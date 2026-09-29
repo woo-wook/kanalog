@@ -1,0 +1,65 @@
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### Eclipse / STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+bin/
+
+### VS Code ###
+.vscode/
+
+### Gradle ###
+.gradle/
+build/
+
+### Kotlin ###
+.kotlin/
+
+### Java ###
+*.class
+*.log
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+hs_err_pid*
+replay_pid*
+
+### OS ###
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+### Env ###
+.env
+.env.local
+*.local
+
+### Japanese study private content ###
+private-data/
+*.apkg
+*.colpkg
+*.anki2
+*.anki21
+*.anki21b
+*.anki21c
+*.sqlite
+*.sqlite3
+frontend/node_modules/
+frontend/.next/
+frontend/test-results/

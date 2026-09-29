@@ -1,0 +1,17 @@
+private-data/
+*.apkg
+*.colpkg
+*.anki2
+*.anki21
+*.anki21b
+*.anki21c
+*.sqlite
+*.sqlite3
+.git/
+.env
+.env.*
+!.env.example
+**/node_modules/
+**/.next/
+**/build/
+**/.gradle/
