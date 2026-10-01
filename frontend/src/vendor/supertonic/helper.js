@@ -1,6 +1,6 @@
 // Supertonic official web helper (MIT). See LICENSE in this directory.
 // Source revision: 1e9799e964ea4c0dad7cde993b65c3c813a7b373
-// Adapted: WebGPU entry, checked fetch, tensor cleanup, partial-load cleanup, model loader injection.
+// Adapted: WebGPU entry, checked fetch, tensor cleanup, partial-load cleanup, model/resource loader injection.
 import * as ort from 'onnxruntime-web/webgpu';
 
 // Available languages for multilingual TTS
@@ -374,11 +374,11 @@ export class TextToSpeech {
 /**
  * Load voice style from JSON files
  */
-export async function loadVoiceStyle(voiceStylePaths, verbose = false) {
+export async function loadVoiceStyle(voiceStylePaths, verbose = false, resourceLoader = checkedFetch) {
     const bsz = voiceStylePaths.length;
     
     // Read first file to get dimensions
-    const firstResponse = await checkedFetch(voiceStylePaths[0]);
+    const firstResponse = await resourceLoader(voiceStylePaths[0]);
     const firstStyle = await firstResponse.json();
     
     const ttlDims = firstStyle.style_ttl.dims;
@@ -397,7 +397,7 @@ export async function loadVoiceStyle(voiceStylePaths, verbose = false) {
     
     // Fill in the data
     for (let i = 0; i < bsz; i++) {
-        const response = await checkedFetch(voiceStylePaths[i]);
+        const response = await resourceLoader(voiceStylePaths[i]);
         const voiceStyle = await response.json();
         
         // Flatten TTL data
@@ -427,8 +427,8 @@ export async function loadVoiceStyle(voiceStylePaths, verbose = false) {
 /**
  * Load configuration from JSON
  */
-export async function loadCfgs(onnxDir) {
-    const response = await checkedFetch(`${onnxDir}/tts.json`);
+export async function loadCfgs(onnxDir, resourceLoader = checkedFetch) {
+    const response = await resourceLoader(`${onnxDir}/tts.json`);
     const cfgs = await response.json();
     return cfgs;
 }
@@ -436,8 +436,8 @@ export async function loadCfgs(onnxDir) {
 /**
  * Load text processor
  */
-export async function loadTextProcessor(onnxDir) {
-    const response = await checkedFetch(`${onnxDir}/unicode_indexer.json`);
+export async function loadTextProcessor(onnxDir, resourceLoader = checkedFetch) {
+    const response = await resourceLoader(`${onnxDir}/unicode_indexer.json`);
     const indexer = await response.json();
     return new UnicodeProcessor(indexer);
 }
@@ -453,10 +453,10 @@ export async function loadOnnx(onnxPath, options) {
 /**
  * Load all TTS components
  */
-export async function loadTextToSpeech(onnxDir, sessionOptions = {}, progressCallback = null, modelLoader = loadOnnx) {
+export async function loadTextToSpeech(onnxDir, sessionOptions = {}, progressCallback = null, modelLoader = loadOnnx, resourceLoader = checkedFetch) {
 
     
-    const cfgs = await loadCfgs(onnxDir);
+    const cfgs = await loadCfgs(onnxDir, resourceLoader);
     
     const dpPath = `${onnxDir}/duration_predictor.onnx`;
     const textEncPath = `${onnxDir}/text_encoder.onnx`;
@@ -482,7 +482,7 @@ export async function loadTextToSpeech(onnxDir, sessionOptions = {}, progressCal
     
     const [dpOrt, textEncOrt, vectorEstOrt, vocoderOrt] = sessions;
     
-    const textProcessor = await loadTextProcessor(onnxDir);
+    const textProcessor = await loadTextProcessor(onnxDir, resourceLoader);
     const textToSpeech = new TextToSpeech(cfgs, textProcessor, dpOrt, textEncOrt, vectorEstOrt, vocoderOrt);
     
     return { textToSpeech, cfgs };

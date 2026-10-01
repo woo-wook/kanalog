@@ -120,3 +120,20 @@ Kanalog는 기존 `infra-postgres` 서버 안의 전용 `kanalog` 데이터베�
 Supertonic 모델은 `private-data/supertonic/models`를 프런트엔드에 읽기 전용으로 연결한다. 모델을 다시 받을 때 `python3 tools/tts/download.py`로 고정 revision과 해시를 확인한다. 코드 업데이트 뒤 `docker compose up -d --build`를 실행하면 worker와 해당 ONNX 버전의 WASM 파일을 함께 생성한다. 모델은 배포 이미지에 포함하지 않는다.
 
 음성 worker는 `worker.<코드 해시>.js`로 생성하며 빌드 도구가 `src/tts-version.ts`를 함께 갱신한다. 새 배포는 새로운 worker 파일을 사용하므로 브라우저·프록시가 이전 `worker.js`를 캐시해도 새 코드에 연결된다. 모델 요청의 `v` 파라미터는 다운로드 manifest의 파일 해시다. 이 요청만 장기 캐시하며 개인 `/api`와 `/media` 응답은 캐시하지 않는다. 모델 크기와 다운로드 완료 여부를 확인한 후 추론을 시작한다.
+
+
+## iPhone/iPad 음성 계산
+
+`voice` 컨테이너는 같은 고정 Supertonic 모델을 CPU로 실행하며 프런트와 함께 `private-data/supertonic/models`를 읽기 전용으로 연결한다. 초기 모델 해시 확인·세션 로딩 후 health가 UP이 되면 백엔드를 시작한다. 메모리 상한 2GiB·CPU 2개이며 호스트 포트를 열지 않는다. DB 역할·계정·미디어 volume 설정은 변경하지 않는다. 현재 Apple Silicon/Linux arm64 Compose에서 빌드·실행을 확인했으며 다른 플랫폼은 이번에 실행하지 않았다.
+
+```sh
+docker compose up -d --build
+docker compose ps
+# 휴대폰 음성만 실패하면
+docker compose logs --tail=50 voice
+docker stats --no-stream kanalog-voice-1
+# 모델을 다시 다운로드한 경우 재초기화
+docker compose restart voice
+```
+
+voice는 manifest 누락·크기/해시 불일치 시 준비 완료로 표시하지 않는다. 기존 기본 음성·학습 진도는 음성 계산과 독립적이며, 계산 실패 시 휴대폰에서 대형 모델을 다시 받지 않고 재시도 오류를 표시한다. 생성 WAV 캐시는 RAM에만 있으므로 별도 백업 대상이 아니며 기존 DB·MAX 미디어 백업 절차는 유지한다. 모델은 서버가 재시작해도 디스크에서 읽고 휴대폰으로 전송하지 않는다. 공개 TTS 모델 URL은 다른 기기의 기존 브라우저 모드를 위해 유지한다.

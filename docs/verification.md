@@ -1,5 +1,38 @@
 # 검증 기록
 
+## 모바일 Safari의 반복 모델 다운로드 방지 (2026-10-02)
+
+사용자가 보고한 재생 후 자동 재로드에 대해 코드상의 자동 reload는 없었다. 약 401MB 모델과 브라우저 추론 메모리로 인한 WebKit 프로세스 재시작을 의심하지만 실기기 종료 로그를 확보하지 않아 원인을 확정하지 않는다. iPhone/iPad(데스크톱 UA iPad 포함)는 브라우저 worker를 초기화하지 않고 인증된 자체 서버의 동일 Supertonic 계산 결과 WAV만 받도록 변경했다. Desktop browser mode와 MAX 기본 음성은 유지한다.
+
+| 검증 | 이번 실행 결과 |
+| --- | --- |
+| 프런트엔드 | 타입 검사·lint·Vitest 45개 통과. iPhone은 worker/model 없이 server route, desktop UA iPad 판별, binary API CSRF/cookie/cache 계약 포함 |
+| 백엔드 | JDK 21 전체 JUnit 22개 통과. 실제 HTTP adapter의 WAV 검증·계산 실패·입력 크기 제한 포함 |
+| 내부 계산 서비스 | Node 테스트 2개 통과. 입력 제한·같은 WAV 캐시 재사용·동시 추론 429·실패 후 슬롯 복구 |
+| 실제 모델 | 동일 고정 revision과 전체 파일 크기/SHA-256 검증 후 Linux arm64 CPU 실행. 로컬 실제 `ア` 합성 122,924 bytes, 1.39초·RMS 0.0468로 비무음 확인. synthetic WAV를 실제 생성 결과로 사용하지 않음 |
+| iPhone WebKit | 공개 HTTPS 배포와 QA 계정으로 실제 음성 3회 재생 완료. 의도하지 않은 주 문서 이동 0회, `/tts/supertonic`, `/tts/runtime`, worker 요청 0개. 생성 WAV 각각 1MiB 미만. 직접 새로고침 후 재생 요청 성공·모델 요청 0개·답변 집계 유지 |
+| 음성 API 접근 | 같은 실제 테스트에서 Origin만 있고 CSRF 없는 요청 403, 잘못된 목소리 400, 로그아웃 후 정상 Origin 요청 401 확인 |
+| 기존 브라우저 흐름 | Chrome 계열 모바일 viewport 360×640/390×844/360×740 가나 3개와 긴 MAX 단어 1개 통과. 새로고침 후 생성 음성·평가 저장·다음 카드 자동재생 1개 통과. WebKit 포함 E2E 총 6개 통과 |
+| 배포 | voice/frontend/backend Docker production build 및 Compose 기동 성공. voice/backend healthy, 공개 HTTPS·Secure 쿠키 검사 통과. voice 약 587MiB 사용 관측(2GiB 상한). 기존 PostgreSQL 전용 DB와 개인 미디어 유지, migration 없음 |
+
+초기 WebKit 테스트의 로그아웃 검증은 Origin을 생략해 인증보다 앞선 Origin 검사에서 403을 받았다. 정상 Origin을 명시하고 로그아웃 요청이 끝나 로그인 화면으로 이동한 뒤 미인증 401을 확인하도록 테스트를 수정했다. 최종 voice 재배포 후 WebKit 테스트를 두 번 연속 반복해 모두 통과했다. 실제 iPhone의 재시작 로그·설치 PWA·오디오 청취 품질·장시간 메모리 사용은 확인하지 않았다. iPhone UA/터치/모바일 viewport를 사용하는 실제 Playwright WebKit 검증이며 실기기 검사와 구분한다.
+
+```sh
+cd backend
+JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ./gradlew test --rerun-tasks --no-daemon
+cd ../frontend
+pnpm exec tsc --noEmit
+pnpm lint
+pnpm test
+pnpm exec playwright install webkit
+cd ../tools/voice-server
+npm test
+cd ../..
+docker compose up -d --build
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/safari-speech.spec.ts e2e/mobile-study.spec.ts e2e/refresh-autoplay.spec.ts
+python3 tools/e2e/check_deployment.py
+```
+
 ## PWA 새로고침과 자동재생 복구 (2026-10-02)
 
 학습 화면은 문서 대신 카드 내부를 스크롤하므로 당겨서 새로고침하는 동작에 의존하지 않도록 모바일 상단·데스크톱 메뉴에 명시적인 새로고침 버튼을 추가했다. 현재 페이지를 완전히 다시 열어 로그인과 서버 데이터를 복원한다. `/api/me`가 일시적인 네트워크 오류로 실패할 때 로그인으로 이동하던 동작은 실패 테스트로 확인했고, 다시 확인 버튼을 제공하도록 수정했다. 실제 401은 로그인으로 이동한다.

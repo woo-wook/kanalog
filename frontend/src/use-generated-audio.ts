@@ -1,6 +1,8 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { browserTts } from "./browser-tts";
+import { serverSpeech } from "./server-speech";
+import { usesServerSpeech } from "./audio-runtime";
 
 export function useGeneratedAudio() {
   const request = useRef<AbortController | null>(null);
@@ -28,12 +30,18 @@ export function useGeneratedAudio() {
       request.current = controller;
       setBusy(true);
       try {
-        const audio = await browserTts().generate(
-          text,
-          voice,
-          controller.signal,
-          progress,
-        );
+        let audio: Blob;
+        if (usesServerSpeech(navigator)) {
+          progress("음성 준비 중…");
+          audio = await serverSpeech(text, voice, controller.signal);
+        } else {
+          audio = await browserTts().generate(
+            text,
+            voice,
+            controller.signal,
+            progress,
+          );
+        }
         if (controller.signal.aborted) return;
         url.current = URL.createObjectURL(audio);
         return url.current;

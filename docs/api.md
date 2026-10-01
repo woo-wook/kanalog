@@ -82,3 +82,10 @@
 - 레벨에는 `goal`, `outcomes`, `units`, `available`와 기본 레슨의 `totalCards`, `studiedCards`, `completedCards`, `totalLessons`, `completedLessons`가 있다. 단원은 순서·선택 여부·기존 레슨을 포함하며 레슨에는 기존 `id`와 `courseId`, `kind`를 보존한다.
 - 조회는 카드 예약·진도 갱신을 하지 않는다. 없는 급수는 `available=false`이고 가짜 레슨을 생성하지 않는다. 선택 확장은 레벨 기본 진도에서 제외한다. `completed`는 첫 연습 완료이며 장기 암기 완료를 뜻하지 않는다.
 - 실제 카드 평가 저장 성공 뒤 클라이언트가 `curriculum` 조회를 갱신한다. 기존 `/api/courses`와 학습 세션/평가 계약은 유지한다.
+
+
+## 모바일 학습 음성
+
+`POST /api/speech`는 로그인 쿠키, `Origin`, `X-CSRF-Token`이 필요하다. 본문은 `{"text":"ア","voice":"F1"}`이며 비어 있지 않은 text 최대 500자, voice `F1`..`F5`/`M1`..`M5`만 허용한다. 성공은 JSON 대신 `Content-Type: audio/wav`와 `Cache-Control: private, no-store`의 이진 응답이다. 학습 상태를 변경하지 않는다. 주소·언어·모델 설정은 클라이언트가 지정할 수 없다.
+
+잘못된 입력 400, 미인증 401, Origin/CSRF 오류 403, 계산 중 429 `SPEECH_BUSY`, 잘못된 WAV 502 `BAD_SPEECH`, 계산 실패 503 `SPEECH_UNAVAILABLE`을 반환한다. 일반 오류 envelope를 사용한다. 클라이언트는 받은 WAV의 Blob URL을 재생하며 취소·페이지 이동 때 해제한다.

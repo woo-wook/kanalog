@@ -1,0 +1,9 @@
+{
+  "name": "kanalog-voice-calculator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "node build.mjs", "test": "node --test", "start": "node app.mjs" },
+  "dependencies": { "onnxruntime-node": "1.30.0" },
+  "devDependencies": { "esbuild": "0.28.2" }
+}

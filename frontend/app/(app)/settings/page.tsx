@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, json, type Settings } from "@/api";
 import { Loading, ErrorMessage } from "@/shell";
 import { useGeneratedAudio } from "@/use-generated-audio";
+import { useServerVoice } from "@/audio-runtime";
 const supertonicVoices = [
   "F1",
   "F2",
@@ -31,6 +32,7 @@ const toggles: { key: keyof Settings; label: string; help?: string }[] = [
   { key: "allowAudioBeforeReveal", label: "정답 전에 발음 듣기" },
 ];
 export default function SettingsPage() {
+  const serverVoice = useServerVoice();
   const client = useQueryClient(),
     query = useQuery({
       queryKey: ["settings"],
@@ -213,8 +215,9 @@ export default function SettingsPage() {
               {value.audioEngine === "SUPERTONIC" && (
                 <>
                   <p className="muted mt-2 text-sm">
-                    처음 들을 때 약 401MB의 모델을 불러옵니다. 일본어 읽기로
-                    음성을 생성합니다.
+                    {serverVoice
+                      ? "이 기기에서는 작은 음성 파일만 받아 재생합니다. 인터넷 연결이 필요합니다."
+                      : "처음 들을 때 약 401MB의 모델을 불러옵니다. 일본어 읽기로 음성을 생성합니다."}
                   </p>
                   <label
                     htmlFor="supertonic-voice"

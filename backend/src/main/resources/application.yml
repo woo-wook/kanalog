@@ -24,3 +24,4 @@ app:
   public-url: ${PUBLIC_APP_URL:http://localhost:8080}
   media-root: ${MEDIA_ROOT:../private-data/media}
   cookie-secure: ${COOKIE_SECURE:false}
+  speech-url: ${SPEECH_URL:http://127.0.0.1:8090}

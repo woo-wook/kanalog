@@ -215,6 +215,34 @@ export async function api<T>(
 export function json(method: string, body: unknown): RequestInit {
   return { method, body: JSON.stringify(body) };
 }
+export async function apiSpeech(
+  text: string,
+  voice: string,
+  signal: AbortSignal,
+): Promise<Blob> {
+  const response = await fetch("/api/speech", {
+    method: "POST",
+    credentials: "include",
+    cache: "no-store",
+    signal,
+    headers: {
+      "Content-Type": "application/json",
+      ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+    },
+    body: JSON.stringify({ text, voice }),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new ApiError(
+      response.status,
+      body?.code ?? "SPEECH_UNAVAILABLE",
+      body?.message ?? "음성을 준비하지 못했습니다. 잠시 후 다시 눌러 주세요.",
+    );
+  }
+  if (!response.headers.get("Content-Type")?.startsWith("audio/wav"))
+    throw new ApiError(502, "BAD_SPEECH", "음성 응답을 확인하지 못했습니다.");
+  return response.blob();
+}
 export async function me(): Promise<User> {
   const user = await api<User>("/me");
   setCsrfToken(user.csrfToken);
