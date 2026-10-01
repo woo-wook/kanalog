@@ -65,6 +65,7 @@ frontend/node_modules/
 frontend/.next/
 frontend/test-results/
 frontend/tsconfig.tsbuildinfo
+frontend/public/tts/
 
 ### Python ###
 __pycache__/

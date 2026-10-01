@@ -5,3 +5,4 @@ test-results
 coverage
 *.log
 .env*
+public/tts/
