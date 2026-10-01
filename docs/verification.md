@@ -7,17 +7,18 @@
 | 합성 APKG 변환 회귀 테스트 | `python3 -m unittest discover -s tools/deck-import -p 'test_*.py' -v`: 8개 통과. 경로 탈출, 누락 필드·미디어, 스크립트 제거, 미지원 스키마 포함 |
 | 실제 N5 변환 검증 | `python3 tools/deck-import/verify_conversion.py private-data/converted/n5`: 카드 878장(어휘 779, 문법 99), 음성 1,795개 |
 | 실제 전체 어휘·문법 변환 검증 | `python3 tools/deck-import/verify_conversion.py private-data/converted/all`: 카드 10,237장, 음성 20,157개. 하위 덱별 집계는 `docs/data-sources.md` |
-| Frontend TypeScript·lint·빌드·Vitest | `pnpm exec tsc --noEmit`, `pnpm lint`, `pnpm test`, `pnpm build` 통과. 기본 Turbopack 빌드는 이 샌드박스의 포트 바인딩 금지로 실패하여 배포 빌드 스크립트를 webpack으로 고정 |
-| Compose 구성 파싱 | `POSTGRES_PASSWORD=validation-only docker compose --env-file .env.example config --quiet` 통과 |
-| 로컬 배포 준비 | Dutchlog의 기본 포트 3000이 Docker 프로세스에서 사용 중이고, 3200은 비어 있음을 확인했다. kanalog의 `.env`에 별도 DB 비밀번호를 생성해 권한을 `0600`으로 설정했고 `docker compose config --quiet`가 통과했다 |
-| Playwright 스펙 발견 | 전용 테스트 환경변수를 제공한 `playwright test --list`에서 4개 실제 API 흐름 발견. 브라우저 흐름 실행은 미실행 |
+| Frontend TypeScript·lint·빌드·Vitest | `pnpm exec tsc --noEmit`, `pnpm lint`, `pnpm test`, `pnpm build` 통과. Vitest 1개 테스트 통과. Docker production build도 통과 |
+| Backend 빌드 및 테스트 | Docker image의 `bootJar -x test` 및 로컬 JDK 21 `./gradlew test` 통과. JUnit 10개 통과: FSRS 4, PostgreSQL persistence 5, 날짜 경계 1 |
+| Compose 기동·DB 마이그레이션 | `docker compose up -d --build` 통과. PostgreSQL 17.11, Kotlin API, Next.js가 실행 중. Flyway 4개 migration 적용 및 backend healthy |
+| HTTP 확인 | `GET /api/health/ready`가 `{"status":"UP"}` 반환. `GET /login` HTTP 200. 브라우저에서 `http://localhost:3200/login` 열기 완료 |
+| Compose 설정 | `docker compose config --quiet` 통과. 호스트 포트 `127.0.0.1:3200`; 3000은 기존 Docker 프로세스가 사용 중이어서 분리했다 |
+| 개인 실행 설정 | `.env`에 무작위 DB 비밀번호를 만들고 파일 권한을 `0600`으로 설정했다. `.env`와 private-data는 Git 및 이미지에서 제외 |
 
-## 이 환경에서 미실행
+## 미실행 및 남은 확인
 
-- Gradle 빌드와 JVM 테스트: JDK 21은 `/opt/homebrew/opt/openjdk@21`에 있으나 기본 `java` 경로가 없고, 지정 후에도 Gradle의 파일 잠금 소켓 생성이 `Operation not permitted`로 거부된다. 이 결과를 테스트 통과로 간주하지 않는다.
-- Compose 이미지 빌드·기동·PostgreSQL 마이그레이션·API 흐름·DB 재시작 지속성·백업/복원: `docker compose up -d --build`를 시도했으나 Docker daemon 소켓 접근이 `Operation not permitted`로 거부된다. kanalog 컨테이너는 이 환경에서 시작되지 않았다.
-- 실제 MAX 변환 JSONL을 Kotlin CLI로 PostgreSQL에 반영하고 인증된 음성까지 확인하는 흐름: 위 DB/컨테이너 제약으로 미실행.
-- Kotlin `FsrsAdapterTest`, PostgreSQL `PersistenceFlowTest`, 브라우저 Playwright 테스트는 파일을 작성했으나 JVM/DB 환경 제한으로 미실행.
-- 실제 휴대폰/태블릿 음성과 iOS 설치: 해당 기기 접근이 없어 미실행.
+- 초기 사용자 이메일을 아직 받지 않아 계정을 만들지 않았고, APKG 변환 JSONL을 DB에 import하지 않았다. 이에 따라 실제 카드 학습·인증 음성·브라우저 E2E 흐름은 아직 확인하지 않았다.
+- Docker daemon이 동작 중이므로 Playwright E2E는 초기 계정 생성과 import 후 실행할 수 있다.
+- DB와 미디어 백업·복원 및 재시작 지속성은 아직 별도 확인하지 않았다.
+- 실제 휴대폰·태블릿 음성과 iOS 설치는 해당 기기 접근이 없어 미실행이다.
 
-환경이 허용되면 저장소 루트에서 `docker compose up -d --build` 후 README의 계정·import 명령을 순서대로 실행하고, 로그인 → 덱 선택 → 평가 → 새로고침·재로그인 → 통계와 음성 → 재import → 복습 기록 보존을 확인한다. 마지막으로 운영 문서의 백업·복원을 별도 테스트 Compose 프로젝트에서 확인한다.
+다음 검증은 관리자 CLI로 사용자를 만든 뒤 실제 N5 데이터를 import하고, 로그인 → 학습 → 평가 → 새로고침 → 통계·음성 → 재import 후 진도 유지 순서로 진행한다. 운영 문서의 백업·복원은 별도 테스트 Compose 볼륨에서 확인한다.
