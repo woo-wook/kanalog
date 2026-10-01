@@ -5,6 +5,7 @@
 ```sh
 test -f .env || cp .env.example .env
 mkdir -p private-data/converted
+python3 tools/tts/download.py
 # RDB_PASSWORD를 강한 임의 비밀번호로 설정한다.
 # 최초 1회 기존 infra-postgres 서버에 전용 DB와 로그인 역할을 만든다.
 docker compose up -d --build
@@ -102,4 +103,8 @@ curl -fsS http://localhost:3200/api/health/ready
 
 ## 이 작업 환경의 검증 범위
 
-Kanalog는 기존 `infra-postgres` 서버 안의 전용 `kanalog` 데이터베이스와 앱 역할을 사용한다. `.env`는 Git에서 제외되고 권한 `0600`으로 관리한다. 앱 포트는 `127.0.0.1:3200`; Kanalog Compose는 DB 포트를 공개하지 않는다. 기존 PostgreSQL 연결과 Flyway 적용을 이번 변경에서 확인한다. 백업·복원은 아직 별도 검증이 필요하다.
+Kanalog는 기존 `infra-postgres` 서버 안의 전용 `kanalog` 데이터베이스와 앱 역할을 사용한다. `.env`는 Git에서 제외되고 권한 `0600`으로 관리한다. 앱 포트는 `127.0.0.1:3200`; Kanalog Compose는 DB 포트를 공개하지 않는다. PostgreSQL 연결과 Flyway V1~V6 적용을 확인했다.
+
+앱 쓰기를 중단한 같은 시점에 DB와 개인 미디어를 백업했다. 별도 테스트 DB·볼륨에 복원해 UserCardState·ReviewLog·설정의 전체 행 해시와 미디어 21,950개 파일의 SHA-256 목록이 일치함을 확인했다. 앱 재시작 후 학습 기록도 유지됐다. 검증에 사용한 임시 DB·볼륨만 제거했고 원래 DB·미디어 볼륨은 유지했다. 로컬 백업은 `private-data/backups`의 권한 `0600` 파일이며 Git에서 제외된다.
+
+Supertonic 모델은 `private-data/supertonic/models`를 프런트엔드에 읽기 전용으로 연결한다. 모델을 다시 받을 때 `python3 tools/tts/download.py`로 고정 revision과 해시를 확인한다. 코드 업데이트 뒤 `docker compose up -d --build`를 실행하면 worker와 해당 ONNX 버전의 WASM 파일을 함께 생성한다. 모델은 배포 이미지에 포함하지 않는다.

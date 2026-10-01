@@ -2,13 +2,13 @@
 
 ## 구성
 
-브라우저는 Next.js 16 프런트엔드에 접속한다. 프런트엔드의 `/api/*` Route Handler는 요청·쿠키·Range 헤더를 Kotlin 서버에 전달하는 전송 프록시이며 학습 규칙이나 데이터 저장을 맡지 않는다. 운영 Compose에서는 `BACKEND_API_URL=http://backend:8080`이다. Kotlin/Spring Boot 4 서버가 계정, 덱 소유권, 학습 세션, FSRS 결과, 검색, 통계를 처리한다. PostgreSQL 17에 사용자 데이터와 복습 이력을 저장한다. 계정 관리 CLI는 Spring Data JPA 저장소를 사용하고, 학습·import는 명시적인 SQL과 행 잠금이 필요한 구간에 JdbcTemplate을 사용한다. Flyway가 스키마를 적용하며 Hibernate는 `validate`만 한다.
+브라우저는 Next.js 16 프런트엔드에 접속한다. 프런트엔드의 `/api/*` Route Handler는 요청·쿠키·Range 헤더를 Kotlin 서버에 전달하는 전송 프록시이며 학습 규칙이나 데이터 저장을 맡지 않는다. 운영 Compose에서는 `BACKEND_API_URL=http://backend:8080`이다. Kotlin/Spring Boot 4 서버가 계정, 덱 소유권, 학습 세션, FSRS 결과, 검색, 통계를 처리한다. PostgreSQL 16에 사용자 데이터와 복습 이력을 저장한다. 계정 관리 CLI는 Spring Data JPA 저장소를 사용하고, 학습·import는 명시적인 SQL과 행 잠금이 필요한 구간에 JdbcTemplate을 사용한다. Flyway가 스키마를 적용하며 Hibernate는 `validate`만 한다.
 
 | 구성 | 지속 데이터 | 외부 접근 |
 | --- | --- | --- |
 | Next.js 프런트엔드 | 앱 shell만 브라우저 캐시 | 기본 localhost:3200 |
 | Kotlin API | 미디어 전용 볼륨 | Compose 내부 |
-| PostgreSQL | DB 전용 볼륨 | Compose 내부 |
+| PostgreSQL | 기존 infra-postgres의 kanalog 전용 DB | infra-backend 내부 |
 | APKG 변환 도구 | `private-data/converted` | 로컬 명령만 |
 
 원본 APKG와 변환 JSONL은 `private-data`에 두고 Git 및 이미지 빌드에서 제외한다. 변환된 음성은 import 중 개인 미디어 볼륨으로 복사한다. `/api/media/{id}`는 DB 소유권을 확인한 후 제공하며, 미디어 볼륨을 웹 서버 정적 경로로 공개하지 않는다.
@@ -26,3 +26,11 @@
 ## PWA
 
 manifest와 자체 SVG/PNG 아이콘을 제공한다. 서비스 워커는 오프라인 안내 화면만 캐시한다. 인증된 학습 API 응답, 음성, 사용자별 데이터, 미제출 답변은 오프라인 캐시에 넣지 않는다.
+
+## 학습 코스와 브라우저 음성
+
+`learning_course` → `course_lesson` → `lesson_card`가 콘텐츠를 레슨에 연결한다. 최초 기본 코스는 가타카나 46자, 히라가나 46자 순서이며 탁음·반탁음·요음은 선택 레슨으로 분리한다. MAX는 원본 어휘/문법과 급수를 유지하면서 어휘 20장/문법 5장 단위 레슨으로 연결한다. 매핑을 다시 실행해도 카드 ID와 FSRS 상태를 초기화하지 않는다. 레슨의 최초 연습 완료는 각 활성 카드에 GOOD/EASY를 최소 한 번 제출한 상태이며 암기 완료를 뜻하지 않는다. 제외 카드가 있는 레슨의 집계와 추천은 활성 카드 기준이다.
+
+Supertonic 3는 브라우저 Web Worker에서 고정된 ONNX 모델로 일본어 음성을 생성한다. ONNX Runtime Web 1.30.0은 WebGPU를 우선 시도하고 사용할 수 없으면 WASM 단일 스레드를 사용한다. 모델은 별도 디렉터리에서 같은 origin의 `/tts/supertonic`으로 제공하며 이미지에 넣지 않는다. 일본어 텍스트를 외부 TTS 서버로 전송하지 않는다. 읽기 필드가 있는 단어는 읽기를, 가나는 해당 글자를 합성한다. 한국어 문법 질문은 합성하지 않고 일본어 예문만 듣는다.
+
+계정 설정의 `audioEngine`은 SUPERTONIC/ORIGINAL/DEVICE, `supertonicVoice`는 F1..F5/M1..M5이며 기본값은 SUPERTONIC/F1이다. 생성된 WAV는 해당 페이지 메모리의 Blob URL로만 재생하고 취소/페이지 이탈 시 해제한다. 취소된 요청의 결과는 재생하지 않는다. 원본 MAX 음성을 별도 버튼으로 비교할 수 있으며 기기 음성은 ja-JP만 사용한다.

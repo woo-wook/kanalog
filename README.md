@@ -13,6 +13,7 @@ JLPT MAX 덱을 개인 계정으로 가져와 단어와 문법을 복습하는 �
 ```sh
 test -f .env || cp .env.example .env
 mkdir -p private-data/converted
+python3 tools/tts/download.py
 # 기존 Docker 네트워크 `infra-backend`에 `infra-postgres`가 실행 중이어야 한다.
 # PostgreSQL 관리자 권한으로 `kanalog` DB와 `kanalog` 로그인 역할을 한 번 생성한다.
 docker compose up -d --build
@@ -61,7 +62,25 @@ docker compose run --rm backend \
 
 ## 학습
 
-로그인 후 덱에서 N5 어휘를 선택하고 학습을 시작한다. Space로 정답을 확인하고 1~4로 다시·어려움·보통·쉬움을 평가할 수 있다. 카드 평가가 서버에 저장된 뒤에 다음 카드로 넘어간다. 설정에서 하루 새 카드 수, 가나 힌트, 한글 발음 보조, 자동재생과 재생 속도를 조절한다. 한글 발음 보조는 [근사 표기 규칙](docs/hangul-hints.md)을 따르며 기본값이 꺼져 있다. MAX 원본에는 이 필드가 없어 자동 생성하지 않으며 개인이 입력하거나 검토된 값만 표시한다. 원본 음성이 없을 때 브라우저 일본어 TTS는 선택적으로만 사용한다.
+로그인 후 가타카나 기본 46자 → 히라가나 기본 46자 → MAX N5 어휘·문법 순서의 코스에서 레슨을 시작한다. 탁음·반탁음·요음은 선택 레슨이다. Space로 정답을 확인하고 1~4로 다시·어려움·보통·쉬움을 평가한다. 서버 저장 후 다음 카드로 넘어간다. 한 번 연습한 상태를 암기 완료로 표시하지 않는다. 기존 MAX 학습 기록은 유지된다.
+
+설정에서 하루 새 카드 수, 힌트, 자동재생·속도와 음성 엔진을 조절한다. Supertonic 3가 기본이며, 처음 듣기를 누를 때 약 401MB의 모델을 불러온다. 10개 목소리를 미리 들어 선택할 수 있다. 학습 카드의 MAX 음성 버튼으로 기존 합성 음성과 비교할 수 있다. 기기 음성은 해당 기기의 일본어 음성이 있을 때만 사용할 수 있다. 한글 보조는 [근사 표기 규칙](docs/hangul-hints.md)을 따르며 기본값은 꺼져 있다.
+
+모델 다운로드/로컬 개발 연결은 다음 명령을 사용한다. 모델 파일은 Git과 이미지에서 제외되며 Compose가 읽기 전용으로 연결한다.
+
+```sh
+python3 tools/tts/download.py
+mkdir -p frontend/public/tts
+ln -s ../../../private-data/supertonic/models frontend/public/tts/supertonic
+# pnpm dev/build가 worker와 일치하는 WASM runtime을 자동 생성한다.
+```
+
+전용 로컬 QA 계정으로 실제 서버 테스트를 실행할 수 있다. 비밀번호는 Git에 없는 권한 0600 파일에 저장하며 출력하지 않는다.
+
+```sh
+python3 tools/e2e/provision.py
+python3 tools/e2e/run_live.py
+```
 
 ## 환경변수
 

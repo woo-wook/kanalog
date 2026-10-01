@@ -1,25 +1,53 @@
 # 검증 기록
 
-2026-10-01 기준 실행 범위를 기록한다. 수치는 실제 JLPT MAX v2.1.2 개인 APKG의 변환 결과이며 공개 저장소에는 콘텐츠 본문과 음성을 넣지 않는다.
+2026-10-01, Apple Silicon 개발 환경과 현재 로컬 Compose 기준이다. 실제 MAX 콘텐츠·음성·QA 비밀번호·백업은 `private-data` 또는 개인 volume에 두고 Git과 이미지에서 제외한다.
+
+## 이번 변경에서 실행한 검증
 
 | 항목 | 결과 |
 | --- | --- |
-| 합성 APKG 변환 회귀 테스트 | `python3 -m unittest discover -s tools/deck-import -p 'test_*.py' -v`: 8개 통과. 경로 탈출, 누락 필드·미디어, 스크립트 제거, 미지원 스키마 포함 |
-| 실제 N5 변환 검증 | `python3 tools/deck-import/verify_conversion.py private-data/converted/n5`: 카드 878장(어휘 779, 문법 99), 음성 1,795개 |
-| 실제 전체 어휘·문법 변환 검증 | `python3 tools/deck-import/verify_conversion.py private-data/converted/all`: 카드 10,237장, 음성 20,157개. 하위 덱별 집계는 `docs/data-sources.md` |
-| Frontend TypeScript·lint·빌드·Vitest | `pnpm exec tsc --noEmit`, `pnpm lint`, `pnpm test`, `pnpm build` 통과. Vitest 1개 테스트 통과. Docker production build도 통과 |
-| Backend 빌드 및 테스트 | Docker image의 `bootJar -x test` 및 로컬 JDK 21 `./gradlew test` 통과. JUnit 10개 통과: FSRS 4, PostgreSQL persistence 5, 날짜 경계 1 |
-| 현행 Compose·DB 마이그레이션 | 기존 Dutchlog 인프라 PostgreSQL 16 `infra-postgres`에 Kanalog 전용 `kanalog` DB와 전용 로그인 역할 생성. 별도 Kanalog DB 컨테이너 제거 후 backend를 `infra-backend`에 연결. 이미지 재빌드·기동, Flyway 4개 적용, backend healthy, `/api/health/ready` UP 확인 |
-| HTTP 확인 | `GET /api/health/ready`가 `{"status":"UP"}` 반환. `GET /login` HTTP 200. 브라우저에서 `http://localhost:3200/login` 열기 완료 |
-| Compose 설정 | `docker compose config --quiet` 통과. 호스트 포트 `127.0.0.1:3200`; 3000은 기존 Docker 프로세스가 사용 중이어서 분리했다 |
-| 개인 실행 설정 | `.env`에 무작위 DB 비밀번호를 만들고 파일 권한을 `0600`으로 설정했다. `.env`와 private-data는 Git 및 이미지에서 제외 |
-| 실제 MAX import 및 브라우저 E2E | 임시 격리 Compose 프로젝트에 일회용 계정을 만들고 N5 실데이터 878장·음성 1,795개 import. Playwright 실제 API 흐름 5개(평가·통계, 로그아웃 권한, 실제 오디오 재생과 로그아웃 후 미디어 거부, 설정 재로그인, 360/390px overflow) 통과 후 테스트 DB·미디어 볼륨 제거 |
-| 현재 개인 계정의 전체 MAX import | `../../anki-deck/JLPT-MAX-Deck-2.1.2.apkg` SHA-256이 공식 v2.1.2 및 기존 비공개 변환본과 일치함을 확인. 현재 Kanalog DB에 지원 범위 10,237장(어휘 9,159·문법 1,078)과 음성 레코드 20,157개를 가져옴. 덱 10개가 모두 READY이며 N5 어휘만 기본 선택. 사용자 카드 상태는 0개로 새 학습 상태 유지 |
+| Backend | JDK 21 `./gradlew test --rerun-tasks --no-daemon` 성공. JUnit 13개 통과: FSRS 4, PostgreSQL 16 Testcontainers persistence 8, 날짜 경계 1 |
+| 서버 도메인 검증 | 평가·재전송·payload 충돌·version 경쟁·신규 한도·소유권·코스 순서·제외 카드·재import 진도 유지·음성 설정 영속성/잘못된 엔진 및 목소리 차단 |
+| Frontend | `pnpm test` 12개 통과. `pnpm exec tsc --noEmit`, `pnpm lint` 성공. 취소한 음성 요청의 늦은 응답 무시, worker 오류 재시도, 일본어 읽기 선택, 예문 듣기 가능 여부, 코스 추천, 탐색 접근성, 설치 앱 색상, ONNX 런타임 파일 포함 검증 |
+| Production build | Compose의 Kotlin `bootJar` 및 Next.js production build 성공. 최신 backend/frontend 이미지 재배포 |
+| 변환기 | `python3 -m unittest discover -s tools/deck-import -p 'test_*.py' -v` 8개 통과. ZIP 경로 탈출·누락 필드/미디어·스크립트 제거·미지원 스키마 포함 |
+| 실제 MAX 변환 | `verify_conversion.py private-data/converted/n5`: 878장(어휘 779, 문법 99), 음성 1,795개. 전체 변환 10,237장(어휘 9,159, 문법 1,078), 음성 레코드 20,157개. 급수별 수는 `data-sources.md` |
+| 실제 재import | 전용 QA 계정의 N5를 관리 CLI로 재import. 카드 건수, UserCardState 전체 행 및 ReviewLog 전체 행의 해시가 실행 전후 동일 |
+| Supertonic 모델 | 공식 고정 revision `aafc6e32416a594460b32413efc49d7fe4ce6d46`, 401,276,744 bytes 확보. 다운로드 도구가 파일 크기와 제공된 LFS SHA-256을 확인. 로컬 manifest에 각 파일 해시 기록 |
+| ONNX 런타임 수정 | 초기 브라우저 테스트에서 ORT 1.30이 요구하는 `asyncify.mjs/.wasm` 누락으로 초기화 실패. 실패 회귀 테스트를 만든 뒤 worker 번들에서 실제 런타임 이름을 추출해 복사하도록 수정. 회귀 테스트 통과. 재배포 후 worker·해당 mjs/wasm·모델 manifest의 HTTP 200 확인 |
+| 현재 서버 | `docker compose config --quiet` 성공. backend healthy, `/api/health/ready` UP, `/login` 200. PostgreSQL 16 `infra-postgres`의 Kanalog 전용 DB/역할 사용, Flyway V1~V6 적용 |
+| DB·미디어 복원 | 같은 앱 중단 시점의 DB dump와 media tar를 별도 테스트 DB·volume에 복원. UserCardState·ReviewLog·설정의 전체 행 해시 및 21,950개 실제 미디어 파일 SHA-256 목록 일치. 임시 테스트 대상 제거 |
+| 재시작 지속성 | 앱 중단·재시작 뒤 기존 학습 상태·복습 로그·설정 해시 유지 |
+| 데이터 분리 | 실제 개인 계정 MAX 10,237장과 QA 계정 N5 878장을 분리. 각 계정에 가타카나 104장·히라가나 104장 생성. 앱 포트 `127.0.0.1:3200`, 개인 미디어 volume 유지 |
 
-## 미실행 및 남은 확인
+## 이전 브라우저 검증과 최종 미실행 범위
 
-- 현재 개인 계정의 전체 MAX import 후 DB 건수와 서버 readiness를 확인했다. 실제 로그인 및 브라우저 학습 확인은 계정 비밀번호가 필요해 이번 import 작업에서 실행하지 않았다. 기존 N5 E2E는 별도 일회용 Compose 프로젝트에서 실행했다.
-- DB와 미디어 백업·복원 및 재시작 지속성은 아직 별도 확인하지 않았다.
-- 실제 휴대폰·태블릿 음성과 iOS 설치는 해당 기기 접근이 없어 미실행이다.
+권한 설정 변경 전 전용 QA 계정으로 기존 Playwright 학습 흐름 5개와 MAX 오디오 테스트를 통과했다. 로그인·평가 저장·통계·로그아웃 권한·설정 재로그인·360/390px 가로 넘침·MP3 비무음 디코딩·재생 시간 증가·range 206·로그아웃 후 media 401을 확인했다. 해당 결과를 마지막 재배포 뒤 재실행한 것으로 간주하지 않는다.
 
-다음 검증은 현재 계정으로 로그인 → 학습 → 평가 → 새로고침 → 통계·음성 → 재import 후 진도 유지 순서로 진행한다. 운영 문서의 백업·복원은 별도 테스트 DB에서 확인한다.
+새 코스 E2E는 복습 우선 큐에서 고유 카드 증가를 잘못 가정해 실패했다. 신규 카드까지 평가하도록 테스트를 수정했으나 최종 재실행은 못 했다. Supertonic 브라우저 E2E 역시 런타임 누락 수정 후 실제 WAV 생성/재생을 다시 확인하지 못했다.
+
+사용자가 전체 접근을 허용한 뒤에도 브라우저 도구는 **저장된 사용자 설정이 `localhost:3200` 접근을 차단한다**고 거부했다. 우회 브라우저나 별도 자동화로 이 차단을 피하지 않았다. 따라서 Supertonic 실제 합성 재생·취소·최종 코스 UI 검증은 미완료다. 모델 확보나 파일 HTTP 200만으로 이를 통과로 표시하지 않는다. 실제 휴대폰·태블릿 청취 품질, iOS/Safari PWA 설치, 다른 CPU 플랫폼은 검증하지 않았다.
+
+## 재현 명령
+
+```sh
+cd backend
+./gradlew test --rerun-tasks --no-daemon
+cd ../frontend
+pnpm test
+pnpm exec tsc --noEmit
+pnpm lint
+cd ..
+python3 -m unittest discover -s tools/deck-import -p 'test_*.py' -v
+docker compose up -d --build
+curl -fsS http://localhost:3200/api/health/ready
+```
+
+브라우저의 저장된 차단 설정이 해제된 테스트 환경에서는 다음을 실행한다. QA 계정은 무작위 비밀번호를 `private-data/e2e/account.json`에 권한 0600으로 저장하며 공개하지 않는다. provision은 실제 개인 계정의 진도를 바꾸지 않는다.
+
+```sh
+python3 tools/e2e/provision.py
+python3 tools/e2e/run_live.py
+```
+
+코스 테스트는 남은 신규 카드와 일일 한도가 필요하다. QA 계정은 반복 검증을 위해 하루 한도를 100장으로 설정한다. Supertonic 테스트는 실제 모델을 읽어 WAV 비무음·재생 시간 진행·페이지 이탈 정리를 확인한다. 고정 응답이나 mock 오디오를 성공으로 사용하지 않는다.

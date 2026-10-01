@@ -64,3 +64,14 @@
 - 복습 예정 수는 활성·비제외 카드 중 `due_at <= 현재 서버 시각`인 수다. 홈은 선택한 덱에 한정하고 전체 통계는 내 모든 준비된 덱을 센다.
 - 오늘 남은 새 카드는 선택한 덱의 미학습 카드 수와 `dailyNewLimit - 오늘 처음 학습한 카드 수` 중 작은 값이다.
 - 연속 학습일은 오늘 학습 기록이 있으면 오늘부터, 없으면 어제부터 하루씩 거슬러 올라간 날 수다.
+
+## 코스와 음성 설정
+
+- `GET /api/courses`: 소유자 코스와 레슨별 활성/학습/최초연습완료/복습예정 카드 집계.
+- `GET /api/courses/{id}`: 개인 코스 상세. 타인 코스는 404.
+- `POST /api/courses/lessons/{id}/select`: 현재 레슨 선택.
+- `POST /api/study/sessions`: `{ "lessonId": "uuid" }` 또는 기존 `{ "deckId": "uuid" }` 중 정확히 하나. 응답에 lessonId/lessonTitle 포함.
+- 대시보드 `dailyNewRemaining`은 코스와 무관한 계정 전체의 오늘 신규 카드 잔여 한도. `newRemaining`은 선택한 레슨/덱에서 가능한 카드 수.
+- 설정 GET/PATCH의 `audioEngine`: SUPERTONIC(기본값), ORIGINAL, DEVICE. `supertonicVoice`: F1(기본값)..F5/M1..M5. 설정은 사용자별로 저장한다. 잘못된 선택은 BAD_AUDIO_ENGINE/BAD_SUPERTONIC_VOICE(400).
+
+음성 합성은 DB 진도 변경이 없으며 브라우저에서 실행한다. 생성 WAV와 개인 학습 데이터는 공개 캐시에 저장하지 않는다.

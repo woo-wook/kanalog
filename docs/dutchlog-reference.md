@@ -25,3 +25,9 @@
 - `backend/gradlew`, `backend/gradlew.bat`, `backend/gradle/wrapper/`, `backend/gradle/libs.versions.toml`
 
 원본 소스 코드, SQL 스키마, Dockerfile, 환경 설정값은 제품별 결정과 비밀값 혼입을 피하려고 그대로 복사하지 않았다. 프런트엔드 골격은 별도 구현 작업에서 Dutchlog 구성을 참고해 구성한다.
+
+## 2026-10-01 UI/UX 재적용
+
+`.claude/skills/`의 원본 75개 SKILL.md와 인덱스가 현재 복사본과 같음을 다시 확인했다. `frontend/CLAUDE.md`의 `@AGENTS.md` 연결도 복사했다. 로컬 설정·환경 파일은 복사하지 않았다.
+
+실제 참고 파일은 `../dutchlog/frontend/app/globals.css`, `src/widgets/app-shell/ui/{Sidebar,TabBar,MobileAppBar,AppShell}.tsx`, `src/widgets/app-shell/model/nav-items.ts`, `src/views/home/ui/HomeView.tsx`, `src/shared/ui/{card,button}.tsx`다. 밝은 슬레이트 배경과 파란 primary, 16px 카드 반경과 그림자, 아이콘 사이드바·모바일 탭, 사용자 표시와 버튼 규칙을 적용했다. 가계부 메뉴와 개인 데이터는 가져오지 않았다. 학습 화면은 가타카나 → 히라가나 → MAX N5 어휘·문법의 코스 구조에 맞췄다.
