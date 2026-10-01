@@ -9,8 +9,49 @@ async function login(page: Page) {
   await page.getByLabel("비밀번호").fill(password);
   await page.getByRole("button", { name: "로그인", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "문자부터 차근차근" }),
+    page.getByRole("heading", { name: "오늘도 한 레슨씩" }),
   ).toBeVisible();
+}
+
+async function startN5Lesson(page: Page) {
+  const curriculum = await (await page.request.get("/api/curriculum")).json();
+  const n5 = curriculum.levels.find(
+    (level: { key: string }) => level.key === "n5",
+  );
+  const lesson = n5.units
+    .flatMap(
+      (unit: {
+        lessons: {
+          id: string;
+          kind: string;
+          studiedCards: number;
+          totalCards: number;
+        }[];
+      }) => unit.lessons,
+    )
+    .find(
+      (lesson: { kind: string; studiedCards: number; totalCards: number }) =>
+        lesson.kind === "vocabulary" &&
+        lesson.totalCards - lesson.studiedCards >= 2,
+    );
+  expect(
+    lesson,
+    "QA 계정에 신규 어휘 카드가 2장 이상 남은 레슨이 필요합니다",
+  ).toBeTruthy();
+  await page
+    .locator('[data-level-key="n5"]')
+    .getByRole("link", { name: "입문 코스 보기" })
+    .click();
+  const row = page.locator(`[data-lesson-id="${lesson.id}"]`);
+  const link = row.getByRole("link");
+  if (!(await link.isVisible()))
+    await page
+      .locator("details")
+      .filter({ has: row })
+      .locator("summary")
+      .first()
+      .click();
+  await link.click();
 }
 
 async function answersLast7Days(page: Page): Promise<number> {
@@ -30,17 +71,7 @@ test("실제 N5 코스에서 평가를 저장하면 다음 카드와 통계가 �
   await login(page);
   const before = await answersLast7Days(page);
   await page.goto("/courses");
-  const n5Vocabulary = page
-    .locator('article[data-course-kind="vocabulary"]')
-    .filter({ hasText: /N5/ })
-    .first();
-  await expect(n5Vocabulary).toBeVisible();
-  await n5Vocabulary.getByRole("link", { name: "코스 보기" }).click();
-  await page
-    .locator("article[data-lesson-id]")
-    .first()
-    .getByRole("link", { name: "레슨 시작" })
-    .click();
+  await startN5Lesson(page);
   const reveal = page.getByRole("button", { name: /정답 보기/ });
   await expect(
     reveal,
@@ -73,17 +104,7 @@ test("MAX 음성은 로그인한 사용자에게만 오디오 스트림으로 �
 }) => {
   await login(page);
   await page.goto("/courses");
-  const n5Vocabulary = page
-    .locator('article[data-course-kind="vocabulary"]')
-    .filter({ hasText: /N5/ })
-    .first();
-  await expect(n5Vocabulary).toBeVisible();
-  await n5Vocabulary.getByRole("link", { name: "코스 보기" }).click();
-  await page
-    .locator("article[data-lesson-id]")
-    .first()
-    .getByRole("link", { name: "레슨 시작" })
-    .click();
+  await startN5Lesson(page);
   const audioResponse = page.waitForResponse(
     (response) =>
       response.url().includes("/api/media/") &&
@@ -143,7 +164,14 @@ test("360px와 390px에서 주요 화면이 가로로 넘치지 않는다", asyn
   await login(page);
   for (const width of [360, 390]) {
     await page.setViewportSize({ width, height: 844 });
-    for (const path of ["/", "/courses", "/settings", "/stats"]) {
+    for (const path of [
+      "/",
+      "/courses",
+      "/courses/levels/starter",
+      "/courses/levels/n5",
+      "/settings",
+      "/stats",
+    ]) {
       await page.goto(path);
       await expect(page.locator("main h1").first()).toBeVisible();
       const overflow = await page.evaluate(

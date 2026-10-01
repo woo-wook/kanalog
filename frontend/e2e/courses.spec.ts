@@ -15,10 +15,12 @@ test("가타카나 코스의 레슨으로 시작하고 평가 진도가 재로�
   await expect(
     page.getByRole("heading", { name: "학습 코스", exact: true }),
   ).toBeVisible();
-  const card = page.locator('article[data-course-kind="katakana"]');
-  await card.getByRole("link", { name: "코스 보기" }).click();
+  await page
+    .locator('[data-level-key="starter"]')
+    .getByRole("link", { name: "왕초보 코스 보기" })
+    .click();
   await expect(
-    page.getByRole("heading", { name: "가타카나", exact: true }),
+    page.getByRole("heading", { name: "왕초보", exact: true }),
   ).toBeVisible();
   const courses = await (await page.request.get("/api/courses")).json();
   const katakana = courses.find((c: { kind: string }) => c.kind === "katakana");
@@ -32,10 +34,16 @@ test("가타카나 코스의 레슨으로 시작하고 평가 진도가 재로�
       r.url().endsWith("/api/study/sessions") &&
       r.request().method() === "POST",
   );
-  await page
-    .locator(`article[data-lesson-id="${lesson.id}"]`)
-    .getByRole("link", { name: "레슨 시작" })
-    .click();
+  const row = page.locator(`[data-lesson-id="${lesson.id}"]`);
+  const link = row.getByRole("link");
+  if (!(await link.isVisible()))
+    await page
+      .locator("details")
+      .filter({ has: row })
+      .locator("summary")
+      .first()
+      .click();
+  await link.click();
   const session = await (await response).json();
   expect(session.lessonId).toBe(lesson.id);
   expect(session.cards.length).toBeGreaterThan(0);
