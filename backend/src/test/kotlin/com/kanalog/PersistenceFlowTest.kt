@@ -19,7 +19,7 @@ import java.util.UUID
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.NONE)
 class PersistenceFlowTest @Autowired constructor(
     private val jdbc:JdbcTemplate,private val notes:NoteService,private val study:StudyService,
-    private val importer:MaxImportService,private val auth:AuthService,private val courses:CourseService,private val overview:OverviewService
+    private val importer:MaxImportService,private val auth:AuthService,private val courses:CourseService,private val overview:OverviewService,private val curriculum:CurriculumService
 ) {
     companion object {
         @Container @JvmField val postgres=PostgreSQLContainer("postgres:16-alpine")
@@ -37,6 +37,28 @@ class PersistenceFlowTest @Autowired constructor(
         jdbc.update("insert into app_user(id,email,password_hash) values(?,?,?)",id,"$id@example.test","test-hash")
         jdbc.update("insert into user_settings(user_id) values(?)",id)
         return id
+    }
+
+    @Test fun `curriculum read model scopes progress and existing lesson ids to the authenticated owner`() {
+        val owner=user(); val other=user()
+        courses.synchronize(owner); courses.synchronize(other)
+        val before=curriculum.get(owner)
+        val lesson=before.levels.first().units.first().lessons.first()
+        assertEquals(lesson.id,before.recommendedLessonId)
+        assertEquals(92,before.levels.first().totalCards)
+        val session=study.start(owner,lessonId=lesson.id)
+        val card=session.cards.first()
+        study.review(owner,ReviewRequest(session.id,card.id,card.version,"GOOD",UUID.randomUUID().toString()))
+        val changed=curriculum.level(owner,"starter")
+        assertEquals(1,changed.completedCards)
+        assertEquals(1,changed.studiedCards)
+        val otherModel=curriculum.get(other)
+        assertEquals(0,otherModel.levels.first().completedCards)
+        val ownerIds=changed.units.flatMap { it.lessons }.map { it.id }.toSet()
+        assertTrue(otherModel.levels.flatMap { it.units }.flatMap { it.lessons }.none { it.id in ownerIds })
+        assertEquals("CURRICULUM_LEVEL_NOT_FOUND",assertThrows(ApiFailure::class.java) { curriculum.level(owner,"missing") }.code)
+        assertEquals(lesson.id,curriculum.get(owner).levels.first().units.first().lessons.first().id)
+        assertEquals(1,jdbc.queryForObject("select count(*) from review_log where user_id=?",Int::class.java,owner))
     }
 
     @Test fun `audio engine and Supertonic voice settings persist per user and reject invalid choices`() {
