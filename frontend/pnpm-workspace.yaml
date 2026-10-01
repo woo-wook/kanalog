@@ -1,0 +1,6 @@
+verifyDepsBeforeRun: false
+allowBuilds:
+  '@swc/core': false
+  msw: true
+  sharp: true
+  unrs-resolver: true

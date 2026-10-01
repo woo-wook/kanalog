@@ -1,0 +1,81 @@
+@import "tailwindcss";
+:root {
+  --background: #f7f7f4;
+  --foreground: #202a28;
+  --accent: #2e7167;
+  --border: #dce4df;
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  background: var(--background);
+}
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-pretendard), system-ui, sans-serif;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+:focus-visible {
+  outline: 3px solid #2e7167;
+  outline-offset: 2px;
+}
+.jp {
+  font-family:
+    "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  overflow-wrap: anywhere;
+}
+.surface {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 2px 12px #172f2110;
+}
+.field {
+  width: 100%;
+  border: 1px solid #b7c6bd;
+  background: white;
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  gap: 0.4rem;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  font-weight: 650;
+  background: #e8efeb;
+  color: #19352d;
+}
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.btn-danger {
+  background: #f8e7e4;
+  color: #903d33;
+}
+.muted {
+  color: #667770;
+}
+@media (max-width: 767px) {
+  .page-pad {
+    padding-bottom: 6rem;
+  }
+}

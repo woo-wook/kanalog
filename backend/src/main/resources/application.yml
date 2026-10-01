@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: kanalog
+  datasource:
+    url: ${RDB_HOST:jdbc:postgresql://localhost:5432/kanalog}
+    username: ${RDB_USER:kanalog}
+    password: ${RDB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  jackson:
+    default-property-inclusion: non_null
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: ${COOKIE_SECURE:false}
+app:
+  public-url: ${PUBLIC_APP_URL:http://localhost:8080}
+  media-root: ${MEDIA_ROOT:../private-data/media}
+  cookie-secure: ${COOKIE_SECURE:false}

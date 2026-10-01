@@ -1,0 +1,185 @@
+package com.kanalog
+
+import io.github.openspacedrepetition.Card
+import io.github.openspacedrepetition.Rating
+import io.github.openspacedrepetition.Scheduler
+import jakarta.servlet.http.HttpServletRequest
+import org.springframework.http.HttpStatus
+import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.bind.annotation.*
+import java.time.*
+import java.util.*
+
+data class DeckView(val id: UUID, val title: String, val level: String?, val kind: String,
+                    val totalCards: Int, val studiedCards: Int, val unseenCards: Int, val selected: Boolean)
+data class ExampleView(val japanese: String, val reading: String?, val korean: String?, val audioId: UUID?)
+data class CardView(val id: UUID, val version: Long, val kind: String, val front: String, val reading: String?,
+                    val meaning: String?, val example: String?, val exampleMeaning: String?,
+                    val explanation: String?, val partOfSpeech: String?, val hangulHint: String?, val audioId: UUID?, val exampleAudioId: UUID?,
+                    val due: Instant?, val examples: List<ExampleView> = emptyList())
+data class SessionRequest(val deckId: UUID)
+data class SessionView(val id: UUID, val cards: List<CardView>, val answered: Int)
+data class ReviewRequest(val sessionId: UUID, val cardId: UUID, val version: Long,
+                         val rating: String, val idempotencyKey: String)
+data class ReviewResult(val due: Instant, val version: Long, val state: String)
+
+@Service
+class FsrsAdapter {
+    // Pinned java-fsrs 1.0.0, deterministic scheduling for repeatable previews and tests.
+    private val scheduler = Scheduler.builder().enableFuzzing(false).build()
+    val version = "java-fsrs/1.0.0"
+    val settingsJson: String = scheduler.toJson()
+    fun review(json: String?, rating: String, now: Instant): Pair<String, Instant> {
+        val enumRating = try { Rating.valueOf(rating) } catch (_: Exception) { fail("BAD_RATING","평가를 확인하세요") }
+        val card = json?.let(Card::fromJson) ?: Card.builder().build()
+        val next = scheduler.reviewCard(card, enumRating, now).card()
+        return next.toJson() to next.due
+    }
+}
+
+@Service
+class StudyService(private val jdbc: JdbcTemplate, private val fsrs: FsrsAdapter) {
+    fun decks(userId: UUID): List<DeckView> = jdbc.query("""
+        select d.id,d.title,d.level,d.kind,d.selected,count(c.id)::int total,
+        count(s.first_seen_at)::int studied from deck d
+        left join card c on c.deck_id=d.id and c.active=true
+        left join user_card_state s on s.card_id=c.id and s.user_id=?
+        where d.owner_id=? and d.import_status='READY'
+        group by d.id order by d.level nulls last,d.source_path
+    """, { rs, _ -> val total=rs.getInt("total"); val studied=rs.getInt("studied")
+        DeckView(rs.getObject("id",UUID::class.java),rs.getString("title"),rs.getString("level"),
+            rs.getString("kind"),total,studied,total-studied,rs.getBoolean("selected")) },userId,userId)
+
+    @Transactional
+    fun select(userId: UUID, deckId: UUID) {
+        val exists = jdbc.queryForObject("select count(*) from deck where id=? and owner_id=? and import_status='READY'",
+            Int::class.java,deckId,userId) ?: 0
+        if (exists==0) fail("DECK_NOT_FOUND","덱을 찾을 수 없습니다",HttpStatus.NOT_FOUND)
+        jdbc.update("update deck set selected=false where owner_id=?",userId)
+        jdbc.update("update deck set selected=true where id=? and owner_id=?",deckId,userId)
+    }
+
+    @Transactional
+    fun start(userId: UUID, deckId: UUID): SessionView {
+        jdbc.queryForObject("select id from app_user where id=? for update",UUID::class.java,userId)
+        val deck = jdbc.queryForObject("select count(*) from deck where id=? and owner_id=? and import_status='READY'",
+            Int::class.java,deckId,userId) ?: 0
+        if(deck==0) fail("DECK_NOT_FOUND","덱을 찾을 수 없습니다",HttpStatus.NOT_FOUND)
+        val zone = zone(userId)
+        val today = LocalDate.now(zone)
+        val start = today.atStartOfDay(zone).toInstant()
+        val end = today.plusDays(1).atStartOfDay(zone).toInstant()
+        val limit = jdbc.queryForObject("select daily_new_limit from user_settings where user_id=?",Int::class.java,userId) ?: 10
+        val used = jdbc.queryForObject("""select count(*) from user_card_state where user_id=? and first_seen_at>=? and first_seen_at<?""",
+            Int::class.java,userId,java.sql.Timestamp.from(start),java.sql.Timestamp.from(end)) ?: 0
+        val dueIds = jdbc.query("""select c.id from card c join user_card_state s on s.card_id=c.id and s.user_id=?
+          where c.deck_id=? and c.owner_id=? and c.active=true and s.suspended=false
+          and s.first_seen_at is not null and s.due_at<=now() order by s.due_at limit 50""",
+          {rs,_->rs.getObject(1,UUID::class.java)},userId,deckId,userId)
+        val newIds = if(used < limit) jdbc.query("""select c.id from card c left join user_card_state s on s.card_id=c.id and s.user_id=?
+          where c.deck_id=? and c.owner_id=? and c.active=true and (s.id is null or (s.first_seen_at is null and s.suspended=false))
+          order by c.id limit ?""",{rs,_->rs.getObject(1,UUID::class.java)},userId,deckId,userId,limit-used) else emptyList()
+        val ids = (dueIds+newIds).distinct()
+        val sessionId = UUID.randomUUID()
+        jdbc.update("insert into study_session(id,user_id,deck_id,started_at) values(?,?,?,now())",sessionId,userId,deckId)
+        ids.forEachIndexed { index,id ->
+            jdbc.update("insert into session_card(session_id,card_id,position) values(?,?,?)",sessionId,id,index)
+            jdbc.update("""insert into user_card_state(id,user_id,card_id,version) values(?,?,?,0)
+               on conflict(user_id,card_id) do nothing""",UUID.randomUUID(),userId,id)
+        }
+        return SessionView(sessionId,ids.mapNotNull { card(userId,it) },0)
+    }
+
+    fun session(userId: UUID, sessionId: UUID): SessionView {
+        val owns = jdbc.queryForObject("select count(*) from study_session where id=? and user_id=?",Int::class.java,sessionId,userId) ?: 0
+        if(owns==0) fail("SESSION_NOT_FOUND","학습 세션을 찾을 수 없습니다",HttpStatus.NOT_FOUND)
+        val ids = jdbc.query("""select sc.card_id from session_card sc
+            join user_card_state s on s.card_id=sc.card_id and s.user_id=?
+            where sc.session_id=? and s.suspended=false and (s.first_seen_at is null or s.due_at<=now())
+            order by sc.position""",
+            {rs,_->rs.getObject(1,UUID::class.java)},userId,sessionId)
+        val answered = jdbc.queryForObject("select count(*) from review_log where session_id=? and user_id=?",
+            Int::class.java,sessionId,userId) ?: 0
+        return SessionView(sessionId,ids.mapNotNull{card(userId,it)},answered)
+    }
+
+    fun card(userId: UUID, cardId: UUID): CardView? {
+        val base = jdbc.query("""select c.id,n.kind,n.front,n.reading,n.meaning,n.example,n.example_meaning,
+          n.explanation,n.part_of_speech,n.hangul_hint,c.word_audio_id,c.example_audio_id,s.version,s.due_at
+          from card c join study_note n on n.id=c.note_id
+          left join user_card_state s on s.card_id=c.id and s.user_id=?
+          where c.id=? and c.owner_id=?""",{rs,_ -> CardView(rs.getObject("id",UUID::class.java),rs.getLong("version"),
+            rs.getString("kind"),rs.getString("front"),rs.getString("reading"),rs.getString("meaning"),
+            rs.getString("example"),rs.getString("example_meaning"),rs.getString("explanation"),rs.getString("part_of_speech"),
+            rs.getString("hangul_hint"),rs.getObject("word_audio_id",UUID::class.java),
+            rs.getObject("example_audio_id",UUID::class.java),rs.getTimestamp("due_at")?.toInstant())},
+            userId,cardId,userId).firstOrNull() ?: return null
+        val examples = jdbc.query("""select e.japanese,e.reading,e.korean,e.audio_id from note_example e
+            join card c on c.note_id=e.note_id where c.id=? and c.owner_id=? and e.owner_id=?
+            order by e.ordinal""", {rs,_ -> ExampleView(rs.getString(1),rs.getString(2),rs.getString(3),
+            rs.getObject(4,UUID::class.java))},cardId,userId,userId)
+        return base.copy(examples=examples)
+    }
+
+    @Transactional
+    fun review(userId: UUID, req: ReviewRequest): ReviewResult {
+        if(req.idempotencyKey.length !in 8..100) fail("BAD_KEY","요청 키를 확인하세요")
+        val digest=sha256("${req.sessionId}|${req.cardId}|${req.version}|${req.rating}")
+        // Serialize all of this user's first reviews. Locking only the card allows
+        // two tabs to review different new cards past the daily limit.
+        jdbc.queryForObject("select id from app_user where id=? for update",UUID::class.java,userId)
+        val prior=jdbc.query("select request_hash,next_state,next_version from review_log where user_id=? and idempotency_key=?",
+            {rs,_->Triple(rs.getString(1),rs.getString(2),rs.getLong(3))},userId,req.idempotencyKey).firstOrNull()
+        if(prior!=null) {
+            if(prior.first!=digest) fail("IDEMPOTENCY_CONFLICT","이미 다른 답변에 사용된 요청 키입니다",HttpStatus.CONFLICT)
+            val due=Card.fromJson(prior.second).due
+            return ReviewResult(due,prior.third,"SAVED")
+        }
+        val inSession=jdbc.queryForObject("""select count(*) from session_card sc join study_session ss on ss.id=sc.session_id
+            where ss.id=? and ss.user_id=? and sc.card_id=?""",Int::class.java,req.sessionId,userId,req.cardId) ?: 0
+        if(inSession==0) fail("CARD_NOT_IN_SESSION","세션 카드를 찾을 수 없습니다",HttpStatus.NOT_FOUND)
+        val state=jdbc.query("""select id,fsrs_json,version,first_seen_at,due_at from user_card_state
+            where user_id=? and card_id=? for update""",{rs,_->StateRow(rs.getObject(1,UUID::class.java),rs.getString(2),
+                rs.getLong(3),rs.getTimestamp(4)?.toInstant(),rs.getTimestamp(5)?.toInstant())},userId,req.cardId).firstOrNull()
+            ?: fail("CARD_STATE_MISSING","카드 상태를 다시 불러오세요",HttpStatus.CONFLICT)
+        if(state.version!=req.version) fail("STALE_CARD","다른 기기에서 변경된 카드입니다. 새로 불러오세요",HttpStatus.CONFLICT)
+        if(state.firstSeen!=null && (state.dueAt==null || state.dueAt.isAfter(Instant.now())))
+            fail("CARD_NOT_DUE","아직 복습 시각이 되지 않았습니다",HttpStatus.CONFLICT)
+        if(state.firstSeen==null) {
+            val zone=zone(userId);val day=LocalDate.now(zone)
+            val begin=day.atStartOfDay(zone).toInstant();val end=day.plusDays(1).atStartOfDay(zone).toInstant()
+            val limit=jdbc.queryForObject("select daily_new_limit from user_settings where user_id=?",Int::class.java,userId)?:10
+            val used=jdbc.queryForObject("select count(*) from user_card_state where user_id=? and first_seen_at>=? and first_seen_at<?",
+                Int::class.java,userId,java.sql.Timestamp.from(begin),java.sql.Timestamp.from(end))?:0
+            if(used>=limit) fail("NEW_LIMIT","오늘 새 카드 한도에 도달했습니다",HttpStatus.CONFLICT)
+        }
+        val now=Instant.now()
+        val (nextJson,due)=fsrs.review(state.json,req.rating,now)
+        jdbc.update("""update user_card_state set fsrs_json=?,due_at=?,last_reviewed_at=?,
+             first_seen_at=coalesce(first_seen_at,?),version=version+1 where id=?""",
+            nextJson,java.sql.Timestamp.from(due),java.sql.Timestamp.from(now),java.sql.Timestamp.from(now),state.id)
+        jdbc.update("""insert into review_log(id,user_id,card_id,session_id,rating,reviewed_at,previous_state,next_state,
+             previous_version,next_version,idempotency_key,request_hash,scheduler_version,scheduler_settings)
+             values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            UUID.randomUUID(),userId,req.cardId,req.sessionId,req.rating,java.sql.Timestamp.from(now),
+            state.json,nextJson,state.version,state.version+1,req.idempotencyKey,digest,fsrs.version,fsrs.settingsJson)
+        return ReviewResult(due,state.version+1,"SAVED")
+    }
+    data class StateRow(val id: UUID,val json: String?,val version: Long,val firstSeen: Instant?,val dueAt: Instant?)
+    fun zone(userId:UUID): ZoneId = try {
+        ZoneId.of(jdbc.queryForObject("select timezone from app_user where id=?",String::class.java,userId) ?: "Asia/Seoul")
+    } catch (_:Exception){ ZoneId.of("Asia/Seoul") }
+}
+
+@RestController
+class StudyController(private val service: StudyService) {
+    @GetMapping("/api/decks") fun decks(request:HttpServletRequest)=service.decks(request.user().id)
+    @GetMapping("/api/decks/{id}") fun deck(@PathVariable id:UUID,request:HttpServletRequest)=
+        service.decks(request.user().id).find{it.id==id} ?: fail("DECK_NOT_FOUND","덱을 찾을 수 없습니다",HttpStatus.NOT_FOUND)
+    @PostMapping("/api/decks/{id}/select") fun select(@PathVariable id:UUID,request:HttpServletRequest)=service.select(request.user().id,id)
+    @PostMapping("/api/study/sessions") fun start(@RequestBody body:SessionRequest,request:HttpServletRequest)=service.start(request.user().id,body.deckId)
+    @GetMapping("/api/study/sessions/{id}") fun session(@PathVariable id:UUID,request:HttpServletRequest)=service.session(request.user().id,id)
+    @PostMapping("/api/study/reviews") fun review(@RequestBody body:ReviewRequest,request:HttpServletRequest)=service.review(request.user().id,body)
+}

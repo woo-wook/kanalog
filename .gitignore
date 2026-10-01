@@ -49,6 +49,7 @@ Desktop.ini
 .env
 .env.local
 *.local
+!.env.example
 
 ### Japanese study private content ###
 private-data/
@@ -63,3 +64,8 @@ private-data/
 frontend/node_modules/
 frontend/.next/
 frontend/test-results/
+frontend/tsconfig.tsbuildinfo
+
+### Python ###
+__pycache__/
+*.py[cod]

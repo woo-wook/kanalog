@@ -1,0 +1,66 @@
+# HTTP API
+
+모든 업무 응답은 Kotlin 서버의 JSON이다. ID는 UUID 문자열, 시각은 UTC ISO 8601 문자열이다. 브라우저는 같은 출처의 `/api`로 요청한다. 로그인 후 `GET /api/me`의 `csrfToken`을 상태 변경 요청의 `X-CSRF-Token` 헤더에 보낸다. 쿠키는 HttpOnly이므로 JavaScript가 읽지 않는다.
+
+## 계정과 조회
+
+| 메서드 | 경로 | 주요 응답 |
+| --- | --- | --- |
+| POST | `/api/auth/login` | `{id,email,csrfToken}` 및 세션 쿠키 |
+| POST | `/api/auth/logout` | 세션 삭제 및 쿠키 만료 |
+| GET | `/api/me` | `{id,email,csrfToken}` |
+| GET | `/api/dashboard` | `{dueCount,newRemaining,studiedCardsToday,answersToday,streak,selectedDeckId}` |
+| GET | `/api/decks` | `{id,title,level,kind,totalCards,studiedCards,unseenCards,selected}[]` |
+| GET | `/api/decks/{id}` | 덱 상세 |
+| POST | `/api/decks/{id}/select` | 선택한 덱 변경 |
+| GET | `/api/settings` | 저장된 학습 설정 |
+| PATCH | `/api/settings` | 저장된 학습 설정 |
+| GET | `/api/stats` | 7일·30일 답변과 고유 카드, 덱별 진행 |
+
+`POST /api/auth/login` 본문은 `{"email":"...","password":"..."}`이다. 공개 회원가입 API는 없다. 설정은 `dailyNewLimit`, `showReadingHint`, `showHangulHint`, `autoPlayAudio`, `allowAudioBeforeReveal`, `ttsFallback`, `playbackSpeed`, `preferredVoice`, `timezone`을 사용한다. 새 카드 한도 단위는 카드다. 저장된 선호 음성이 현재 기기에 없으면 사용 가능한 일본어 음성으로 돌아간다.
+
+## 학습
+
+`POST /api/study/sessions` 본문은 `{"deckId":"UUID"}`다. 응답은 `{id,cards,answered}`이며 각 카드는 `id`, `version`, `kind`, `front`, `reading`, `meaning`, `example`, `exampleMeaning`, `examples`, `explanation`, `hangulHint`, `audioId`, `exampleAudioId`, `due`를 가진다. `examples`는 순서대로 `{japanese,reading,korean,audioId}`를 담는다. 선택한 덱의 복습 예정 카드를 먼저 담는다. `GET /api/study/sessions/{id}`는 저장된 세션에서 지금 학습 가능한 카드를 다시 조회한다.
+
+`POST /api/study/reviews` 예시:
+
+```json
+{
+  "sessionId": "SESSION_UUID",
+  "cardId": "CARD_UUID",
+  "version": 0,
+  "rating": "GOOD",
+  "idempotencyKey": "CLIENT_GENERATED_UUID"
+}
+```
+
+`rating`은 `AGAIN`, `HARD`, `GOOD`, `EASY` 중 하나다. 응답은 `{due,version,state}`이다. 같은 사용자·키·동일 요청을 다시 보내면 이전 성공 결과를 돌려준다. 같은 키로 다른 내용을 보내거나 다른 탭에서 갱신된 `version`을 제출하면 409다. 이미 답한 카드를 실제 복습 시각 전에 새 키로 다시 평가해도 `CARD_NOT_DUE` 409다. 클라이언트는 저장 성공 후에만 다음 카드로 이동한다.
+
+## 개인 콘텐츠와 운영
+
+| 메서드 | 경로 | 설명 |
+| --- | --- | --- |
+| GET | `/api/notes?query=&page=0&size=20` | 표기·읽기·뜻 검색 |
+| POST | `/api/notes` | 개인 단어 등록 |
+| PATCH | `/api/notes/{id}` | 개인 단어 수정·메모·북마크·학습 제외 |
+| GET | `/api/imports` | 내 import 작업 목록, 최근 100건 |
+| GET | `/api/imports/{id}` | 내 import 결과 `{id,fileName,status,startedAt,finishedAt,reportJson,errorMessage}` |
+| GET | `/api/media/{id}` | 소유권 확인 후 음성 제공, Range 지원 |
+| GET | `/api/health/live` | 프로세스 상태 |
+| GET | `/api/health/ready` | DB 준비 상태 |
+
+웹 APKG 업로드 API는 제공하지 않는다. 대형 파일은 로컬 변환 후 Kotlin CLI로 가져온다.
+
+## 오류
+
+오류 응답은 `{code,message,requestId}`이며 검증 오류에는 필요할 때 `fieldErrors`가 추가된다. 401은 로그인 필요, 403은 CSRF·Origin 또는 권한 실패, 404는 사용자 범위에서 없는 리소스, 409는 중복 키의 다른 내용 또는 오래된 카드 상태다. 서버 내부 예외는 사용자에게 스택 트레이스를 반환하지 않는다.
+
+## 통계 정의
+
+- 오늘의 시작·끝, 7일·30일 범위와 연속 학습일은 사용자 `timezone`의 자정을 기준으로 한다. 시간대 변경은 과거 UTC 로그를 새 시간대로 다시 묶어 즉시 적용한다.
+- 답변 횟수는 범위 안의 `review_log` 행 수다. 고유 카드는 같은 범위 안에서 답변한 서로 다른 카드 ID 수다.
+- 한 번 이상 학습한 카드는 `user_card_state.first_seen_at`이 있는 활성 카드다. 이는 암기 완료를 뜻하지 않는다.
+- 복습 예정 수는 활성·비제외 카드 중 `due_at <= 현재 서버 시각`인 수다. 홈은 선택한 덱에 한정하고 전체 통계는 내 모든 준비된 덱을 센다.
+- 오늘 남은 새 카드는 선택한 덱의 미학습 카드 수와 `dailyNewLimit - 오늘 처음 학습한 카드 수` 중 작은 값이다.
+- 연속 학습일은 오늘 학습 기록이 있으면 오늘부터, 없으면 어제부터 하루씩 거슬러 올라간 날 수다.

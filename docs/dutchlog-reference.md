@@ -14,7 +14,7 @@
 | DB와 스키마 | `../dutchlog/backend/src/main/resources/application.yml`, `../dutchlog/backend/src/main/resources/db/ddl.sql`, `../dutchlog/backend/src/main/resources/db/migrate_phase5_household.sql` 등 | PostgreSQL, Spring Data JPA, `open-in-view: false`, Hibernate `ddl-auto: none`. Dutchlog의 SQL 파일은 수동 적용 방식이며 Flyway/Liquibase 의존성이 없다. 이번 앱은 별도 PostgreSQL과 반복 가능한 버전 마이그레이션을 사용한다. |
 | 테스트 | `../dutchlog/backend/src/test/kotlin/com/dutchlog/backend/auth/AuthIntegrationTest.kt`, `../dutchlog/backend/src/test/kotlin/com/dutchlog/backend/common/security/JwtSecurityIntegrationTest.kt`, `../dutchlog/frontend/vitest.config.ts`, `../dutchlog/frontend/playwright.config.ts` | 백엔드는 JUnit Platform, Kotest, MockK, H2 테스트 의존성. 프런트는 Vitest와 Playwright. 이번 앱은 학습 상태와 DB 제약의 실제 위험을 검증할 때 PostgreSQL 기준을 우선한다. |
 | 프런트엔드 | `../dutchlog/frontend/package.json`, `pnpm-lock.yaml`, `app/`, `src/`, `next.config.ts`, `Dockerfile` | Next.js 16 App Router, React 19, TypeScript, pnpm, Tailwind 4, TanStack Query, Feature-Sliced Design, standalone 배포. FE는 화면과 API 클라이언트를 맡고 학습 업무 규칙은 Kotlin BE에서 확정한다. |
-| 배포 | `../dutchlog/backend/Dockerfile`, `../dutchlog/frontend/Dockerfile` | BE는 Temurin 21 다단계 빌드, FE는 Node 22 Alpine standalone. 저장소 루트에 Compose 파일은 확인되지 않았다. 이번 앱은 독립 DB, 미디어 볼륨, 포트와 Compose를 별도로 만든다. |
+| 배포 | `../dutchlog/backend/Dockerfile`, `../dutchlog/frontend/Dockerfile`, `../dutchlog/frontend/.env.example` | BE는 Temurin 21 다단계 빌드, FE는 Node 22 Alpine standalone. 저장소 루트에 Compose 파일은 확인되지 않았다. Dutchlog FE의 기본 개발 포트는 3000이므로 이번 앱의 호스트 포트는 3200으로 분리했다. 독립 DB와 미디어 볼륨, Compose를 사용한다. |
 
 ## 복사한 기본 파일
 
