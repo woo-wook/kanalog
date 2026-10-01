@@ -71,6 +71,42 @@ test("로그아웃하면 보호 화면과 API에 접근할 수 없다", async ({
   expect((await page.request.get("/api/me")).status()).toBe(401);
 });
 
+test("MAX 음성은 로그인한 사용자에게만 오디오 스트림으로 제공된다", async ({
+  page,
+}) => {
+  await login(page);
+  await page.goto("/decks");
+  const n5Vocabulary = page
+    .locator("article")
+    .filter({ hasText: /N5\s*·\s*어휘/ })
+    .first();
+  await expect(n5Vocabulary).toBeVisible();
+  const select = n5Vocabulary.getByRole("button", { name: "이 덱 선택" });
+  if (await select.isVisible()) await select.click();
+  await n5Vocabulary.getByRole("link", { name: "학습" }).click();
+  const audioResponse = page.waitForResponse(
+    (response) =>
+      response.url().includes("/api/media/") &&
+      [200, 206].includes(response.status()),
+  );
+  await page.getByRole("button", { name: "단어 발음 듣기" }).click();
+  const response = await audioResponse;
+  expect(response.headers()["content-type"]).toContain("audio/mpeg");
+  expect((await response.body()).byteLength).toBeGreaterThan(0);
+  const audioUrl = response.url();
+  const logoutResponse = page.waitForResponse(
+    (result) => result.url().endsWith("/api/auth/logout"),
+  );
+  await page.getByRole("button", { name: "로그아웃" }).click();
+  expect((await logoutResponse).status()).toBe(200);
+  expect(
+    await page.evaluate(async () => (await fetch("/api/me")).status),
+  ).toBe(401);
+  expect(
+    await page.evaluate(async (url) => (await fetch(url)).status, audioUrl),
+  ).toBe(401);
+});
+
 test("가나와 한글 발음 설정이 재로그인 뒤 유지된다", async ({ page }) => {
   await login(page);
   await page.goto("/settings");
