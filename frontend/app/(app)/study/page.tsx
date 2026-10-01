@@ -37,6 +37,7 @@ function StudyContent() {
     [saving, setSaving] = useState(false),
     [error, setError] = useState<unknown>(null),
     [audioMessage, setAudioMessage] = useState(""),
+    [audioUrl, setAudioUrl] = useState(""),
     [retry, setRetry] = useState<{ rating: Rating; key: string } | null>(null),
     [uniqueCards, setUniqueCards] = useState<string[]>([]),
     [nextDue, setNextDue] = useState<string | null>(null),
@@ -67,20 +68,33 @@ function StudyContent() {
   }, []);
   useEffect(() => () => stopAudio(), [stopAudio]);
   const play = useCallback(
-    (item: StudyCard, example?: { audioId?: string | null; japanese?: string | null }) => {
+    (
+      item: StudyCard,
+      example?: { audioId?: string | null; japanese?: string | null },
+    ) => {
       stopAudio();
       setAudioMessage("");
       const id = example ? example.audioId : item.audioId;
       const text = example ? example.japanese : item.front;
       if (id) {
-        const player = new Audio(`/api/media/${id}`);
+        const player = audio.current;
+        if (!player) return;
+        const url = `/api/media/${id}`;
+        player.src = url;
+        player.muted = false;
+        player.volume = 1;
         player.playbackRate = settings.data?.playbackSpeed ?? 1;
-        audio.current = player;
-        player
-          .play()
-          .catch(() =>
-            setAudioMessage("음성을 재생할 수 없습니다. 파일을 확인해 주세요."),
+        setAudioUrl(url);
+        setAudioMessage("음성을 불러오는 중…");
+        player.play().catch((reason: unknown) => {
+          if (reason instanceof DOMException && reason.name === "AbortError")
+            return;
+          setAudioMessage(
+            reason instanceof DOMException && reason.name === "NotAllowedError"
+              ? "브라우저가 자동재생을 막았습니다. 듣기 버튼이나 아래 재생 버튼을 눌러 주세요."
+              : "음성을 재생하지 못했습니다. 로그인 상태와 네트워크를 확인하고 다시 눌러 주세요.",
           );
+        });
         return;
       }
       if (
@@ -92,19 +106,28 @@ function StudyContent() {
         return;
       }
       const voices = window.speechSynthesis.getVoices();
-      const japaneseVoices = voices.filter((v) => v.lang.toLowerCase().startsWith("ja"));
-      const voice = japaneseVoices.find((v) => v.voiceURI === settings.data?.preferredVoice)
-        ?? japaneseVoices[0];
+      const japaneseVoices = voices.filter((v) =>
+        v.lang.toLowerCase().startsWith("ja"),
+      );
+      const voice =
+        japaneseVoices.find(
+          (v) => v.voiceURI === settings.data?.preferredVoice,
+        ) ?? japaneseVoices[0];
       if (!voice) {
         if (voices.length === 0) {
-          setAudioMessage("음성 목록을 불러오는 중입니다. 잠시 후 다시 눌러 주세요.");
+          setAudioMessage(
+            "음성 목록을 불러오는 중입니다. 잠시 후 다시 눌러 주세요.",
+          );
           window.speechSynthesis.addEventListener(
             "voiceschanged",
-            () => setAudioMessage("음성 목록이 준비되었습니다. 다시 눌러 주세요."),
+            () =>
+              setAudioMessage("음성 목록이 준비되었습니다. 다시 눌러 주세요."),
             { once: true },
           );
         } else {
-          setAudioMessage("이 기기에는 일본어 음성이 없습니다. 원본 음성이 있는 카드를 이용해 주세요.");
+          setAudioMessage(
+            "이 기기에는 일본어 음성이 없습니다. 원본 음성이 있는 카드를 이용해 주세요.",
+          );
         }
         return;
       }
@@ -112,6 +135,12 @@ function StudyContent() {
       utterance.voice = voice;
       utterance.lang = "ja-JP";
       utterance.rate = settings.data.playbackSpeed;
+      utterance.onstart = () => setAudioMessage("기기 일본어 음성 재생 중");
+      utterance.onend = () => setAudioMessage("재생 완료");
+      utterance.onerror = (event) => {
+        if (event.error !== "canceled" && event.error !== "interrupted")
+          setAudioMessage("기기 음성을 재생하지 못했습니다. 다시 눌러 주세요.");
+      };
       window.speechSynthesis.speak(utterance);
     },
     [settings.data, stopAudio],
@@ -154,11 +183,15 @@ function StudyContent() {
           ...previous,
           [rating]: previous[rating] + 1,
         }));
-        setUniqueCards((previous) => previous.includes(card.id) ? previous : [...previous, card.id]);
+        setUniqueCards((previous) =>
+          previous.includes(card.id) ? previous : [...previous, card.id],
+        );
         setNextDue(result.due);
         setIndex((previous) => previous + 1);
         setRevealed(false);
         setHint(false);
+        setAudioUrl("");
+        setAudioMessage("");
         setRetry(null);
         stopAudio();
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -213,7 +246,9 @@ function StudyContent() {
       setRefreshing(true);
       setError(null);
       try {
-        const current = await api<StudySession>(`/study/sessions/${session.id}`);
+        const current = await api<StudySession>(
+          `/study/sessions/${session.id}`,
+        );
         setSession(current);
         setIndex(0);
       } catch (e) {
@@ -237,13 +272,22 @@ function StudyContent() {
           ))}
         </div>
         <p className="muted mt-5 text-sm">
-          다시 평가한 카드는 복습 시각이 되면 같은 세션에서 이어서 학습할 수 있습니다.
+          다시 평가한 카드는 복습 시각이 되면 같은 세션에서 이어서 학습할 수
+          있습니다.
         </p>
-        {nextDue && <p className="muted mt-2 text-sm">최근 카드의 다음 복습: {new Date(nextDue).toLocaleString("ko-KR")}</p>}
+        {nextDue && (
+          <p className="muted mt-2 text-sm">
+            최근 카드의 다음 복습: {new Date(nextDue).toLocaleString("ko-KR")}
+          </p>
+        )}
         <button className="btn mt-5" onClick={refreshDue} disabled={refreshing}>
           {refreshing ? "확인 중…" : "복습할 카드 다시 확인"}
         </button>
-        {error !== null && <p role="alert" className="mt-3 text-sm text-[#993d36]">복습 카드를 불러오지 못했습니다. 다시 눌러 주세요.</p>}
+        {error !== null && (
+          <p role="alert" className="mt-3 text-sm text-[#993d36]">
+            복습 카드를 불러오지 못했습니다. 다시 눌러 주세요.
+          </p>
+        )}
         <div className="mt-6 flex justify-center gap-3">
           <Link className="btn btn-primary" href="/">
             홈으로
@@ -257,13 +301,23 @@ function StudyContent() {
   }
   const canHearBefore = revealed || settings.data?.allowAudioBeforeReveal;
   const hasSound = Boolean(card.audioId || settings.data?.ttsFallback);
-  const examples = card.examples?.length ? card.examples : card.example
-    ? [{ japanese: card.example, korean: card.exampleMeaning, audioId: card.exampleAudioId }]
-    : [];
+  const examples = card.examples?.length
+    ? card.examples
+    : card.example
+      ? [
+          {
+            japanese: card.example,
+            korean: card.exampleMeaning,
+            audioId: card.exampleAudioId,
+          },
+        ]
+      : [];
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-5 flex items-center justify-between text-sm muted">
-        <span>{card.kind.toLowerCase() === "grammar" ? "문법 회상" : "어휘 인식"}</span>
+        <span>
+          {card.kind.toLowerCase() === "grammar" ? "문법 회상" : "어휘 인식"}
+        </span>
         <span>
           {index + 1} / {session.cards.length}
         </span>
@@ -312,6 +366,20 @@ function StudyContent() {
             {audioMessage}
           </p>
         )}
+        <audio
+          ref={audio}
+          controls
+          preload="none"
+          aria-label="현재 발음 오디오"
+          className={audioUrl ? "mx-auto mt-3 w-full max-w-sm" : "hidden"}
+          onPlaying={() => setAudioMessage("재생 중 · 원본 음성")}
+          onEnded={() => setAudioMessage("재생 완료")}
+          onError={() =>
+            setAudioMessage(
+              "원본 음성을 불러오지 못했습니다. 로그인 상태와 네트워크를 확인해 주세요.",
+            )
+          }
+        />
         {revealed && (
           <div className="mt-8 border-t border-[#dce4df] pt-6">
             <h2 className="text-2xl font-bold">
@@ -321,12 +389,17 @@ function StudyContent() {
               <p className="muted mt-2 text-sm">품사: {card.partOfSpeech}</p>
             )}
             {examples.map((example, exampleIndex) => (
-              <div key={exampleIndex} className="mt-5 rounded-xl bg-[#f4f7f4] p-4">
+              <div
+                key={exampleIndex}
+                className="mt-5 rounded-xl bg-[#f4f7f4] p-4"
+              >
                 <p className="jp text-lg">{example.japanese}</p>
                 {"reading" in example && example.reading && (
                   <p className="jp muted mt-2">{example.reading}</p>
                 )}
-                {example.korean && <p className="muted mt-2">{example.korean}</p>}
+                {example.korean && (
+                  <p className="muted mt-2">{example.korean}</p>
+                )}
                 {example.audioId && (
                   <button
                     className="mt-3 text-sm font-semibold text-[#2e7167]"

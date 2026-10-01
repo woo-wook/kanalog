@@ -37,6 +37,7 @@ async function proxy(request: Request, { params }: Context): Promise<Response> {
     for (const name of [
       "content-type",
       "content-range",
+      "content-length",
       "accept-ranges",
       "set-cookie",
       "cache-control",
