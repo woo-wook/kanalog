@@ -22,7 +22,7 @@ class PersistenceFlowTest @Autowired constructor(
     private val importer:MaxImportService,private val auth:AuthService,private val courses:CourseService,private val overview:OverviewService
 ) {
     companion object {
-        @Container @JvmField val postgres=PostgreSQLContainer("postgres:17-alpine")
+        @Container @JvmField val postgres=PostgreSQLContainer("postgres:16-alpine")
         private val mediaRoot=Files.createTempDirectory("kanalog-test-media-")
         @DynamicPropertySource @JvmStatic fun properties(registry:DynamicPropertyRegistry) {
             registry.add("spring.datasource.url") { postgres.jdbcUrl }
@@ -39,6 +39,28 @@ class PersistenceFlowTest @Autowired constructor(
         return id
     }
 
+    @Test fun `audio engine and Supertonic voice settings persist per user and reject invalid choices`() {
+        val owner=user();val other=user()
+        assertEquals("SUPERTONIC",overview.settings(owner).audioEngine)
+        assertEquals("F1",overview.settings(owner).supertonicVoice)
+        overview.patch(owner,SettingsPatch(audioEngine="ORIGINAL",supertonicVoice="M5",preferredVoice="device-ja-JP"))
+        assertEquals("ORIGINAL",overview.settings(owner).audioEngine)
+        assertEquals("M5",overview.settings(owner).supertonicVoice)
+        assertEquals("device-ja-JP",overview.settings(owner).preferredVoice)
+        assertEquals("SUPERTONIC",overview.settings(other).audioEngine)
+        assertEquals("BAD_AUDIO_ENGINE",assertThrows(ApiFailure::class.java) {
+            overview.patch(owner,SettingsPatch(audioEngine="UNKNOWN"))
+        }.code)
+        assertEquals("BAD_SUPERTONIC_VOICE",assertThrows(ApiFailure::class.java) {
+            overview.patch(owner,SettingsPatch(supertonicVoice="F6"))
+        }.code)
+        assertEquals("ORIGINAL",overview.settings(owner).audioEngine)
+        assertEquals("M5",overview.settings(owner).supertonicVoice)
+        overview.patch(owner,SettingsPatch(audioEngine="DEVICE"))
+        assertEquals("DEVICE",overview.settings(owner).audioEngine)
+        assertEquals("device-ja-JP",overview.settings(owner).preferredVoice)
+    }
+
     @Test fun `kana courses start with ordered katakana and preserve practice on synchronization`() {
         val owner=user(); val other=user()
         courses.synchronize(owner)
@@ -50,11 +72,13 @@ class PersistenceFlowTest @Autowired constructor(
         courses.select(owner,lesson.id)
         assertEquals(lesson.id,overview.dashboard(owner).activeLessonId)
         assertEquals(5,overview.dashboard(owner).newRemaining)
+        assertEquals(10,overview.dashboard(owner).dailyNewRemaining)
         val session=study.start(owner,lessonId=lesson.id)
         assertEquals(listOf("ア","イ","ウ","エ","オ"),session.cards.map { it.front })
         val card=session.cards.first()
         val request=ReviewRequest(session.id,card.id,card.version,"GOOD",UUID.randomUUID().toString())
         study.review(owner,request)
+        assertEquals(9,overview.dashboard(owner).dailyNewRemaining)
         courses.synchronize(owner)
         study.review(owner,request)
         assertEquals(1,courses.list(owner).first().lessons.first().completedCards)
@@ -63,6 +87,23 @@ class PersistenceFlowTest @Autowired constructor(
             study.start(other,lessonId=lesson.id)
         }.code)
         assertEquals("LESSON_NOT_FOUND",assertThrows(ApiFailure::class.java) { courses.select(other,lesson.id) }.code)
+        val excluded=session.cards.last()
+        jdbc.update("update user_card_state set suspended=true where user_id=? and card_id=?",owner,excluded.id)
+        assertEquals(4,courses.get(owner,all.first().id).lessons.first().totalCards)
+        session.cards.drop(1).dropLast(1).forEach { remaining ->
+            study.review(owner,ReviewRequest(session.id,remaining.id,remaining.version,"GOOD",UUID.randomUUID().toString()))
+        }
+        assertTrue(courses.get(owner,all.first().id).lessons.first().completed)
+        assertEquals(all.first().lessons[1].id,courses.get(owner,all.first().id).recommendedLessonId)
+        jdbc.update("""insert into user_card_state(id,user_id,card_id,suspended)
+            select gen_random_uuid(),?,lc.card_id,true from lesson_card lc join course_lesson l on l.id=lc.lesson_id
+            where l.course_id=? on conflict(user_id,card_id) do update set suspended=true""",owner,all.first().id)
+        val suspended=courses.get(owner,all.first().id)
+        assertEquals(0,suspended.totalCards)
+        assertEquals(0,suspended.studiedCards)
+        assertEquals(0,suspended.completedCards)
+        assertEquals(null,suspended.recommendedLessonId)
+        assertTrue(study.start(owner,lessonId=lesson.id).cards.isEmpty())
     }
 
     @Test fun `MAX courses chunk source note order while preserving existing reviews on import retry`() {

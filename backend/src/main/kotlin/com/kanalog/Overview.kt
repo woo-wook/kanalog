@@ -18,17 +18,18 @@ import java.util.UUID
 data class SettingsView(
     val dailyNewLimit: Int, val showReadingHint: Boolean, val showHangulHint: Boolean,
     val autoPlayAudio: Boolean, val allowAudioBeforeReveal: Boolean, val ttsFallback: Boolean,
-    val playbackSpeed: Double, val timezone: String, val preferredVoice: String?
+    val playbackSpeed: Double, val timezone: String, val preferredVoice: String?,
+    val audioEngine: String, val supertonicVoice: String
 )
 data class SettingsPatch(
     @field:Min(0) @field:Max(100) val dailyNewLimit: Int? = null,
     val showReadingHint: Boolean? = null, val showHangulHint: Boolean? = null,
     val autoPlayAudio: Boolean? = null, val allowAudioBeforeReveal: Boolean? = null,
     val ttsFallback: Boolean? = null, val playbackSpeed: Double? = null, val timezone: String? = null,
-    val preferredVoice: String? = null
+    val preferredVoice: String? = null, val audioEngine: String? = null, val supertonicVoice: String? = null
 )
 data class DashboardView(val dueCount: Int, val newRemaining: Int, val studiedCardsToday: Int,
-                         val answersToday: Int, val streak: Int, val selectedDeckId: UUID?, val activeLessonId: UUID? = null, val activeLessonTitle: String? = null)
+                         val answersToday: Int, val streak: Int, val selectedDeckId: UUID?, val activeLessonId: UUID? = null, val activeLessonTitle: String? = null, val dailyNewRemaining: Int = 0)
 data class DeckProgress(val deckId: UUID, val title: String, val totalCards: Int, val studiedCards: Int)
 data class StatsView(val answers7Days: Int, val uniqueCards7Days: Int, val answers30Days: Int,
                      val uniqueCards30Days: Int, val learnedCards: Int, val unseenCards: Int,
@@ -46,7 +47,7 @@ class OverviewService(private val jdbc: JdbcTemplate, private val study: StudySe
         rs.getInt("daily_new_limit"),rs.getBoolean("show_reading_hint"),rs.getBoolean("show_hangul_hint"),
         rs.getBoolean("auto_play_audio"),rs.getBoolean("allow_audio_before_reveal"),
         rs.getBoolean("tts_fallback"),rs.getDouble("playback_speed"),rs.getString("timezone"),
-        rs.getString("preferred_voice")) }, user).firstOrNull()
+        rs.getString("preferred_voice"),rs.getString("audio_engine"),rs.getString("supertonic_voice")) }, user).firstOrNull()
         ?: fail("SETTINGS_MISSING", "설정을 찾을 수 없습니다", HttpStatus.NOT_FOUND)
 
     @Transactional
@@ -54,14 +55,20 @@ class OverviewService(private val jdbc: JdbcTemplate, private val study: StudySe
         val old = settings(user)
         val speed = patch.playbackSpeed ?: old.playbackSpeed
         if (speed < 0.5 || speed > 2.0) fail("BAD_SETTING", "재생 속도는 0.5~2 사이여야 합니다")
+        val audioEngine = patch.audioEngine ?: old.audioEngine
+        if(audioEngine !in setOf("SUPERTONIC","ORIGINAL","DEVICE"))
+            fail("BAD_AUDIO_ENGINE", "음성 재생 방식을 확인하세요")
+        val supertonicVoice = patch.supertonicVoice ?: old.supertonicVoice
+        if(supertonicVoice !in setOf("F1","F2","F3","F4","F5","M1","M2","M3","M4","M5"))
+            fail("BAD_SUPERTONIC_VOICE", "Supertonic 음성을 확인하세요")
         val zone = patch.timezone ?: old.timezone
         try { ZoneId.of(zone) } catch (_: Exception) { fail("BAD_TIMEZONE", "시간대를 확인하세요") }
         jdbc.update("""update user_settings set daily_new_limit=?,show_reading_hint=?,show_hangul_hint=?,
-            auto_play_audio=?,allow_audio_before_reveal=?,tts_fallback=?,playback_speed=?,preferred_voice=? where user_id=?""",
+            auto_play_audio=?,allow_audio_before_reveal=?,tts_fallback=?,playback_speed=?,preferred_voice=?,audio_engine=?,supertonic_voice=? where user_id=?""",
             patch.dailyNewLimit ?: old.dailyNewLimit, patch.showReadingHint ?: old.showReadingHint,
             patch.showHangulHint ?: old.showHangulHint, patch.autoPlayAudio ?: old.autoPlayAudio,
             patch.allowAudioBeforeReveal ?: old.allowAudioBeforeReveal, patch.ttsFallback ?: old.ttsFallback,
-            speed, (if (patch.preferredVoice == null) old.preferredVoice else patch.preferredVoice.takeIf { it.isNotBlank() })?.take(200), user)
+            speed, (if (patch.preferredVoice == null) old.preferredVoice else patch.preferredVoice.takeIf { it.isNotBlank() })?.take(200), audioEngine, supertonicVoice, user)
         jdbc.update("update app_user set timezone=? where id=?", zone, user)
         return settings(user)
     }
@@ -88,7 +95,7 @@ class OverviewService(private val jdbc: JdbcTemplate, private val study: StudySe
         val answers = count("select count(*) from review_log where user_id=? and reviewed_at>=? and reviewed_at<?",user,start,end)
         val selected = jdbc.query("select id from deck where owner_id=? and selected=true and import_status='READY' limit 1",
             { rs,_ -> rs.getObject(1,UUID::class.java) },user).firstOrNull()
-        return DashboardView(due, minOf(unseen,maxOf(0,limit-used)),studied,answers,streak(user,zone),selected,active?.first,active?.second)
+        return DashboardView(due, minOf(unseen,maxOf(0,limit-used)),studied,answers,streak(user,zone),selected,active?.first,active?.second,maxOf(0,limit-used))
     }
 
     fun stats(user: UUID): StatsView {

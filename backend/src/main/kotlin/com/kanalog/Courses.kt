@@ -22,9 +22,9 @@ data class LessonScope(val id:UUID,val deckId:UUID,val title:String)
 class CourseService(private val jdbc:JdbcTemplate) {
     fun list(owner:UUID):List<CourseView> = jdbc.query("select * from learning_course where owner_id=? order by position,course_key",{rs,_->
         val id=rs.getObject("id",UUID::class.java)
-        val lessons=jdbc.query("""select l.*,count(c.id)::int total,
-            count(s.first_seen_at)::int studied,
-            count(c.id) filter(where exists(select 1 from review_log r where r.user_id=? and r.card_id=c.id and r.rating in ('GOOD','EASY')))::int practiced,
+        val lessons=jdbc.query("""select l.*,count(c.id) filter(where coalesce(s.suspended,false)=false)::int total,
+            count(s.first_seen_at) filter(where coalesce(s.suspended,false)=false)::int studied,
+            count(c.id) filter(where coalesce(s.suspended,false)=false and exists(select 1 from review_log r where r.user_id=? and r.card_id=c.id and r.rating in ('GOOD','EASY')))::int practiced,
             count(c.id) filter(where s.first_seen_at is not null and s.suspended=false and s.due_at<=now())::int due,
             (us.active_lesson_id=l.id) selected
             from course_lesson l left join lesson_card lc on lc.lesson_id=l.id
@@ -37,7 +37,7 @@ class CourseService(private val jdbc:JdbcTemplate) {
             },owner,owner,owner,id)
         CourseView(id,rs.getString("title"),rs.getString("description"),rs.getString("kind"),rs.getString("level"),rs.getInt("position"),
             lessons.sumOf{it.totalCards},lessons.sumOf{it.studiedCards},lessons.sumOf{it.completedCards},lessons.sumOf{it.dueCount},lessons,
-            lessons.firstOrNull{!it.optional && !it.completed}?.id ?: lessons.firstOrNull{!it.completed}?.id)
+            lessons.firstOrNull{it.totalCards>0 && !it.optional && !it.completed}?.id ?: lessons.firstOrNull{it.totalCards>0 && !it.completed}?.id)
     },owner)
 
     fun get(owner:UUID,id:UUID)=list(owner).find{it.id==id} ?: fail("COURSE_NOT_FOUND","코스를 찾을 수 없습니다",HttpStatus.NOT_FOUND)
