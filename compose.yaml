@@ -7,8 +7,8 @@ services:
       RDB_HOST: ${RDB_HOST:-jdbc:postgresql://infra-postgres:5432/kanalog}
       RDB_USER: kanalog
       RDB_PASSWORD: ${RDB_PASSWORD:?Set RDB_PASSWORD in .env}
-      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:3200}
-      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-https://kanalog.hanwook.me}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
       MEDIA_ROOT: /app/media
     volumes:
       - kanalog_media:/app/media

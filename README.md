@@ -20,7 +20,7 @@ docker compose up -d --build
 curl -fsS http://localhost:3200/api/health/ready
 ```
 
-기본 공개 주소는 `http://localhost:3200`이다. Dutchlog 프런트엔드의 기본 개발 포트 3000과 분리했다. Kanalog Compose는 DB 컨테이너를 새로 만들거나 DB 포트를 추가 공개하지 않는다. 기존 PostgreSQL의 포트 공개 범위는 기존 인프라 설정을 따른다. Kotlin API는 Compose 내부에만 연결한다. Docker가 없을 때는 `backend/gradlew bootRun`을 실행하고 `cd frontend && pnpm install --frozen-lockfile && pnpm dev --port 3200`으로 프런트엔드를 실행한다. 이때 `RDB_HOST`, `RDB_USER=kanalog`, `RDB_PASSWORD`, `PUBLIC_APP_URL=http://localhost:3200`, `BACKEND_API_URL=http://localhost:8080`을 실제 환경에 맞게 설정한다.
+현재 배포 주소는 `https://kanalog.hanwook.me`이며 기존 프록시가 `127.0.0.1:3200`으로 전달한다. `.env.example`과 Compose 기본값도 이 HTTPS 주소 및 Secure 쿠키에 맞췄다. 브라우저에서 직접 로컬 HTTP로 개발할 때는 `.env`의 `PUBLIC_APP_URL=http://localhost:3200`, `COOKIE_SECURE=false`로 함께 변경하고 컨테이너를 재생성한다. Dutchlog 프런트엔드의 기본 개발 포트 3000과 분리했다. Kanalog Compose는 DB 컨테이너를 새로 만들거나 DB 포트를 추가 공개하지 않는다. 기존 PostgreSQL의 포트 공개 범위는 기존 인프라 설정을 따른다. Kotlin API는 Compose 내부에만 연결한다. Docker가 없을 때는 `backend/gradlew bootRun`을 실행하고 `cd frontend && pnpm install --frozen-lockfile && pnpm dev --port 3200`으로 프런트엔드를 실행한다. 이때 `RDB_HOST`, `RDB_USER=kanalog`, `RDB_PASSWORD`, `PUBLIC_APP_URL=http://localhost:3200`, `COOKIE_SECURE=false`, `BACKEND_API_URL=http://localhost:8080`을 실제 환경에 맞게 설정한다.
 
 ### 초기 계정과 개인 덱
 
@@ -77,7 +77,7 @@ ln -s ../../../private-data/supertonic/models frontend/public/tts/supertonic
 # pnpm dev/build가 worker와 일치하는 WASM runtime을 자동 생성한다.
 ```
 
-전용 로컬 QA 계정으로 실제 서버 테스트를 실행할 수 있다. 비밀번호는 Git에 없는 권한 0600 파일에 저장하며 출력하지 않는다.
+전용 QA 계정으로 실제 서버 테스트를 실행할 수 있다. 비밀번호는 Git에 없는 권한 0600 파일에 저장하며 출력하지 않는다. 공개 도메인 배포 설정은 `python3 tools/e2e/check_deployment.py`로 검사한다. 로컬 HTTP 테스트라면 위의 로컬 개발 설정으로 전환한 후 실행한다. `provision.py`/`run_live.py`는 `E2E_BASE_URL`로 접속 주소를 선택할 수 있으며 외부 프록시가 해당 테스트 클라이언트의 요청을 허용해야 한다.
 
 ```sh
 python3 tools/e2e/provision.py

@@ -1,6 +1,34 @@
 # 검증 기록
 
-## 레벨별 커리큘럼 변경의 최종 확인
+## 공개 도메인 로그인 복구 (2026-10-01)
+
+현재 배포 주소는 `https://kanalog.hanwook.me`다. 해당 주소에서는 Codex 브라우저 접근이 허용되었다. 로그인 화면에서 전용 QA 계정으로 실패를 재현했고 `허용되지 않은 요청 출처입니다`가 표시됐다. 실행 중인 백엔드의 `PUBLIC_APP_URL=http://localhost:3200`, `COOKIE_SECURE=false`가 HTTPS 공개 주소와 불일치한 것이 원인이다. 비밀번호 문제가 아니며 Origin 검사를 제거하지 않았다.
+
+`.env`와 Compose/예시 파일의 배포 주소를 `https://kanalog.hanwook.me`, HTTPS 쿠키 설정을 `true`로 맞추고 `docker compose up -d backend`로 컨테이너를 재생성했다. 기존 DB·미디어·계정·복습 기록은 유지했다.
+
+| 검증 | 실제 결과 |
+| --- | --- |
+| 설정 회귀 검사 | `python3 tools/e2e/check_deployment.py`: 수정 전 주소 불일치로 실패, 수정 후 Compose/실행 컨테이너 주소·Secure 설정·health 모두 통과. 비밀값 출력 없음 |
+| 브라우저 로그인 | 공개 도메인 로그인 → 실제 홈 화면 진입. 새로고침 후 로그인 유지 |
+| 학습 저장 | 실제 QA N5 카드 정답 확인 → 보통 평가 → 다음 카드(1/20 → 2/20). 오늘 답변 3 → 4 증가 및 재로그인 후 4 유지 |
+| MAX 음성 | 인증된 원본 MP3 재생. DOM 오디오 상태 duration/currentTime 1.26712초, readyState 4, error 없음, 재생 종료 확인. 청취 품질이나 새 Supertonic WAV 검증으로 간주하지 않음 |
+| 로그아웃 | 로그인 화면 복귀. `/stats` 직접 진입도 로그인 화면으로 이동 |
+| 잘못된 비밀번호 | 로그인 오류 안내 표시. 올바른 비밀번호로 재로그인 성공 |
+| 커리큘럼 | 공개 도메인의 실제 코스 화면에서 6레벨·QA N5 진도·미확보 급수 표시 확인 |
+| API 접근 통제 | 실제 공개 주소에 익명 `/api/me` 401, 외부 Origin 로그인 403 `BAD_ORIGIN` 확인 |
+| Backend | JDK 21 `./gradlew test --rerun-tasks --no-daemon`: 21개 통과. `bootJar` 성공 |
+| Frontend | 타입 검사·린트 통과. `pnpm test`: 28개 통과 |
+| 변환기 | synthetic fixture 단위 테스트 8개 통과 |
+
+브라우저 확인은 내장 브라우저로 수행했다. 별도 Playwright 전체 suite·360/390px·Supertonic 실제 WAV 합성은 이번 로그인 복구 검증에 포함하지 않았다. Python urllib의 공개 도메인 요청은 Cloudflare 403/1010으로 거부되어 그 클라이언트의 API suite를 통과로 표시하지 않았고, 차단을 우회하지 않았다. 공개 도메인의 브라우저와 허용된 curl 요청에서는 위 항목을 실제 확인했다.
+
+```sh
+docker compose up -d backend
+python3 tools/e2e/check_deployment.py
+curl -fsS https://kanalog.hanwook.me/api/health/ready
+```
+
+## 이전 레벨별 커리큘럼 변경의 확인
 
 2026-10-01 후속 변경에서 Backend 21개(Builder 7, PostgreSQL 통합 9, FSRS 4, 날짜 1), Frontend 28개 테스트가 통과했다. 프런트 타입 검사·lint, Kotlin/Next.js Docker production build와 Compose 재배포가 성공했다.
 

@@ -44,7 +44,17 @@ location / {
 }
 ```
 
-`.env`의 `PUBLIC_APP_URL=https://study.example.com`, `COOKIE_SECURE=true`로 설정한다. 다른 도메인·포트에서 직접 접속하면 Origin 검사와 쿠키 동작이 달라질 수 있다. `APP_BIND_IP=0.0.0.0`은 외부 포트를 직접 열어야 할 때에만 사용한다. HTTPS 공개 환경에서는 프록시의 TLS 설정을 먼저 완료한다.
+현재 배포의 `.env`는 `PUBLIC_APP_URL=https://kanalog.hanwook.me`, `COOKIE_SECURE=true`다. 다른 서버에 설치할 때는 실제 브라우저 주소로 바꾼다. 다른 도메인·포트에서 직접 로그인하면 Origin 검사로 거부된다. HTTPS용 Secure 쿠키는 로컬 HTTP 개발과 함께 사용할 수 없으므로 로컬 개발에서는 두 설정을 각각 `http://localhost:3200`, `false`로 바꾼다. `APP_BIND_IP=0.0.0.0`은 외부 포트를 직접 열어야 할 때에만 사용한다. HTTPS 공개 환경에서는 프록시의 TLS 설정을 먼저 완료한다.
+
+환경변수를 수정한 후에는 `restart`가 아니라 컨테이너 재생성이 필요하다. 다음 검사는 Compose 설정과 실행 중인 컨테이너 모두를 확인하며 DB 비밀번호나 세션을 출력하지 않는다.
+
+```sh
+docker compose up -d backend
+# backend가 healthy 상태가 된 후
+python3 tools/e2e/check_deployment.py
+# 로컬 HTTP 개발 설정을 검사할 때
+E2E_BASE_URL=http://localhost:3200 python3 tools/e2e/check_deployment.py
+```
 
 사용자 설정에서 시간대를 바꾸면 저장된 UTC 복습 시각은 유지되고, 오늘 새 카드 한도와 연속 학습일·7일·30일 통계는 새 시간대의 날짜 경계로 바로 다시 계산된다.
 
