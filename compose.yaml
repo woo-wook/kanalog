@@ -1,36 +1,18 @@
 name: kanalog
 services:
-  db:
-    image: postgres:17.11-alpine3.24
-    environment:
-      POSTGRES_DB: kanalog
-      POSTGRES_USER: kanalog
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-    volumes:
-      - kanalog_postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kanalog -d kanalog"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
-    restart: unless-stopped
-
   backend:
     build:
       context: ./backend
     environment:
-      RDB_HOST: jdbc:postgresql://db:5432/kanalog
+      RDB_HOST: ${RDB_HOST:-jdbc:postgresql://infra-postgres:5432/kanalog}
       RDB_USER: kanalog
-      RDB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      RDB_PASSWORD: ${RDB_PASSWORD:?Set RDB_PASSWORD in .env}
       PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:3200}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       MEDIA_ROOT: /app/media
     volumes:
       - kanalog_media:/app/media
       - ./private-data/converted:/app/import:ro
-    depends_on:
-      db:
-        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/api/health/ready"]
       interval: 10s
@@ -38,6 +20,9 @@ services:
       start_period: 45s
       retries: 10
     restart: unless-stopped
+    networks:
+      - default
+      - dutchlog_infra
 
   frontend:
     build:
@@ -54,5 +39,9 @@ services:
     restart: unless-stopped
 
 volumes:
-  kanalog_postgres:
   kanalog_media:
+
+networks:
+  dutchlog_infra:
+    external: true
+    name: infra-backend

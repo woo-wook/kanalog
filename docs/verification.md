@@ -9,7 +9,7 @@
 | 실제 전체 어휘·문법 변환 검증 | `python3 tools/deck-import/verify_conversion.py private-data/converted/all`: 카드 10,237장, 음성 20,157개. 하위 덱별 집계는 `docs/data-sources.md` |
 | Frontend TypeScript·lint·빌드·Vitest | `pnpm exec tsc --noEmit`, `pnpm lint`, `pnpm test`, `pnpm build` 통과. Vitest 1개 테스트 통과. Docker production build도 통과 |
 | Backend 빌드 및 테스트 | Docker image의 `bootJar -x test` 및 로컬 JDK 21 `./gradlew test` 통과. JUnit 10개 통과: FSRS 4, PostgreSQL persistence 5, 날짜 경계 1 |
-| Compose 기동·DB 마이그레이션 | `docker compose up -d --build` 통과. PostgreSQL 17.11, Kotlin API, Next.js가 실행 중. Flyway 4개 migration 적용 및 backend healthy |
+| 현행 Compose·DB 마이그레이션 | 기존 Dutchlog 인프라 PostgreSQL 16 `infra-postgres`에 Kanalog 전용 `kanalog` DB와 전용 로그인 역할 생성. 별도 Kanalog DB 컨테이너 제거 후 backend를 `infra-backend`에 연결. 이미지 재빌드·기동, Flyway 4개 적용, backend healthy, `/api/health/ready` UP 확인 |
 | HTTP 확인 | `GET /api/health/ready`가 `{"status":"UP"}` 반환. `GET /login` HTTP 200. 브라우저에서 `http://localhost:3200/login` 열기 완료 |
 | Compose 설정 | `docker compose config --quiet` 통과. 호스트 포트 `127.0.0.1:3200`; 3000은 기존 Docker 프로세스가 사용 중이어서 분리했다 |
 | 개인 실행 설정 | `.env`에 무작위 DB 비밀번호를 만들고 파일 권한을 `0600`으로 설정했다. `.env`와 private-data는 Git 및 이미지에서 제외 |

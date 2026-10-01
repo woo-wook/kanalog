@@ -6,19 +6,20 @@ JLPT MAX 덱을 개인 계정으로 가져와 단어와 문법을 복습하는 �
 
 - Docker Engine 및 Docker Compose plugin. 로컬 개발은 Java 21, Python 3.9 이상, Node.js 22와 pnpm 11.9.0도 사용한다.
 - JLPT MAX v2.1.2 APKG를 받을 약 1.2 GB의 공간과 변환·음성을 위한 추가 여유 공간. 현재 검증한 크기와 SHA-256은 [데이터 출처](docs/data-sources.md)에 있다.
-- `../dutchlog`의 운영 계정·DB·토큰은 이 앱에 사용하지 않는다. 참고한 구조만 [기록](docs/dutchlog-reference.md)에 남겼다.
+- 기존 PostgreSQL 서버를 사용하되, Kanalog 전용 `kanalog` 데이터베이스와 `kanalog` 로그인 역할을 분리해 사용한다. Dutchlog의 DB, 사용자, 토큰은 공유하지 않는다.
 
 ## 빠른 시작
 
 ```sh
 test -f .env || cp .env.example .env
 mkdir -p private-data/converted
-# 새로 만든 .env의 POSTGRES_PASSWORD를 고유한 긴 임의값으로 바꾼다.
+# 기존 Docker 네트워크 `infra-backend`에 `infra-postgres`가 실행 중이어야 한다.
+# PostgreSQL 관리자 권한으로 `kanalog` DB와 `kanalog` 로그인 역할을 한 번 생성한다.
 docker compose up -d --build
 curl -fsS http://localhost:3200/api/health/ready
 ```
 
-기본 공개 주소는 `http://localhost:3200`이다. Dutchlog 프런트엔드의 기본 개발 포트 3000과 분리했다. DB와 Kotlin API 포트는 호스트에 공개하지 않는다. Docker가 없을 때는 `backend/gradlew bootRun`을 PostgreSQL과 함께 실행하고 `cd frontend && pnpm install --frozen-lockfile && pnpm dev --port 3200`으로 프런트엔드를 실행한다. 이때 `RDB_HOST`, `RDB_USER`, `RDB_PASSWORD`, `PUBLIC_APP_URL=http://localhost:3200`, `BACKEND_API_URL=http://localhost:8080`을 실제 환경에 맞게 설정한다.
+기본 공개 주소는 `http://localhost:3200`이다. Dutchlog 프런트엔드의 기본 개발 포트 3000과 분리했다. Kanalog Compose는 DB 컨테이너를 새로 만들거나 DB 포트를 추가 공개하지 않는다. 기존 PostgreSQL의 포트 공개 범위는 기존 인프라 설정을 따른다. Kotlin API는 Compose 내부에만 연결한다. Docker가 없을 때는 `backend/gradlew bootRun`을 실행하고 `cd frontend && pnpm install --frozen-lockfile && pnpm dev --port 3200`으로 프런트엔드를 실행한다. 이때 `RDB_HOST`, `RDB_USER=kanalog`, `RDB_PASSWORD`, `PUBLIC_APP_URL=http://localhost:3200`, `BACKEND_API_URL=http://localhost:8080`을 실제 환경에 맞게 설정한다.
 
 ### 초기 계정과 개인 덱
 
@@ -66,7 +67,8 @@ docker compose run --rm backend \
 
 | 변수 | 사용처 | 설명 |
 | --- | --- | --- |
-| `POSTGRES_PASSWORD` | DB·백엔드 | 새 설치에서 반드시 고유값 설정 |
+| `RDB_HOST` | 백엔드 | Compose에서는 `infra-postgres`를 사용. 로컬 `bootRun`에서는 `localhost` 사용 |
+| `RDB_PASSWORD` | DB·백엔드 | 기존 PostgreSQL에 만든 Kanalog 전용 역할의 비밀번호 |
 | `PUBLIC_APP_URL` | 백엔드 | 브라우저가 사용하는 정확한 주소. Origin 확인 기준 |
 | `COOKIE_SECURE` | 백엔드 | HTTPS 운영이면 `true` |
 | `APP_BIND_IP`, `APP_PORT` | 프런트엔드 | 기본 `127.0.0.1:3200` |
