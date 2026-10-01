@@ -28,7 +28,7 @@ data class SettingsPatch(
     val preferredVoice: String? = null
 )
 data class DashboardView(val dueCount: Int, val newRemaining: Int, val studiedCardsToday: Int,
-                         val answersToday: Int, val streak: Int, val selectedDeckId: UUID?)
+                         val answersToday: Int, val streak: Int, val selectedDeckId: UUID?, val activeLessonId: UUID? = null, val activeLessonTitle: String? = null)
 data class DeckProgress(val deckId: UUID, val title: String, val totalCards: Int, val studiedCards: Int)
 data class StatsView(val answers7Days: Int, val uniqueCards7Days: Int, val answers30Days: Int,
                      val uniqueCards30Days: Int, val learnedCards: Int, val unseenCards: Int,
@@ -71,21 +71,24 @@ class OverviewService(private val jdbc: JdbcTemplate, private val study: StudySe
         val (dayStart,dayEnd)=localDayWindow(Instant.now(),zone)
         val start = Timestamp.from(dayStart)
         val end = Timestamp.from(dayEnd)
+        val active=jdbc.query("select us.active_lesson_id,l.title from user_settings us left join course_lesson l on l.id=us.active_lesson_id where us.user_id=?",
+            {rs,_->rs.getObject(1,UUID::class.java) to rs.getString(2)},user).firstOrNull()
+        val scope=active?.first?.let { "exists(select 1 from lesson_card lc where lc.card_id=c.id and lc.lesson_id='$it')" } ?: "d.selected=true"
         val due = count("""select count(*) from user_card_state s join card c on c.id=s.card_id
-            join deck d on d.id=c.deck_id where s.user_id=? and c.owner_id=? and d.selected=true
+            join deck d on d.id=c.deck_id where s.user_id=? and c.owner_id=? and $scope
             and d.import_status='READY' and c.active=true and s.suspended=false and s.first_seen_at is not null
             and s.due_at<=now()""", user,user)
         val used = count("select count(*) from user_card_state where user_id=? and first_seen_at>=? and first_seen_at<?",user,start,end)
         val limit = settings(user).dailyNewLimit
         val unseen = count("""select count(*) from card c join deck d on d.id=c.deck_id
             left join user_card_state s on s.card_id=c.id and s.user_id=?
-            where c.owner_id=? and d.selected=true and d.import_status='READY' and c.active=true
+            where c.owner_id=? and $scope and d.import_status='READY' and c.active=true
             and (s.id is null or (s.first_seen_at is null and s.suspended=false))""",user,user)
         val studied = count("select count(distinct card_id) from review_log where user_id=? and reviewed_at>=? and reviewed_at<?",user,start,end)
         val answers = count("select count(*) from review_log where user_id=? and reviewed_at>=? and reviewed_at<?",user,start,end)
         val selected = jdbc.query("select id from deck where owner_id=? and selected=true and import_status='READY' limit 1",
             { rs,_ -> rs.getObject(1,UUID::class.java) },user).firstOrNull()
-        return DashboardView(due, minOf(unseen,maxOf(0,limit-used)),studied,answers,streak(user,zone),selected)
+        return DashboardView(due, minOf(unseen,maxOf(0,limit-used)),studied,answers,streak(user,zone),selected,active?.first,active?.second)
     }
 
     fun stats(user: UUID): StatsView {

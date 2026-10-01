@@ -68,7 +68,7 @@ class AdminCli(private val jdbc:JdbcTemplate,private val importer:MaxImportServi
 data class ImportResult(val sourceId:UUID,val cards:Int,val media:Int,val report:String)
 
 @Service
-class MaxImportService(private val jdbc:JdbcTemplate,private val mapper:ObjectMapper,
+class MaxImportService(private val jdbc:JdbcTemplate,private val mapper:ObjectMapper,private val courses:CourseService,
     @Value("\${app.media-root}") root:String) {
     private val mediaRoot=Path.of(root).toAbsolutePath().normalize()
     private val sourceKey="jlpt-max"
@@ -153,6 +153,7 @@ class MaxImportService(private val jdbc:JdbcTemplate,private val mapper:ObjectMa
         if(cards==0) error("Converted notes.jsonl has no supported cards")
         if(report.path("convertedCards").asInt(-1)!=cards) error("Converted card count differs from report")
         deckCache.values.forEach { jdbc.update("update deck set import_status='READY' where id=? and owner_id=?",it,owner) }
+        courses.synchronize(owner)
         return ImportResult(source,cards,media.size,reportText)
     }
 

@@ -28,16 +28,18 @@ interface AppUserRepository:JpaRepository<AppUserEntity,UUID> {
 }
 
 @Service
-class AccountAdminService(private val users:AppUserRepository,private val jdbc:JdbcTemplate) {
+class AccountAdminService(private val users:AppUserRepository,private val jdbc:JdbcTemplate,private val courses:CourseService) {
     @Transactional
     fun create(email:String,hash:String):Boolean {
         val existing=users.findByEmail(email)
         if(existing!=null) {
             jdbc.update("insert into user_settings(user_id) values(?) on conflict do nothing",requireNotNull(existing.id))
+            courses.synchronize(requireNotNull(existing.id))
             return false
         }
         val account=users.saveAndFlush(AppUserEntity(email=email,passwordHash=hash))
         jdbc.update("insert into user_settings(user_id) values(?) on conflict do nothing",requireNotNull(account.id))
+        courses.synchronize(requireNotNull(account.id))
         return true
     }
     @Transactional

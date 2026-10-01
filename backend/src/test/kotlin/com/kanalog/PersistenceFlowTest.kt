@@ -19,7 +19,7 @@ import java.util.UUID
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.NONE)
 class PersistenceFlowTest @Autowired constructor(
     private val jdbc:JdbcTemplate,private val notes:NoteService,private val study:StudyService,
-    private val importer:MaxImportService,private val auth:AuthService
+    private val importer:MaxImportService,private val auth:AuthService,private val courses:CourseService,private val overview:OverviewService
 ) {
     companion object {
         @Container @JvmField val postgres=PostgreSQLContainer("postgres:17-alpine")
@@ -37,6 +37,59 @@ class PersistenceFlowTest @Autowired constructor(
         jdbc.update("insert into app_user(id,email,password_hash) values(?,?,?)",id,"$id@example.test","test-hash")
         jdbc.update("insert into user_settings(user_id) values(?)",id)
         return id
+    }
+
+    @Test fun `kana courses start with ordered katakana and preserve practice on synchronization`() {
+        val owner=user(); val other=user()
+        courses.synchronize(owner)
+        val all=courses.list(owner)
+        assertEquals(listOf("katakana","hiragana"),all.map { it.kind })
+        assertEquals(46,all.first().lessons.filter { !it.optional }.sumOf { it.totalCards })
+        val lesson=all.first().lessons.first()
+        assertEquals(5,lesson.totalCards)
+        courses.select(owner,lesson.id)
+        assertEquals(lesson.id,overview.dashboard(owner).activeLessonId)
+        assertEquals(5,overview.dashboard(owner).newRemaining)
+        val session=study.start(owner,lessonId=lesson.id)
+        assertEquals(listOf("ア","イ","ウ","エ","オ"),session.cards.map { it.front })
+        val card=session.cards.first()
+        val request=ReviewRequest(session.id,card.id,card.version,"GOOD",UUID.randomUUID().toString())
+        study.review(owner,request)
+        courses.synchronize(owner)
+        study.review(owner,request)
+        assertEquals(1,courses.list(owner).first().lessons.first().completedCards)
+        assertEquals(1,jdbc.queryForObject("select count(*) from review_log where user_id=?",Int::class.java,owner))
+        assertEquals("LESSON_NOT_FOUND",assertThrows(ApiFailure::class.java) {
+            study.start(other,lessonId=lesson.id)
+        }.code)
+        assertEquals("LESSON_NOT_FOUND",assertThrows(ApiFailure::class.java) { courses.select(other,lesson.id) }.code)
+    }
+
+    @Test fun `MAX courses chunk source note order while preserving existing reviews on import retry`() {
+        val owner=user()
+        val dir=Files.createTempDirectory("kanalog-course-import-")
+        Files.createDirectory(dir.resolve("media"));Files.writeString(dir.resolve("media.jsonl"),"")
+        Files.writeString(dir.resolve("report.json"),"""{"version":"2.1.2","sha256":"c0898a086a7d440e4081c8a68fcd0c63e678bb345012888d1fc8e5270d762532","convertedCards":22,"mediaExtracted":0}""")
+        Files.writeString(dir.resolve("notes.jsonl"),(22 downTo 1).joinToString("\n") { i ->
+            """{"schemaVersion":1,"sourceVersion":"2.1.2","sourceNoteId":$i,"sourceGuid":"fixture-$i","sourceCardId":$i,"cardDirection":"recognition","deckPath":"MAX::N5","kind":"vocabulary","level":"N5","front":"単語$i","reading":"たんご","meaning":"단어","tags":[]}"""
+        })
+        importer.importData(owner,dir)
+        val course=courses.list(owner).first { it.kind=="vocabulary" }
+        assertEquals(listOf(20,2),course.lessons.map { it.totalCards })
+        val lesson=course.lessons.first()
+        val session=study.start(owner,lessonId=lesson.id)
+        assertEquals((1..10).map { "単語$it" },session.cards.map { it.front })
+        val card=session.cards.first()
+        val req=ReviewRequest(session.id,card.id,card.version,"GOOD",UUID.randomUUID().toString())
+        study.review(owner,req)
+        importer.importData(owner,dir)
+        assertEquals(lesson.id,courses.get(owner,course.id).lessons.first().id)
+        assertEquals(1,courses.get(owner,course.id).completedCards)
+        assertEquals(1L,study.card(owner,card.id)?.version)
+        assertEquals(1,jdbc.queryForObject("select count(*) from review_log where user_id=?",Int::class.java,owner))
+        assertEquals("BAD_STUDY_SCOPE",assertThrows(ApiFailure::class.java) {
+            study.start(owner,session.cards.first().id,lesson.id)
+        }.code)
     }
 
     @Test fun `expired login block starts a fresh failure window`() {
@@ -118,14 +171,14 @@ class PersistenceFlowTest @Autowired constructor(
         Files.writeString(dir.resolve("notes.jsonl"),"""{"schemaVersion":1,"sourceVersion":"2.1.2","sourceNoteId":42,"sourceGuid":"fixture-guid","sourceCardId":43,"cardDirection":"recognition","deckPath":"JLPT MAX::어휘::N5","kind":"vocabulary","level":"N5","front":"犬","reading":"いぬ","meaning":"개","partOfSpeech":"명사","examples":[{"japanese":"犬がいます","korean":"개가 있습니다"},{"japanese":"犬を見ます","korean":"개를 봅니다"}],"tags":[]}
 """)
         importer.importData(owner,dir)
-        val card=jdbc.queryForObject("select id from card where owner_id=?",UUID::class.java,owner)!!
+        val card=jdbc.queryForObject("select id from card where owner_id=? and direction='recognition'",UUID::class.java,owner)!!
         jdbc.update("insert into user_card_state(id,user_id,card_id,first_seen_at,version) values(?,?,?,now(),3)",
             UUID.randomUUID(),owner,card)
         importer.importData(owner,dir)
-        assertEquals(card,jdbc.queryForObject("select id from card where owner_id=?",UUID::class.java,owner))
+        assertEquals(card,jdbc.queryForObject("select id from card where owner_id=? and direction='recognition'",UUID::class.java,owner))
         assertEquals(3L,jdbc.queryForObject("select version from user_card_state where user_id=? and card_id=?",
             Long::class.java,owner,card))
-        assertEquals(1,jdbc.queryForObject("select count(*) from card where owner_id=?",Int::class.java,owner))
+        assertEquals(1,jdbc.queryForObject("select count(*) from card where owner_id=? and direction='recognition'",Int::class.java,owner))
         assertEquals(2,study.card(owner,card)?.examples?.size)
         assertEquals("명사",study.card(owner,card)?.partOfSpeech)
     }
