@@ -1,19 +1,20 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
-import { api, type Stats, type Course } from "@/api";
+import Link from "next/link";
+import { api, type Stats, type Curriculum } from "@/api";
 import { Loading, ErrorMessage } from "@/shell";
 export default function StatsPage() {
   const query = useQuery({
     queryKey: ["stats"],
     queryFn: () => api<Stats>("/stats"),
   });
-  const courses = useQuery({
-    queryKey: ["courses"],
-    queryFn: () => api<Course[]>("/courses"),
+  const curriculum = useQuery({
+    queryKey: ["curriculum"],
+    queryFn: () => api<Curriculum>("/curriculum"),
   });
-  if (query.isPending || courses.isPending) return <Loading />;
-  if (query.error || courses.error)
-    return <ErrorMessage error={query.error ?? courses.error} />;
+  if (query.isPending || curriculum.isPending) return <Loading />;
+  if (query.error || curriculum.error)
+    return <ErrorMessage error={query.error ?? curriculum.error} />;
   const s = query.data;
   const items = [
     ["최근 7일 답변", s.answers7Days],
@@ -40,26 +41,41 @@ export default function StatsPage() {
           </div>
         ))}
       </div>
-      <section className="surface mt-6 p-5">
-        <h2 className="text-xl font-bold">코스별 학습</h2>
-        {courses.data.length ? (
+      <section className="surface mt-6 p-5" aria-label="레벨별 첫 연습 진도">
+        <h2 className="text-xl font-bold">레벨별 첫 연습 진도</h2>
+        <p className="muted mt-2 text-sm">
+          기본 레슨에서 보통·쉬움으로 한 번 이상 평가한 카드입니다. 선택 단원과
+          복습은 별도로 이어갑니다.
+        </p>
+        {curriculum.data.levels.length ? (
           <div className="mt-4 space-y-4">
-            {courses.data.map((course) => (
-              <div key={course.id}>
+            {curriculum.data.levels.map((level) => (
+              <div key={level.key}>
                 <div className="flex justify-between gap-3 text-sm">
-                  <span>{course.title}</span>
+                  {level.available ? (
+                    <Link
+                      className="font-medium text-primary"
+                      href={`/courses/levels/${level.key}`}
+                    >
+                      {level.title}
+                    </Link>
+                  ) : (
+                    <span>{level.title}</span>
+                  )}
                   <span>
-                    {course.studiedCards}/{course.totalCards}장
+                    {level.available
+                      ? `${level.completedCards}/${level.totalCards}장`
+                      : "학습 데이터 없음"}
                   </span>
                 </div>
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e8efeb]">
-                  <div
-                    className="h-full bg-[#2e7167]"
-                    style={{
-                      width: `${course.totalCards ? Math.min(100, (course.studiedCards / course.totalCards) * 100) : 0}%`,
-                    }}
+                {level.available && (
+                  <progress
+                    className="mt-2 h-2 w-full"
+                    aria-label={`${level.title} 첫 연습 진행`}
+                    value={level.completedCards}
+                    max={Math.max(level.totalCards, 1)}
                   />
-                </div>
+                )}
               </div>
             ))}
           </div>

@@ -41,6 +41,47 @@ export interface Course {
   lessons: Lesson[];
   recommendedLessonId: string | null;
 }
+export interface CurriculumLesson extends Lesson {
+  courseId: string;
+  kind: string;
+}
+export interface CurriculumUnit {
+  key: string;
+  title: string;
+  goal: string;
+  position: number;
+  optional: boolean;
+  lessons: CurriculumLesson[];
+  totalCards: number;
+  studiedCards: number;
+  completedCards: number;
+  completedLessons: number;
+  completed: boolean;
+}
+export interface CurriculumLevel {
+  key: string;
+  title: string;
+  subtitle: string;
+  jlptLevel: string | null;
+  position: number;
+  goal: string;
+  outcomes: string[];
+  units: CurriculumUnit[];
+  totalCards: number;
+  studiedCards: number;
+  completedCards: number;
+  totalLessons: number;
+  completedLessons: number;
+  dueCount: number;
+  available: boolean;
+  completed: boolean;
+}
+export interface Curriculum {
+  version: string;
+  levels: CurriculumLevel[];
+  recommendedLevelKey: string | null;
+  recommendedLessonId: string | null;
+}
 export interface Deck {
   id: string;
   title: string;

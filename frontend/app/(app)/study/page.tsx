@@ -16,6 +16,7 @@ import {
 import { Loading, ErrorMessage } from "@/shell";
 import { canPlayExample, speechText } from "@/speech";
 import { useGeneratedAudio } from "@/use-generated-audio";
+import { StudyNextStep } from "@/study-next-step";
 const ratings: { value: Rating; label: string }[] = [
   { value: "AGAIN", label: "다시" },
   { value: "HARD", label: "어려움" },
@@ -231,6 +232,7 @@ function StudyContent() {
         queryClient.invalidateQueries({ queryKey: ["stats"] });
         queryClient.invalidateQueries({ queryKey: ["decks"] });
         queryClient.invalidateQueries({ queryKey: ["courses"] });
+        queryClient.invalidateQueries({ queryKey: ["curriculum"] });
       } catch (e) {
         setError(e);
       } finally {
@@ -330,6 +332,7 @@ function StudyContent() {
             복습 카드를 불러오지 못했습니다. 다시 눌러 주세요.
           </p>
         )}
+        <StudyNextStep lessonId={lessonId} />
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link className="btn btn-primary" href="/">
             홈으로
