@@ -18,6 +18,10 @@ export function loadTextToSpeech(
   directory: string,
   options: InferenceSession.SessionOptions,
   progress?: (name: string, current: number, total: number) => void,
+  modelLoader?: (
+    path: string,
+    options: InferenceSession.SessionOptions,
+  ) => Promise<InferenceSession>,
 ): Promise<{
   textToSpeech: TextToSpeech;
   cfgs: { ae: { sample_rate: number } };

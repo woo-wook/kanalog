@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { BrowserTts } from "./browser-tts";
 
 class FakeWorker {
@@ -13,6 +13,21 @@ class FakeWorker {
 let worker: FakeWorker;
 beforeEach(() => {
   worker = new FakeWorker();
+});
+afterEach(() => vi.useRealTimers());
+
+it("다운로드가 진행 중이면 전체 시간이 길어도 준비 작업을 중단하지 않는다", async () => {
+  vi.useFakeTimers();
+  const client = new BrowserTts(() => worker as unknown as Worker);
+  const result = client.generate("ア", "F1").catch((error: Error) => error);
+  const id = worker.postMessage.mock.calls[0]![0].id;
+  await vi.advanceTimersByTimeAsync(120_000);
+  worker.reply({ id, type: "progress", message: "음성 준비 중 · 50%" });
+  await vi.advanceTimersByTimeAsync(120_000);
+  expect(worker.terminate).not.toHaveBeenCalled();
+  worker.reply({ id, type: "result", wav: new ArrayBuffer(128) });
+  expect(await result).toBeInstanceOf(Blob);
+  client.dispose();
 });
 
 it("취소된 생성 결과를 반환하지 않고 다음 요청을 정상 처리한다", async () => {

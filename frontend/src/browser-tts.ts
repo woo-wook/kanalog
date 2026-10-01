@@ -1,9 +1,12 @@
+import { TTS_WORKER_PATH } from "./tts-version";
+
 type Progress = (message: string) => void;
 type Pending = {
   resolve: (blob: Blob) => void;
   reject: (error: Error) => void;
   progress?: Progress;
   cleanup: () => void;
+  touch: () => void;
 };
 
 export class BrowserTts {
@@ -11,7 +14,7 @@ export class BrowserTts {
   private nextId = 0;
   private pending = new Map<number, Pending>();
   constructor(
-    private factory = () => new Worker("/tts/worker.js", { type: "module" }),
+    private factory = () => new Worker(TTS_WORKER_PATH, { type: "module" }),
   ) {}
 
   generate(
@@ -32,6 +35,7 @@ export class BrowserTts {
         const entry = this.pending.get(data.id);
         if (!entry) return;
         if (data.type === "progress") {
+          entry.touch();
           entry.progress?.(data.message);
           return;
         }
@@ -58,17 +62,22 @@ export class BrowserTts {
         this.pending.delete(id);
         reject(new DOMException("취소됨", "AbortError"));
       };
-      const timeout = setTimeout(() => {
+      const expire = () => {
         this.dispose(
           new Error(
-            "음성 준비가 오래 걸립니다. 다시 시도하거나 MAX 음성을 들어 주세요.",
+            "음성 준비가 중단됐습니다. 연결 상태를 확인하고 다시 눌러 주세요.",
           ),
         );
-      }, 180_000);
+      };
+      let timeout = setTimeout(expire, 180_000);
       this.pending.set(id, {
         resolve,
         reject,
         progress,
+        touch: () => {
+          clearTimeout(timeout);
+          timeout = setTimeout(expire, 180_000);
+        },
         cleanup: () => {
           clearTimeout(timeout);
           signal?.removeEventListener("abort", abort);

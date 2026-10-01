@@ -1,4 +1,5 @@
 import * as ort from "onnxruntime-web/webgpu";
+import { downloadModel } from "./tts-models";
 import {
   loadTextToSpeech,
   loadVoiceStyle,
@@ -19,7 +20,6 @@ ort.env.wasm.proxy = false;
 ort.env.logLevel = "error";
 const assets = "/tts/supertonic";
 let engine: Awaited<ReturnType<typeof loadTextToSpeech>> | undefined;
-let provider = "WASM";
 const styles = new Map<string, VoiceStyle>();
 const cancelled = new Set<number>();
 let queue = Promise.resolve();
@@ -34,13 +34,46 @@ async function initialize(id: number) {
   const response = await fetch(`${assets}/manifest.json`);
   if (!response.ok)
     throw new Error(
-      "음성 모델이 준비되지 않았습니다. tools/tts/download.py를 실행해 주세요.",
+      "음성 파일이 아직 준비되지 않았습니다. 잠시 후 다시 눌러 주세요.",
     );
+  const manifest = (await response.json()) as {
+    files: { path: string; bytes: number; sha256: string }[];
+  };
+  const loadModel = async (
+    path: string,
+    options: ort.InferenceSession.SessionOptions,
+  ) => {
+    const file = manifest.files.find(
+      (file) => `${assets}/${file.path}` === path,
+    );
+    if (!file)
+      throw new Error(
+        "음성 파일 정보를 확인하지 못했습니다. 다시 눌러 주세요.",
+      );
+    let lastUpdate = 0;
+    const bytes = await downloadModel(path, file, (received, total) => {
+      const now = Date.now();
+      if (received !== total && received !== 0 && now - lastUpdate < 200)
+        return;
+      lastUpdate = now;
+      scope.postMessage({
+        type: "progress",
+        id,
+        message: `음성 준비 중 · ${Math.round((received / total) * 100)}% · ${(received / 1048576).toFixed(1)} / ${(total / 1048576).toFixed(1)} MB`,
+      });
+    });
+    scope.postMessage({
+      type: "progress",
+      id,
+      message: "음성 준비 중 · 파일을 처리하고 있습니다.",
+    });
+    return ort.InferenceSession.create(bytes, options);
+  };
   const onLoad = (_: string, current: number, total: number) => {
     scope.postMessage({
       type: "progress",
       id,
-      message: `Supertonic 3 준비 중 · ${current}/${total} · 처음에는 약 401MB를 불러옵니다.`,
+      message: `음성 준비 중 · ${current}/${total} · 처음에는 약 401MB를 불러옵니다.`,
     });
   };
   let gpuAvailable = false;
@@ -55,8 +88,8 @@ async function initialize(id: number) {
         `${assets}/onnx`,
         { executionProviders: ["webgpu"], graphOptimizationLevel: "all" },
         onLoad,
+        loadModel,
       );
-      provider = "WebGPU";
     } catch {
       engine = undefined;
     }
@@ -66,8 +99,8 @@ async function initialize(id: number) {
       `${assets}/onnx`,
       { executionProviders: ["wasm"], graphOptimizationLevel: "all" },
       onLoad,
+      loadModel,
     );
-    provider = "WASM";
   }
 }
 
@@ -82,7 +115,7 @@ async function generate(job: { id: number; text: string; voice: string }) {
     )
       throw new Error("음성 요청을 확인해 주세요.");
     if (!engine) await initialize(job.id);
-    progress(job.id, `Supertonic 3 음성 생성 중 · ${provider}`);
+    progress(job.id, "음성 생성 중…");
     let style = styles.get(job.voice);
     if (!style) {
       style = await loadVoiceStyle([
@@ -97,11 +130,7 @@ async function generate(job: { id: number; text: string; voice: string }) {
       8,
       1,
       0.3,
-      (step, total) =>
-        progress(
-          job.id,
-          `Supertonic 3 음성 생성 중 · ${step}/${total} · ${provider}`,
-        ),
+      (step, total) => progress(job.id, `음성 생성 중 · ${step}/${total}`),
     );
     if (cancelled.has(job.id)) return;
     if (!wav.length || wav.some((sample) => !Number.isFinite(sample)))

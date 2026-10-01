@@ -1,6 +1,6 @@
 // Supertonic official web helper (MIT). See LICENSE in this directory.
 // Source revision: 1e9799e964ea4c0dad7cde993b65c3c813a7b373
-// Adapted: WebGPU entry, checked fetch, inference tensor cleanup, partial-load cleanup.
+// Adapted: WebGPU entry, checked fetch, tensor cleanup, partial-load cleanup, model loader injection.
 import * as ort from 'onnxruntime-web/webgpu';
 
 // Available languages for multilingual TTS
@@ -453,7 +453,7 @@ export async function loadOnnx(onnxPath, options) {
 /**
  * Load all TTS components
  */
-export async function loadTextToSpeech(onnxDir, sessionOptions = {}, progressCallback = null) {
+export async function loadTextToSpeech(onnxDir, sessionOptions = {}, progressCallback = null, modelLoader = loadOnnx) {
 
     
     const cfgs = await loadCfgs(onnxDir);
@@ -476,7 +476,7 @@ export async function loadTextToSpeech(onnxDir, sessionOptions = {}, progressCal
         if (progressCallback) {
             progressCallback(modelPaths[i].name, i + 1, modelPaths.length);
         }
-        const session = await loadOnnx(modelPaths[i].path, sessionOptions);
+        const session = await modelLoader(modelPaths[i].path, sessionOptions);
         sessions.push(session);
     }
     
