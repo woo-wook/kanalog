@@ -13,11 +13,12 @@
 | HTTP 확인 | `GET /api/health/ready`가 `{"status":"UP"}` 반환. `GET /login` HTTP 200. 브라우저에서 `http://localhost:3200/login` 열기 완료 |
 | Compose 설정 | `docker compose config --quiet` 통과. 호스트 포트 `127.0.0.1:3200`; 3000은 기존 Docker 프로세스가 사용 중이어서 분리했다 |
 | 개인 실행 설정 | `.env`에 무작위 DB 비밀번호를 만들고 파일 권한을 `0600`으로 설정했다. `.env`와 private-data는 Git 및 이미지에서 제외 |
+| 실제 MAX import 및 브라우저 E2E | 임시 격리 Compose 프로젝트에 일회용 계정을 만들고 N5 실데이터 878장·음성 1,795개 import. Playwright 실제 API 흐름 4개(평가·통계, 로그아웃 권한, 설정 재로그인, 360/390px overflow) 통과 후 테스트 DB·미디어 볼륨 제거 |
 
 ## 미실행 및 남은 확인
 
-- 초기 사용자 이메일을 아직 받지 않아 계정을 만들지 않았고, APKG 변환 JSONL을 DB에 import하지 않았다. 이에 따라 실제 카드 학습·인증 음성·브라우저 E2E 흐름은 아직 확인하지 않았다.
-- Docker daemon이 동작 중이므로 Playwright E2E는 초기 계정 생성과 import 후 실행할 수 있다.
+- 사용자의 실제 계정 정보가 없어 기본 kanalog 인스턴스에는 계정과 개인 덱을 생성하지 않았다. 기본 인스턴스는 현재 비어 있고 로그인 화면을 제공한다. 실제 N5 import 및 E2E는 별도 일회용 Compose 프로젝트에서 실행했다.
+- 실제 MAX 파일의 미디어 1,795개를 import했지만, 브라우저에서 인증 음성을 직접 재생하는 검증은 아직 별도로 하지 않았다.
 - DB와 미디어 백업·복원 및 재시작 지속성은 아직 별도 확인하지 않았다.
 - 실제 휴대폰·태블릿 음성과 iOS 설치는 해당 기기 접근이 없어 미실행이다.
 
