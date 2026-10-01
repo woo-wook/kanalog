@@ -109,12 +109,12 @@ class MaxImportService(private val jdbc:JdbcTemplate,private val mapper:ObjectMa
             val front=row.requireText("front")
             if(kind !in setOf("vocabulary","grammar") || direction !in setOf("recognition","recall"))
                 error("Unsupported card kind or direction")
-            val deck=deckCache.getOrPut(path) { findOrCreateDeck(owner,source,path,row.path("level").asText(""),kind) }
+            val deck=deckCache.getOrPut(path) { findOrCreateDeck(owner,source,path,row.path("level").asString(""),kind) }
             val note=jdbc.query("select id from study_note where owner_id=? and source_id=? and source_guid=?",
                 {rs,_->rs.getObject(1,UUID::class.java)},owner,source,guid).firstOrNull() ?: UUID.randomUUID()
             val first=row.path("examples").takeIf { it.isArray && it.size()>0 }?.get(0)
-            val example=first?.path("japanese")?.asText()?.takeIf { it.isNotBlank() }
-            val exampleMeaning=first?.path("korean")?.asText()?.takeIf { it.isNotBlank() }
+            val example=first?.path("japanese")?.asString()?.takeIf { it.isNotBlank() }
+            val exampleMeaning=first?.path("korean")?.asString()?.takeIf { it.isNotBlank() }
             val reading=row.optionalText("reading")
             val meaning=if(kind=="vocabulary") row.optionalText("meaning") else row.optionalText("answer")
             val explanation=if(kind=="grammar") row.optionalText("grammarKind") else null
@@ -216,6 +216,6 @@ class MaxImportService(private val jdbc:JdbcTemplate,private val mapper:ObjectMa
     }
 }
 
-private fun JsonNode.requireText(name:String):String = path(name).asText("").takeIf { it.isNotBlank() }
+private fun JsonNode.requireText(name:String):String = path(name).asString("").takeIf { it.isNotBlank() }
     ?: error("Missing required converted field: $name")
-private fun JsonNode.optionalText(name:String):String? = path(name).asText("").takeIf { it.isNotBlank() }
+private fun JsonNode.optionalText(name:String):String? = path(name).asString("").takeIf { it.isNotBlank() }
