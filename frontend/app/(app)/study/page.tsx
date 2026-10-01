@@ -14,6 +14,8 @@ import {
   type ApiError,
 } from "@/api";
 import { Loading, ErrorMessage } from "@/shell";
+import { canPlayExample, speechText } from "@/speech";
+import { useGeneratedAudio } from "@/use-generated-audio";
 const ratings: { value: Rating; label: string }[] = [
   { value: "AGAIN", label: "다시" },
   { value: "HARD", label: "어려움" },
@@ -22,7 +24,8 @@ const ratings: { value: Rating; label: string }[] = [
 ];
 function StudyContent() {
   const params = useSearchParams(),
-    deckId = params.get("deckId");
+    deckId = params.get("deckId"),
+    lessonId = params.get("lessonId");
   const queryClient = useQueryClient();
   const settings = useQuery({
     queryKey: ["settings"],
@@ -49,41 +52,60 @@ function StudyContent() {
       EASY: 0,
     });
   const audio = useRef<HTMLAudioElement | null>(null);
+  const { generate, cancel, busy: generating } = useGeneratedAudio();
+  const [audioSource, setAudioSource] = useState("Supertonic 3 합성 음성");
   const savingRef = useRef(false);
   const started = useRef(false);
   useEffect(() => {
-    if (started.current || !deckId) return;
+    if (started.current || (!deckId && !lessonId)) return;
     started.current = true;
-    api<StudySession>("/study/sessions", json("POST", { deckId }))
+    const selected = lessonId
+      ? api(`/courses/lessons/${lessonId}/select`, { method: "POST" })
+      : Promise.resolve();
+    selected
+      .then(() =>
+        api<StudySession>(
+          "/study/sessions",
+          json("POST", lessonId ? { lessonId } : { deckId }),
+        ),
+      )
       .then(setSession)
       .catch(setStartError)
       .finally(() => setLoading(false));
-  }, [deckId]);
+  }, [deckId, lessonId]);
   const card = session?.cards[index];
   const stopAudio = useCallback(() => {
+    cancel();
     audio.current?.pause();
     if (audio.current) audio.current.currentTime = 0;
     if (typeof window !== "undefined" && "speechSynthesis" in window)
       window.speechSynthesis.cancel();
-  }, []);
+  }, [cancel]);
   useEffect(() => () => stopAudio(), [stopAudio]);
+  useEffect(() => {
+    if ("speechSynthesis" in window) window.speechSynthesis.getVoices();
+  }, []);
   const play = useCallback(
-    (
+    async (
       item: StudyCard,
       example?: { audioId?: string | null; japanese?: string | null },
+      override?: Settings["audioEngine"],
     ) => {
       stopAudio();
+      setAudioUrl("");
       setAudioMessage("");
       const id = example ? example.audioId : item.audioId;
-      const text = example ? example.japanese : item.front;
-      if (id) {
+      const text = speechText(item, example);
+      const selectedEngine =
+        override ?? settings.data?.audioEngine ?? "SUPERTONIC";
+      function playUrl(url: string, source: string) {
         const player = audio.current;
         if (!player) return;
-        const url = `/api/media/${id}`;
         player.src = url;
         player.muted = false;
         player.volume = 1;
         player.playbackRate = settings.data?.playbackSpeed ?? 1;
+        setAudioSource(source);
         setAudioUrl(url);
         setAudioMessage("음성을 불러오는 중…");
         player.play().catch((reason: unknown) => {
@@ -91,18 +113,44 @@ function StudyContent() {
             return;
           setAudioMessage(
             reason instanceof DOMException && reason.name === "NotAllowedError"
-              ? "브라우저가 자동재생을 막았습니다. 듣기 버튼이나 아래 재생 버튼을 눌러 주세요."
-              : "음성을 재생하지 못했습니다. 로그인 상태와 네트워크를 확인하고 다시 눌러 주세요.",
+              ? "브라우저가 자동재생을 막았습니다. 아래 재생 버튼을 눌러 주세요."
+              : "음성을 재생하지 못했습니다. 다시 눌러 주세요.",
           );
         });
+      }
+      if (selectedEngine === "ORIGINAL") {
+        if (id) playUrl(`/api/media/${id}`, "MAX 합성 음성");
+        else
+          setAudioMessage(
+            "이 항목에는 MAX 음성이 없습니다. Supertonic 3나 기기 음성을 선택해 주세요.",
+          );
         return;
       }
-      if (
-        !settings.data?.ttsFallback ||
-        !text ||
-        !("speechSynthesis" in window)
-      ) {
-        setAudioMessage("이 항목의 음성을 사용할 수 없습니다.");
+      if (!text) {
+        setAudioMessage(
+          "이 항목에는 읽을 일본어가 없습니다. 일본어 예문에서 듣기를 눌러 주세요.",
+        );
+        return;
+      }
+      if (selectedEngine === "SUPERTONIC") {
+        try {
+          const url = await generate(
+            text,
+            settings.data?.supertonicVoice ?? "F1",
+            setAudioMessage,
+          );
+          if (url) playUrl(url, "Supertonic 3 합성 음성");
+        } catch (error) {
+          setAudioMessage(
+            error instanceof Error
+              ? error.message
+              : "음성을 생성하지 못했습니다. MAX 음성이나 기기 음성을 들어 주세요.",
+          );
+        }
+        return;
+      }
+      if (!("speechSynthesis" in window)) {
+        setAudioMessage("이 브라우저에서는 기기 음성을 사용할 수 없습니다.");
         return;
       }
       const voices = window.speechSynthesis.getVoices();
@@ -114,28 +162,19 @@ function StudyContent() {
           (v) => v.voiceURI === settings.data?.preferredVoice,
         ) ?? japaneseVoices[0];
       if (!voice) {
-        if (voices.length === 0) {
-          setAudioMessage(
-            "음성 목록을 불러오는 중입니다. 잠시 후 다시 눌러 주세요.",
-          );
-          window.speechSynthesis.addEventListener(
-            "voiceschanged",
-            () =>
-              setAudioMessage("음성 목록이 준비되었습니다. 다시 눌러 주세요."),
-            { once: true },
-          );
-        } else {
-          setAudioMessage(
-            "이 기기에는 일본어 음성이 없습니다. 원본 음성이 있는 카드를 이용해 주세요.",
-          );
-        }
+        setAudioMessage(
+          voices.length === 0
+            ? "음성 목록을 불러오는 중입니다. 잠시 후 다시 눌러 주세요."
+            : "이 기기에는 일본어 음성이 없습니다. Supertonic 3나 MAX 음성을 이용해 주세요.",
+        );
         return;
       }
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.voice = voice;
       utterance.lang = "ja-JP";
-      utterance.rate = settings.data.playbackSpeed;
-      utterance.onstart = () => setAudioMessage("기기 일본어 음성 재생 중");
+      utterance.rate = settings.data?.playbackSpeed ?? 1;
+      utterance.onstart = () =>
+        setAudioMessage("재생 중 · 기기 일본어 합성 음성");
       utterance.onend = () => setAudioMessage("재생 완료");
       utterance.onerror = (event) => {
         if (event.error !== "canceled" && event.error !== "interrupted")
@@ -143,23 +182,17 @@ function StudyContent() {
       };
       window.speechSynthesis.speak(utterance);
     },
-    [settings.data, stopAudio],
+    [settings.data, stopAudio, generate],
   );
+  const autoPlaybackAllowed =
+    settings.data?.autoPlayAudio &&
+    (settings.data.allowAudioBeforeReveal || revealed);
   useEffect(() => {
-    if (
-      card &&
-      settings.data?.autoPlayAudio &&
-      settings.data.allowAudioBeforeReveal
-    ) {
+    if (card && autoPlaybackAllowed) {
       const timer = setTimeout(() => play(card), 0);
       return () => clearTimeout(timer);
     }
-  }, [
-    card,
-    settings.data?.autoPlayAudio,
-    settings.data?.allowAudioBeforeReveal,
-    play,
-  ]);
+  }, [card, autoPlaybackAllowed, play]);
   const submit = useCallback(
     async (rating: Rating, existingKey?: string) => {
       if (!session || !card || savingRef.current) return;
@@ -197,6 +230,7 @@ function StudyContent() {
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
         queryClient.invalidateQueries({ queryKey: ["stats"] });
         queryClient.invalidateQueries({ queryKey: ["decks"] });
+        queryClient.invalidateQueries({ queryKey: ["courses"] });
       } catch (e) {
         setError(e);
       } finally {
@@ -234,7 +268,15 @@ function StudyContent() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [revealed, card, saving, retry, submit]);
-  if (!deckId) return <ErrorMessage error={new Error("덱을 선택해 주세요.")} />;
+  if (!deckId && !lessonId)
+    return (
+      <div>
+        <ErrorMessage error={new Error("학습할 레슨을 골라 주세요.")} />
+        <Link className="btn mt-4" href="/courses">
+          학습 코스 보기
+        </Link>
+      </div>
+    );
   if (loading || settings.isPending) return <Loading />;
   if (startError || settings.error)
     return <ErrorMessage error={startError ?? settings.error} />;
@@ -288,19 +330,27 @@ function StudyContent() {
             복습 카드를 불러오지 못했습니다. 다시 눌러 주세요.
           </p>
         )}
-        <div className="mt-6 flex justify-center gap-3">
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link className="btn btn-primary" href="/">
             홈으로
           </Link>
           <Link className="btn" href="/stats">
             통계 보기
           </Link>
+          <Link className="btn" href="/courses">
+            다음 레슨 고르기
+          </Link>
         </div>
       </div>
     );
   }
   const canHearBefore = revealed || settings.data?.allowAudioBeforeReveal;
-  const hasSound = Boolean(card.audioId || settings.data?.ttsFallback);
+  const isKana = ["katakana", "hiragana"].includes(card.kind);
+  const hasSound = Boolean(
+    card.audioId ||
+    (card.kind !== "grammar" && settings.data?.audioEngine !== "ORIGINAL") ||
+    (isKana && settings.data?.audioEngine !== "ORIGINAL"),
+  );
   const examples = card.examples?.length
     ? card.examples
     : card.example
@@ -316,7 +366,12 @@ function StudyContent() {
     <div className="mx-auto max-w-2xl">
       <div className="mb-5 flex items-center justify-between text-sm muted">
         <span>
-          {card.kind.toLowerCase() === "grammar" ? "문법 회상" : "어휘 인식"}
+          {session.lessonTitle ??
+            (isKana
+              ? "문자 읽기"
+              : card.kind === "grammar"
+                ? "문법 회상"
+                : "단어 연습")}
         </span>
         <span>
           {index + 1} / {session.cards.length}
@@ -325,29 +380,40 @@ function StudyContent() {
       <article className="surface min-h-[360px] p-6 sm:p-9">
         <div className="text-center">
           <p className="muted text-sm">
-            {revealed ? "정답" : "일본어를 보고 뜻을 떠올려 보세요"}
+            {revealed
+              ? "정답"
+              : isKana
+                ? "이 문자는 어떻게 읽을까요?"
+                : card.kind === "grammar"
+                  ? "질문을 보고 답을 떠올려 보세요"
+                  : "일본어를 보고 뜻을 떠올려 보세요"}
           </p>
           <h1 className="jp mt-7 text-5xl font-semibold leading-tight sm:text-6xl">
             {card.front}
           </h1>
           {card.reading &&
             (revealed || settings.data?.showReadingHint || hint) && (
-              <p className="jp mt-4 text-xl text-[#536b60]">{card.reading}</p>
+              <p className="jp mt-4 text-xl text-[var(--muted-foreground)]">
+                {card.reading}
+              </p>
             )}
           {!revealed && card.reading && !settings.data?.showReadingHint && (
             <button
               onClick={() => setHint(true)}
-              className="mt-4 text-sm font-semibold text-[#2e7167]"
+              className="mt-4 text-sm font-semibold text-[var(--accent)]"
             >
               읽기 힌트 보기
             </button>
           )}
-          {revealed && settings.data?.showHangulHint && card.hangulHint && (
-            <p className="muted mt-2 text-sm">
-              한글 발음 보조: {card.hangulHint}{" "}
-              <span className="text-xs">(근사 표기)</span>
-            </p>
-          )}
+          {revealed &&
+            !isKana &&
+            settings.data?.showHangulHint &&
+            card.hangulHint && (
+              <p className="muted mt-2 text-sm">
+                한글 발음 보조: {card.hangulHint}{" "}
+                <span className="text-xs">(근사 표기)</span>
+              </p>
+            )}
         </div>
         {canHearBefore && hasSound && (
           <div className="mt-5 text-center">
@@ -355,11 +421,56 @@ function StudyContent() {
               type="button"
               className="btn"
               onClick={() => play(card)}
-              aria-label="단어 발음 듣기"
+              aria-label={isKana ? "글자 발음 듣기" : "단어 발음 듣기"}
             >
               ▶ 발음 듣기
             </button>
+            <p className="muted mt-2 text-xs">
+              {settings.data?.audioEngine === "ORIGINAL"
+                ? "MAX 합성 음성"
+                : settings.data?.audioEngine === "DEVICE"
+                  ? "기기 일본어 합성 음성"
+                  : "Supertonic 3 · 브라우저에서 생성하는 합성 음성"}
+            </p>
+            <div className="mt-3 flex flex-wrap justify-center gap-3">
+              {card.audioId && settings.data?.audioEngine !== "ORIGINAL" && (
+                <button
+                  type="button"
+                  className="btn text-sm"
+                  onClick={() => play(card, undefined, "ORIGINAL")}
+                >
+                  MAX 음성 듣기
+                </button>
+              )}
+              {card.kind !== "grammar" &&
+                settings.data?.audioEngine !== "DEVICE" && (
+                  <button
+                    type="button"
+                    className="text-sm muted underline"
+                    onClick={() => play(card, undefined, "DEVICE")}
+                  >
+                    기기 음성 듣기
+                  </button>
+                )}
+              {generating && (
+                <button
+                  type="button"
+                  className="text-sm muted underline"
+                  onClick={() => {
+                    stopAudio();
+                    setAudioMessage("음성 준비를 취소했습니다.");
+                  }}
+                >
+                  음성 준비 취소
+                </button>
+              )}
+            </div>
           </div>
+        )}
+        {!hasSound && (
+          <p className="muted mt-5 text-center text-sm">
+            이 항목에는 원본 음성이 없습니다.
+          </p>
         )}
         {audioMessage && (
           <p role="status" className="muted mt-3 text-center text-sm">
@@ -372,18 +483,28 @@ function StudyContent() {
           preload="none"
           aria-label="현재 발음 오디오"
           className={audioUrl ? "mx-auto mt-3 w-full max-w-sm" : "hidden"}
-          onPlaying={() => setAudioMessage("재생 중 · 원본 음성")}
+          onPlaying={() => setAudioMessage(`재생 중 · ${audioSource}`)}
           onEnded={() => setAudioMessage("재생 완료")}
+          onPause={() => {
+            if (
+              audio.current &&
+              audio.current.currentTime > 0 &&
+              !audio.current.ended
+            )
+              setAudioMessage("일시정지");
+          }}
           onError={() =>
             setAudioMessage(
-              "원본 음성을 불러오지 못했습니다. 로그인 상태와 네트워크를 확인해 주세요.",
+              "음성을 재생하지 못했습니다. 다시 듣기를 눌러 주세요.",
             )
           }
         />
         {revealed && (
           <div className="mt-8 border-t border-[#dce4df] pt-6">
             <h2 className="text-2xl font-bold">
-              {card.meaning || "뜻 정보 없음"}
+              {isKana
+                ? `${card.meaning} (근사 발음)`
+                : card.meaning || "뜻 정보 없음"}
             </h2>
             {card.partOfSpeech && (
               <p className="muted mt-2 text-sm">품사: {card.partOfSpeech}</p>
@@ -400,9 +521,9 @@ function StudyContent() {
                 {example.korean && (
                   <p className="muted mt-2">{example.korean}</p>
                 )}
-                {example.audioId && (
+                {canPlayExample(example, settings.data?.audioEngine) && (
                   <button
-                    className="mt-3 text-sm font-semibold text-[#2e7167]"
+                    className="mt-3 text-sm font-semibold text-[var(--accent)]"
                     onClick={() => play(card, example)}
                     aria-label={`${exampleIndex + 1}번 예문 듣기`}
                   >
@@ -475,7 +596,11 @@ function StudyContent() {
 export default function StudyPage() {
   return (
     <Suspense fallback={<Loading />}>
-      <StudyContent />
+      <StudyEntry />
     </Suspense>
   );
+}
+function StudyEntry() {
+  const params = useSearchParams();
+  return <StudyContent key={params.toString()} />;
 }

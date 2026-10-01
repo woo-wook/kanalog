@@ -4,6 +4,8 @@ import json
 import os
 import secrets
 import subprocess
+import http.cookiejar
+import urllib.request
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[2]
@@ -23,4 +25,15 @@ subprocess.run(base + ['--app.cli=create-user', '--app.email=' + account['email'
                input=account['password'] + '\n', text=True, check=True)
 subprocess.run(base + ['--app.cli=import-max', '--app.email=' + account['email'], '--app.input-dir=/app/import/n5'],
                cwd=root, check=True)
+# The QA account has a larger daily allowance so repeated checks do not consume the personal user's limit.
+base_url = os.environ.get('E2E_BASE_URL', 'http://localhost:3200').rstrip('/')
+client = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+headers = {'Content-Type': 'application/json', 'Origin': base_url}
+with client.open(urllib.request.Request(base_url + '/api/auth/login', data=json.dumps(account).encode(), headers=headers)) as response:
+    csrf = json.load(response)['csrfToken']
+headers['X-CSRF-Token'] = csrf
+with client.open(urllib.request.Request(base_url + '/api/settings', data=b'{"dailyNewLimit":100}', headers=headers, method='PATCH')):
+    pass
+with client.open(urllib.request.Request(base_url + '/api/auth/logout', data=b'', headers=headers)):
+    pass
 print('QA account ready. Credentials remain in private-data/e2e/account.json (0600).')

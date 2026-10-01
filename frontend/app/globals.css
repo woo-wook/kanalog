@@ -1,9 +1,32 @@
 @import "tailwindcss";
+
+/* Dutchlog's shared light palette, radius and card elevation. */
 :root {
-  --background: #f7f7f4;
-  --foreground: #202a28;
-  --accent: #2e7167;
-  --border: #dce4df;
+  --background: hsl(210 40% 98%);
+  --foreground: hsl(222 47% 11%);
+  --card: hsl(0 0% 100%);
+  --primary: hsl(222 89% 55%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(210 40% 96%);
+  --muted-foreground: hsl(215 16% 47%);
+  --border: hsl(214 32% 91%);
+  --destructive: hsl(0 72% 51%);
+  --radius: 0.75rem;
+  --shadow-card:
+    0 2px 8px -2px hsl(222 47% 11% / 0.08),
+    0 1px 3px -1px hsl(222 47% 11% / 0.06);
+  --accent: var(--primary);
+}
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
 }
 * {
   box-sizing: border-box;
@@ -14,7 +37,13 @@ html {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-pretendard), system-ui, sans-serif;
+  font-family:
+    var(--font-pretendard),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 button,
 input,
@@ -30,8 +59,8 @@ button:disabled {
   opacity: 0.55;
 }
 :focus-visible {
-  outline: 3px solid #2e7167;
-  outline-offset: 2px;
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
 }
 .jp {
   font-family:
@@ -39,43 +68,82 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 .surface {
-  background: white;
+  background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 20px;
-  box-shadow: 0 2px 12px #172f2110;
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: var(--shadow-card);
 }
 .field {
   width: 100%;
-  border: 1px solid #b7c6bd;
-  background: white;
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius);
   padding: 0.7rem 0.85rem;
+  min-height: 44px;
+  transition: border-color 150ms;
+}
+.field:hover {
+  border-color: var(--muted-foreground);
 }
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 44px;
-  gap: 0.4rem;
-  border-radius: 12px;
+  gap: 0.5rem;
+  border-radius: var(--radius);
   padding: 0.7rem 1rem;
-  font-weight: 650;
-  background: #e8efeb;
-  color: #19352d;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: var(--secondary);
+  color: var(--foreground);
+  transition:
+    background-color 150ms,
+    box-shadow 150ms;
+}
+.btn:hover:not(:disabled) {
+  background: hsl(214 32% 91%);
 }
 .btn-primary {
-  background: var(--accent);
-  color: white;
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.btn-primary:hover:not(:disabled) {
+  background: hsl(222 89% 48%);
 }
 .btn-danger {
-  background: #f8e7e4;
-  color: #903d33;
+  background: hsl(0 86% 97%);
+  color: var(--destructive);
 }
 .muted {
-  color: #667770;
+  color: var(--muted-foreground);
+}
+progress {
+  accent-color: var(--primary);
+  border-radius: 999px;
+  overflow: hidden;
+}
+progress::-webkit-progress-bar {
+  background: var(--secondary);
+  border-radius: 999px;
+}
+progress::-webkit-progress-value {
+  background: var(--primary);
+  border-radius: 999px;
+}
+progress::-moz-progress-bar {
+  background: var(--primary);
+  border-radius: 999px;
 }
 @media (max-width: 767px) {
   .page-pad {
-    padding-bottom: 6rem;
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
   }
 }

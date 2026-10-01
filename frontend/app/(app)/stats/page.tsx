@@ -1,14 +1,19 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
-import { api, type Stats } from "@/api";
+import { api, type Stats, type Course } from "@/api";
 import { Loading, ErrorMessage } from "@/shell";
 export default function StatsPage() {
   const query = useQuery({
     queryKey: ["stats"],
     queryFn: () => api<Stats>("/stats"),
   });
-  if (query.isPending) return <Loading />;
-  if (query.error) return <ErrorMessage error={query.error} />;
+  const courses = useQuery({
+    queryKey: ["courses"],
+    queryFn: () => api<Course[]>("/courses"),
+  });
+  if (query.isPending || courses.isPending) return <Loading />;
+  if (query.error || courses.error)
+    return <ErrorMessage error={query.error ?? courses.error} />;
   const s = query.data;
   const items = [
     ["최근 7일 답변", s.answers7Days],
@@ -36,22 +41,22 @@ export default function StatsPage() {
         ))}
       </div>
       <section className="surface mt-6 p-5">
-        <h2 className="text-xl font-bold">덱별 진행</h2>
-        {s.decks?.length ? (
+        <h2 className="text-xl font-bold">코스별 학습</h2>
+        {courses.data.length ? (
           <div className="mt-4 space-y-4">
-            {s.decks.map((deck) => (
-              <div key={deck.deckId}>
+            {courses.data.map((course) => (
+              <div key={course.id}>
                 <div className="flex justify-between gap-3 text-sm">
-                  <span>{deck.title}</span>
+                  <span>{course.title}</span>
                   <span>
-                    {deck.studiedCards}/{deck.totalCards}장
+                    {course.studiedCards}/{course.totalCards}장
                   </span>
                 </div>
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e8efeb]">
                   <div
                     className="h-full bg-[#2e7167]"
                     style={{
-                      width: `${deck.totalCards ? Math.min(100, (deck.studiedCards / deck.totalCards) * 100) : 0}%`,
+                      width: `${course.totalCards ? Math.min(100, (course.studiedCards / course.totalCards) * 100) : 0}%`,
                     }}
                   />
                 </div>
@@ -59,7 +64,7 @@ export default function StatsPage() {
             ))}
           </div>
         ) : (
-          <p className="muted mt-3">학습한 덱이 없습니다.</p>
+          <p className="muted mt-3">학습 코스가 없습니다.</p>
         )}
       </section>
     </div>

@@ -11,6 +11,35 @@ export interface Dashboard {
   answersToday: number;
   streak: number;
   selectedDeckId: string | null;
+  activeLessonId?: string | null;
+  activeLessonTitle?: string | null;
+  dailyNewRemaining?: number;
+}
+export interface Lesson {
+  id: string;
+  title: string;
+  position: number;
+  optional: boolean;
+  totalCards: number;
+  studiedCards: number;
+  completedCards: number;
+  dueCount: number;
+  selected: boolean;
+  completed: boolean;
+}
+export interface Course {
+  id: string;
+  title: string;
+  description: string;
+  kind: string;
+  level: string | null;
+  position: number;
+  totalCards: number;
+  studiedCards: number;
+  completedCards: number;
+  dueCount: number;
+  lessons: Lesson[];
+  recommendedLessonId: string | null;
 }
 export interface Deck {
   id: string;
@@ -47,12 +76,16 @@ export interface StudySession {
   id: string;
   cards: StudyCard[];
   answered: number;
+  lessonId?: string | null;
+  lessonTitle?: string | null;
 }
 export interface ReviewResult {
   due: string;
   version: number;
 }
 export interface Settings {
+  audioEngine: "SUPERTONIC" | "ORIGINAL" | "DEVICE";
+  supertonicVoice: string;
   dailyNewLimit: number;
   showReadingHint: boolean;
   showHangulHint: boolean;

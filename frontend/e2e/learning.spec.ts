@@ -9,7 +9,7 @@ async function login(page: Page) {
   await page.getByLabel("비밀번호").fill(password);
   await page.getByRole("button", { name: "로그인", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "조금씩, 꾸준히" }),
+    page.getByRole("heading", { name: "문자부터 차근차근" }),
   ).toBeVisible();
 }
 
@@ -24,26 +24,23 @@ async function answersLast7Days(page: Page): Promise<number> {
   return Number(value.replaceAll(",", ""));
 }
 
-test("실제 N5 덱에서 평가를 저장하면 다음 카드와 통계가 바뀐다", async ({
+test("실제 N5 코스에서 평가를 저장하면 다음 카드와 통계가 바뀐다", async ({
   page,
 }) => {
   await login(page);
   const before = await answersLast7Days(page);
-  await page.goto("/decks");
+  await page.goto("/courses");
   const n5Vocabulary = page
-    .locator("article")
-    .filter({ hasText: /N5\s*·\s*어휘/ })
+    .locator('article[data-course-kind="vocabulary"]')
+    .filter({ hasText: /N5/ })
     .first();
-  await expect(
-    n5Vocabulary,
-    "전용 계정에 N5 어휘 덱을 먼저 가져와야 합니다",
-  ).toBeVisible();
-  const select = n5Vocabulary.getByRole("button", { name: "이 덱 선택" });
-  if (await select.isVisible()) {
-    await select.click();
-    await expect(n5Vocabulary.getByText("선택됨").first()).toBeVisible();
-  }
-  await n5Vocabulary.getByRole("link", { name: "학습" }).click();
+  await expect(n5Vocabulary).toBeVisible();
+  await n5Vocabulary.getByRole("link", { name: "코스 보기" }).click();
+  await page
+    .locator("article[data-lesson-id]")
+    .first()
+    .getByRole("link", { name: "레슨 시작" })
+    .click();
   const reveal = page.getByRole("button", { name: /정답 보기/ });
   await expect(
     reveal,
@@ -75,33 +72,36 @@ test("MAX 음성은 로그인한 사용자에게만 오디오 스트림으로 �
   page,
 }) => {
   await login(page);
-  await page.goto("/decks");
+  await page.goto("/courses");
   const n5Vocabulary = page
-    .locator("article")
-    .filter({ hasText: /N5\s*·\s*어휘/ })
+    .locator('article[data-course-kind="vocabulary"]')
+    .filter({ hasText: /N5/ })
     .first();
   await expect(n5Vocabulary).toBeVisible();
-  const select = n5Vocabulary.getByRole("button", { name: "이 덱 선택" });
-  if (await select.isVisible()) await select.click();
-  await n5Vocabulary.getByRole("link", { name: "학습" }).click();
+  await n5Vocabulary.getByRole("link", { name: "코스 보기" }).click();
+  await page
+    .locator("article[data-lesson-id]")
+    .first()
+    .getByRole("link", { name: "레슨 시작" })
+    .click();
   const audioResponse = page.waitForResponse(
     (response) =>
       response.url().includes("/api/media/") &&
       [200, 206].includes(response.status()),
   );
-  await page.getByRole("button", { name: "단어 발음 듣기" }).click();
+  await page.getByRole("button", { name: "MAX 음성 듣기" }).click();
   const response = await audioResponse;
   expect(response.headers()["content-type"]).toContain("audio/mpeg");
   expect((await response.body()).byteLength).toBeGreaterThan(0);
   const audioUrl = response.url();
-  const logoutResponse = page.waitForResponse(
-    (result) => result.url().endsWith("/api/auth/logout"),
+  const logoutResponse = page.waitForResponse((result) =>
+    result.url().endsWith("/api/auth/logout"),
   );
   await page.getByRole("button", { name: "로그아웃" }).click();
   expect((await logoutResponse).status()).toBe(200);
-  expect(
-    await page.evaluate(async () => (await fetch("/api/me")).status),
-  ).toBe(401);
+  expect(await page.evaluate(async () => (await fetch("/api/me")).status)).toBe(
+    401,
+  );
   expect(
     await page.evaluate(async (url) => (await fetch(url)).status, audioUrl),
   ).toBe(401);
@@ -143,7 +143,7 @@ test("360px와 390px에서 주요 화면이 가로로 넘치지 않는다", asyn
   await login(page);
   for (const width of [360, 390]) {
     await page.setViewportSize({ width, height: 844 });
-    for (const path of ["/", "/decks", "/settings", "/stats"]) {
+    for (const path of ["/", "/courses", "/settings", "/stats"]) {
       await page.goto(path);
       await expect(page.locator("main h1").first()).toBeVisible();
       const overflow = await page.evaluate(

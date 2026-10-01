@@ -1,8 +1,21 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, json, type Settings } from "@/api";
 import { Loading, ErrorMessage } from "@/shell";
+import { useGeneratedAudio } from "@/use-generated-audio";
+const supertonicVoices = [
+  "F1",
+  "F2",
+  "F3",
+  "F4",
+  "F5",
+  "M1",
+  "M2",
+  "M3",
+  "M4",
+  "M5",
+];
 const toggles: { key: keyof Settings; label: string; help?: string }[] = [
   { key: "showReadingHint", label: "가나 읽기를 처음부터 표시" },
   {
@@ -12,10 +25,6 @@ const toggles: { key: keyof Settings; label: string; help?: string }[] = [
   },
   { key: "autoPlayAudio", label: "카드 음성 자동재생" },
   { key: "allowAudioBeforeReveal", label: "정답 전에 발음 듣기" },
-  {
-    key: "ttsFallback",
-    label: "원본 음성이 없을 때 브라우저 일본어 음성 사용",
-  },
 ];
 export default function SettingsPage() {
   const client = useQueryClient(),
@@ -27,15 +36,83 @@ export default function SettingsPage() {
     [saving, setSaving] = useState(false),
     [message, setMessage] = useState(""),
     [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const player = useRef<HTMLAudioElement | null>(null);
+  const { generate, cancel, busy } = useGeneratedAudio();
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewMessage, setPreviewMessage] = useState("");
+  useEffect(
+    () => () => {
+      player.current?.pause();
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    },
+    [],
+  );
   useEffect(() => {
     if (!("speechSynthesis" in window)) return;
-    const refresh = () => setVoices(window.speechSynthesis.getVoices()
-      .filter((voice) => voice.lang.toLowerCase().startsWith("ja")));
+    const refresh = () =>
+      setVoices(
+        window.speechSynthesis
+          .getVoices()
+          .filter((voice) => voice.lang.toLowerCase().startsWith("ja")),
+      );
     refresh();
     window.speechSynthesis.addEventListener("voiceschanged", refresh);
-    return () => window.speechSynthesis.removeEventListener("voiceschanged", refresh);
+    return () =>
+      window.speechSynthesis.removeEventListener("voiceschanged", refresh);
   }, []);
   const value = draft ?? query.data;
+  async function preview() {
+    if (!value) return;
+    player.current?.pause();
+    cancel();
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    setPreviewUrl("");
+    setPreviewMessage("");
+    if (value.audioEngine === "ORIGINAL") {
+      setPreviewMessage("MAX 음성은 학습 카드의 듣기 버튼으로 확인해 주세요.");
+      return;
+    }
+    if (value.audioEngine === "DEVICE") {
+      const voice =
+        voices.find((v) => v.voiceURI === value.preferredVoice) ?? voices[0];
+      if (!voice) {
+        setPreviewMessage("이 기기에는 일본어 음성이 없습니다.");
+        return;
+      }
+      const speech = new SpeechSynthesisUtterance("アイウエオ。こんにちは。");
+      speech.lang = "ja-JP";
+      speech.voice = voice;
+      speech.rate = value.playbackSpeed;
+      speech.onstart = () => setPreviewMessage("기기 일본어 합성 음성 재생 중");
+      speech.onend = () => setPreviewMessage("재생 완료");
+      speech.onerror = (event) => {
+        if (event.error !== "canceled" && event.error !== "interrupted")
+          setPreviewMessage("음성을 재생하지 못했습니다.");
+      };
+      window.speechSynthesis.speak(speech);
+      return;
+    }
+    try {
+      const url = await generate(
+        "アイウエオ。こんにちは。",
+        value.supertonicVoice,
+        setPreviewMessage,
+      );
+      if (!url || !player.current) return;
+      player.current.src = url;
+      player.current.playbackRate = value.playbackSpeed;
+      setPreviewUrl(url);
+      await player.current.play();
+    } catch (error) {
+      setPreviewMessage(
+        error instanceof DOMException && error.name === "NotAllowedError"
+          ? "아래 재생 버튼을 눌러 주세요."
+          : error instanceof Error
+            ? error.message
+            : "음성을 재생하지 못했습니다.",
+      );
+    }
+  }
   async function save() {
     if (!value) return;
     setSaving(true);
@@ -102,12 +179,108 @@ export default function SettingsPage() {
                   </span>
                   <input
                     type="checkbox"
-                    className="mt-1 h-5 w-5 accent-[#2e7167]"
+                    className="mt-1 h-5 w-5 accent-[var(--accent)]"
                     checked={Boolean(value[item.key])}
                     onChange={(e) => update({ [item.key]: e.target.checked })}
                   />
                 </label>
               ))}
+            </div>
+            <div className="border-t pt-5">
+              <label htmlFor="engine" className="block font-semibold">
+                음성 엔진
+              </label>
+              <select
+                id="engine"
+                className="field mt-2"
+                value={value.audioEngine}
+                onChange={(e) => {
+                  player.current?.pause();
+                  cancel();
+                  update({
+                    audioEngine: e.target.value as Settings["audioEngine"],
+                  });
+                }}
+              >
+                <option value="SUPERTONIC">
+                  Supertonic 3 · 브라우저 합성 음성
+                </option>
+                <option value="ORIGINAL">MAX · 가져온 합성 음성</option>
+                <option value="DEVICE">기기 · 일본어 합성 음성</option>
+              </select>
+              {value.audioEngine === "SUPERTONIC" && (
+                <>
+                  <p className="muted mt-2 text-sm">
+                    처음 들을 때 약 401MB의 모델을 불러옵니다. 일본어 읽기로
+                    음성을 생성합니다.
+                  </p>
+                  <label
+                    htmlFor="supertonic-voice"
+                    className="mt-4 block font-semibold"
+                  >
+                    Supertonic 목소리
+                  </label>
+                  <select
+                    id="supertonic-voice"
+                    className="field mt-2"
+                    value={value.supertonicVoice}
+                    onChange={(e) => {
+                      player.current?.pause();
+                      cancel();
+                      update({ supertonicVoice: e.target.value });
+                    }}
+                  >
+                    {supertonicVoices.map((id) => (
+                      <option key={id} value={id}>
+                        {id.startsWith("F") ? "여성" : "남성"} {id.slice(1)} (
+                        {id})
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={preview}
+                  disabled={busy}
+                >
+                  음성 미리 듣기
+                </button>
+                {busy && (
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => {
+                      cancel();
+                      setPreviewMessage("음성 준비를 취소했습니다.");
+                    }}
+                  >
+                    음성 준비 취소
+                  </button>
+                )}
+              </div>
+              {previewMessage && (
+                <p role="status" className="muted mt-3 text-sm">
+                  {previewMessage}
+                </p>
+              )}
+              <audio
+                ref={player}
+                controls
+                aria-label="미리 듣기 오디오"
+                className={previewUrl ? "mt-3 w-full" : "hidden"}
+                onPlaying={() =>
+                  setPreviewMessage("Supertonic 3 합성 음성 재생 중")
+                }
+                onEnded={() => setPreviewMessage("재생 완료")}
+                onError={() =>
+                  setPreviewMessage(
+                    "음성을 재생하지 못했습니다. 다시 눌러 주세요.",
+                  )
+                }
+              />
             </div>
             <div className="border-t pt-5">
               <label htmlFor="speed" className="block font-semibold">
@@ -145,9 +318,14 @@ export default function SettingsPage() {
                     {voice.name} ({voice.lang})
                   </option>
                 ))}
-                {value.preferredVoice && !voices.some((voice) => voice.voiceURI === value.preferredVoice) && (
-                  <option value={value.preferredVoice}>이 기기에서 사용할 수 없는 저장된 음성</option>
-                )}
+                {value.preferredVoice &&
+                  !voices.some(
+                    (voice) => voice.voiceURI === value.preferredVoice,
+                  ) && (
+                    <option value={value.preferredVoice}>
+                      이 기기에서 사용할 수 없는 저장된 음성
+                    </option>
+                  )}
               </select>
             </div>
             <div>

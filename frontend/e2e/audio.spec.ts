@@ -18,7 +18,7 @@ test("실제 MAX 음성은 디코딩·재생되고 수동 컨트롤과 범위 �
   const media = page.waitForResponse(
     (r) => r.url().includes("/api/media/") && [200, 206].includes(r.status()),
   );
-  await page.getByRole("button", { name: "단어 발음 듣기" }).click();
+  await page.getByRole("button", { name: "MAX 음성 듣기" }).click();
   const response = await media;
   const player = page.locator("audio[controls]");
   await expect(player).toBeVisible();

@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useState } from "react";
+import { BookOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { api, json, me } from "@/api";
@@ -27,15 +28,18 @@ export default function LoginPage() {
   }
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-12">
-      <h1 className="text-center text-3xl font-bold text-[#205d51]">
+      <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+        <BookOpen className="h-6 w-6" aria-hidden="true" />
+      </div>
+      <h1 className="text-center text-2xl font-semibold tracking-tight">
         일본어 학습
       </h1>
       <p className="muted mt-3 text-center">
-        오늘의 단어와 문법을 이어서 공부하세요.
+        가타카나부터, 오늘의 학습을 이어가세요.
       </p>
-      <form onSubmit={submit} className="surface mt-10 space-y-5 p-6">
+      <form onSubmit={submit} className="surface mt-8 space-y-5 p-6 sm:p-7">
         <div>
-          <label htmlFor="email" className="mb-2 block font-semibold">
+          <label htmlFor="email" className="mb-2 block text-sm font-medium">
             이메일
           </label>
           <input
@@ -49,7 +53,7 @@ export default function LoginPage() {
           />
         </div>
         <div>
-          <label htmlFor="password" className="mb-2 block font-semibold">
+          <label htmlFor="password" className="mb-2 block text-sm font-medium">
             비밀번호
           </label>
           <input
@@ -63,7 +67,7 @@ export default function LoginPage() {
           />
         </div>
         {error && (
-          <p role="alert" className="text-sm text-[#993d36]">
+          <p role="alert" className="text-sm text-destructive">
             {error}
           </p>
         )}
