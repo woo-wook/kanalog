@@ -69,7 +69,7 @@ export default function SettingsPage() {
     setPreviewUrl("");
     setPreviewMessage("");
     if (value.audioEngine === "ORIGINAL") {
-      setPreviewMessage("MAX 음성은 학습 카드의 듣기 버튼으로 확인해 주세요.");
+      setPreviewMessage("기본 음성은 학습 카드의 듣기 버튼으로 확인해 주세요.");
       return;
     }
     if (value.audioEngine === "DEVICE") {
@@ -83,7 +83,7 @@ export default function SettingsPage() {
       speech.lang = "ja-JP";
       speech.voice = voice;
       speech.rate = value.playbackSpeed;
-      speech.onstart = () => setPreviewMessage("기기 일본어 합성 음성 재생 중");
+      speech.onstart = () => setPreviewMessage("재생 중");
       speech.onend = () => setPreviewMessage("재생 완료");
       speech.onerror = (event) => {
         if (event.error !== "canceled" && event.error !== "interrupted")
@@ -202,11 +202,9 @@ export default function SettingsPage() {
                   });
                 }}
               >
-                <option value="SUPERTONIC">
-                  Supertonic 3 · 브라우저 합성 음성
-                </option>
-                <option value="ORIGINAL">MAX · 가져온 합성 음성</option>
-                <option value="DEVICE">기기 · 일본어 합성 음성</option>
+                <option value="SUPERTONIC">학습 음성 (추천)</option>
+                <option value="ORIGINAL">기본 음성</option>
+                <option value="DEVICE">기기 음성</option>
               </select>
               {value.audioEngine === "SUPERTONIC" && (
                 <>
@@ -218,7 +216,7 @@ export default function SettingsPage() {
                     htmlFor="supertonic-voice"
                     className="mt-4 block font-semibold"
                   >
-                    Supertonic 목소리
+                    목소리
                   </label>
                   <select
                     id="supertonic-voice"
@@ -232,8 +230,7 @@ export default function SettingsPage() {
                   >
                     {supertonicVoices.map((id) => (
                       <option key={id} value={id}>
-                        {id.startsWith("F") ? "여성" : "남성"} {id.slice(1)} (
-                        {id})
+                        {id.startsWith("F") ? "여성" : "남성"} {id.slice(1)}
                       </option>
                     ))}
                   </select>
@@ -271,9 +268,7 @@ export default function SettingsPage() {
                 controls
                 aria-label="미리 듣기 오디오"
                 className={previewUrl ? "mt-3 w-full" : "hidden"}
-                onPlaying={() =>
-                  setPreviewMessage("Supertonic 3 합성 음성 재생 중")
-                }
+                onPlaying={() => setPreviewMessage("재생 중")}
                 onEnded={() => setPreviewMessage("재생 완료")}
                 onError={() =>
                   setPreviewMessage(

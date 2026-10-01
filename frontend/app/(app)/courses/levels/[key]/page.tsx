@@ -89,7 +89,7 @@ export default function CurriculumLevelPage() {
                 아직 가져온 학습 데이터가 없어요
               </h2>
               <p className="muted mt-2 text-sm leading-relaxed">
-                개인 계정에 해당 급수의 MAX 데이터를 가져오면 어휘와 문법 레슨이
+                개인 계정에 해당 급수의 학습 데이터를 가져오면 어휘와 문법 레슨이
                 여기에 연결됩니다.
               </p>
             </div>

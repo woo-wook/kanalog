@@ -200,9 +200,6 @@ export default function NotesPage() {
                       {note.memo}
                     </p>
                   )}
-                  <p className="muted mt-4 text-xs">
-                    출처: {note.source ?? "개인 등록"}
-                  </p>
                   <div className="mt-4 flex gap-2">
                     {(!note.source || note.source === "PERSONAL") && (
                       <button className="btn" onClick={() => edit(note)}>

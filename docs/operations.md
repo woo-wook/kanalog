@@ -118,3 +118,5 @@ Kanalog는 기존 `infra-postgres` 서버 안의 전용 `kanalog` 데이터베�
 앱 쓰기를 중단한 같은 시점에 DB와 개인 미디어를 백업했다. 별도 테스트 DB·볼륨에 복원해 UserCardState·ReviewLog·설정의 전체 행 해시와 미디어 21,950개 파일의 SHA-256 목록이 일치함을 확인했다. 앱 재시작 후 학습 기록도 유지됐다. 검증에 사용한 임시 DB·볼륨만 제거했고 원래 DB·미디어 볼륨은 유지했다. 로컬 백업은 `private-data/backups`의 권한 `0600` 파일이며 Git에서 제외된다.
 
 Supertonic 모델은 `private-data/supertonic/models`를 프런트엔드에 읽기 전용으로 연결한다. 모델을 다시 받을 때 `python3 tools/tts/download.py`로 고정 revision과 해시를 확인한다. 코드 업데이트 뒤 `docker compose up -d --build`를 실행하면 worker와 해당 ONNX 버전의 WASM 파일을 함께 생성한다. 모델은 배포 이미지에 포함하지 않는다.
+
+음성 worker는 `worker.<코드 해시>.js`로 생성하며 빌드 도구가 `src/tts-version.ts`를 함께 갱신한다. 새 배포는 새로운 worker 파일을 사용하므로 브라우저·프록시가 이전 `worker.js`를 캐시해도 새 코드에 연결된다. 모델 요청의 `v` 파라미터는 다운로드 manifest의 파일 해시다. 이 요청만 장기 캐시하며 개인 `/api`와 `/media` 응답은 캐시하지 않는다. 모델 크기와 다운로드 완료 여부를 확인한 후 추론을 시작한다.

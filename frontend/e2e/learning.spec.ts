@@ -110,7 +110,7 @@ test("MAX 음성은 로그인한 사용자에게만 오디오 스트림으로 �
       response.url().includes("/api/media/") &&
       [200, 206].includes(response.status()),
   );
-  await page.getByRole("button", { name: "MAX 음성 듣기" }).click();
+  await page.getByRole("button", { name: "기본 음성 듣기" }).click();
   const response = await audioResponse;
   expect(response.headers()["content-type"]).toContain("audio/mpeg");
   expect((await response.body()).byteLength).toBeGreaterThan(0);

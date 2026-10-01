@@ -54,7 +54,6 @@ function StudyContent() {
     });
   const audio = useRef<HTMLAudioElement | null>(null);
   const { generate, cancel, busy: generating } = useGeneratedAudio();
-  const [audioSource, setAudioSource] = useState("Supertonic 3 합성 음성");
   const savingRef = useRef(false);
   const started = useRef(false);
   useEffect(() => {
@@ -99,14 +98,13 @@ function StudyContent() {
       const text = speechText(item, example);
       const selectedEngine =
         override ?? settings.data?.audioEngine ?? "SUPERTONIC";
-      function playUrl(url: string, source: string) {
+      function playUrl(url: string) {
         const player = audio.current;
         if (!player) return;
         player.src = url;
         player.muted = false;
         player.volume = 1;
         player.playbackRate = settings.data?.playbackSpeed ?? 1;
-        setAudioSource(source);
         setAudioUrl(url);
         setAudioMessage("음성을 불러오는 중…");
         player.play().catch((reason: unknown) => {
@@ -120,10 +118,10 @@ function StudyContent() {
         });
       }
       if (selectedEngine === "ORIGINAL") {
-        if (id) playUrl(`/api/media/${id}`, "MAX 합성 음성");
+        if (id) playUrl(`/api/media/${id}`);
         else
           setAudioMessage(
-            "이 항목에는 MAX 음성이 없습니다. Supertonic 3나 기기 음성을 선택해 주세요.",
+            "이 항목에는 기본 음성이 없습니다. 다른 재생 방식을 선택해 주세요.",
           );
         return;
       }
@@ -140,12 +138,12 @@ function StudyContent() {
             settings.data?.supertonicVoice ?? "F1",
             setAudioMessage,
           );
-          if (url) playUrl(url, "Supertonic 3 합성 음성");
+          if (url) playUrl(url);
         } catch (error) {
           setAudioMessage(
             error instanceof Error
               ? error.message
-              : "음성을 생성하지 못했습니다. MAX 음성이나 기기 음성을 들어 주세요.",
+              : "음성을 생성하지 못했습니다. 기본 음성이나 기기 음성을 들어 주세요.",
           );
         }
         return;
@@ -166,7 +164,7 @@ function StudyContent() {
         setAudioMessage(
           voices.length === 0
             ? "음성 목록을 불러오는 중입니다. 잠시 후 다시 눌러 주세요."
-            : "이 기기에는 일본어 음성이 없습니다. Supertonic 3나 MAX 음성을 이용해 주세요.",
+            : "이 기기에는 일본어 음성이 없습니다. 학습 음성이나 기본 음성을 이용해 주세요.",
         );
         return;
       }
@@ -174,8 +172,7 @@ function StudyContent() {
       utterance.voice = voice;
       utterance.lang = "ja-JP";
       utterance.rate = settings.data?.playbackSpeed ?? 1;
-      utterance.onstart = () =>
-        setAudioMessage("재생 중 · 기기 일본어 합성 음성");
+      utterance.onstart = () => setAudioMessage("재생 중");
       utterance.onend = () => setAudioMessage("재생 완료");
       utterance.onerror = (event) => {
         if (event.error !== "canceled" && event.error !== "interrupted")
@@ -428,13 +425,6 @@ function StudyContent() {
             >
               ▶ 발음 듣기
             </button>
-            <p className="muted mt-2 text-xs">
-              {settings.data?.audioEngine === "ORIGINAL"
-                ? "MAX 합성 음성"
-                : settings.data?.audioEngine === "DEVICE"
-                  ? "기기 일본어 합성 음성"
-                  : "Supertonic 3 · 브라우저에서 생성하는 합성 음성"}
-            </p>
             <div className="mt-3 flex flex-wrap justify-center gap-3">
               {card.audioId && settings.data?.audioEngine !== "ORIGINAL" && (
                 <button
@@ -442,7 +432,7 @@ function StudyContent() {
                   className="btn text-sm"
                   onClick={() => play(card, undefined, "ORIGINAL")}
                 >
-                  MAX 음성 듣기
+                  기본 음성 듣기
                 </button>
               )}
               {card.kind !== "grammar" &&
@@ -472,7 +462,7 @@ function StudyContent() {
         )}
         {!hasSound && (
           <p className="muted mt-5 text-center text-sm">
-            이 항목에는 원본 음성이 없습니다.
+            이 항목에는 재생할 음성이 없습니다.
           </p>
         )}
         {audioMessage && (
@@ -486,7 +476,7 @@ function StudyContent() {
           preload="none"
           aria-label="현재 발음 오디오"
           className={audioUrl ? "mx-auto mt-3 w-full max-w-sm" : "hidden"}
-          onPlaying={() => setAudioMessage(`재생 중 · ${audioSource}`)}
+          onPlaying={() => setAudioMessage("재생 중")}
           onEnded={() => setAudioMessage("재생 완료")}
           onPause={() => {
             if (
