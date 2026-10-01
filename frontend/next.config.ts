@@ -6,6 +6,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+        ],
+      },
+      {
         source: "/tts/supertonic/onnx/:file",
         has: [{ type: "query", key: "v", value: "[a-f0-9]{64}" }],
         headers: [

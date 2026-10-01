@@ -42,6 +42,7 @@ function StudyContent() {
     [error, setError] = useState<unknown>(null),
     [audioMessage, setAudioMessage] = useState(""),
     [audioUrl, setAudioUrl] = useState(""),
+    [playbackBlocked, setPlaybackBlocked] = useState(false),
     [retry, setRetry] = useState<{ rating: Rating; key: string } | null>(null),
     [uniqueCards, setUniqueCards] = useState<string[]>([]),
     [nextDue, setNextDue] = useState<string | null>(null),
@@ -53,6 +54,8 @@ function StudyContent() {
       EASY: 0,
     });
   const audio = useRef<HTMLAudioElement | null>(null);
+  const playbackAttempt = useRef(0);
+  const autoPlayed = useRef<string | null>(null);
   const { generate, cancel, busy: generating } = useGeneratedAudio();
   const savingRef = useRef(false);
   const started = useRef(false);
@@ -75,6 +78,8 @@ function StudyContent() {
   }, [deckId, lessonId]);
   const card = session?.cards[index];
   const stopAudio = useCallback(() => {
+    playbackAttempt.current += 1;
+    setPlaybackBlocked(false);
     cancel();
     audio.current?.pause();
     if (audio.current) audio.current.currentTime = 0;
@@ -85,6 +90,25 @@ function StudyContent() {
   useEffect(() => {
     if ("speechSynthesis" in window) window.speechSynthesis.getVoices();
   }, []);
+  const resumeAudio = useCallback(() => {
+    const player = audio.current;
+    if (!player?.getAttribute("src")) return;
+    const attempt = playbackAttempt.current;
+    // Call play directly in the tap handler, before any asynchronous work.
+    player
+      .play()
+      .then(() => {
+        if (attempt === playbackAttempt.current) setPlaybackBlocked(false);
+      })
+      .catch((reason: unknown) => {
+        if (attempt !== playbackAttempt.current) return;
+        if (reason instanceof DOMException && reason.name === "AbortError")
+          return;
+        setAudioMessage(
+          "재생을 시작하지 못했습니다. 재생 버튼을 다시 눌러 주세요.",
+        );
+      });
+  }, []);
   const play = useCallback(
     async (
       item: StudyCard,
@@ -92,6 +116,7 @@ function StudyContent() {
       override?: Settings["audioEngine"],
     ) => {
       stopAudio();
+      const attempt = playbackAttempt.current;
       setAudioUrl("");
       setAudioMessage("");
       const id = example ? example.audioId : item.audioId;
@@ -108,11 +133,15 @@ function StudyContent() {
         setAudioUrl(url);
         setAudioMessage("음성을 불러오는 중…");
         player.play().catch((reason: unknown) => {
+          if (attempt !== playbackAttempt.current) return;
           if (reason instanceof DOMException && reason.name === "AbortError")
             return;
+          const blocked =
+            reason instanceof DOMException && reason.name === "NotAllowedError";
+          setPlaybackBlocked(blocked);
           setAudioMessage(
-            reason instanceof DOMException && reason.name === "NotAllowedError"
-              ? "브라우저가 자동재생을 막았습니다. 아래 재생 버튼을 눌러 주세요."
+            blocked
+              ? "준비된 음성을 들으려면 재생 버튼을 한 번 눌러 주세요."
               : "음성을 재생하지 못했습니다. 다시 눌러 주세요.",
           );
         });
@@ -185,12 +214,30 @@ function StudyContent() {
   const autoPlaybackAllowed =
     settings.data?.autoPlayAudio &&
     (settings.data.allowAudioBeforeReveal || revealed);
+  const autoPlaybackKey =
+    card && settings.data
+      ? [
+          card.id,
+          card.version,
+          settings.data.audioEngine,
+          settings.data.supertonicVoice,
+          settings.data.preferredVoice,
+          settings.data.playbackSpeed,
+        ].join(":")
+      : null;
   useEffect(() => {
-    if (card && autoPlaybackAllowed) {
-      const timer = setTimeout(() => play(card), 0);
+    if (!autoPlaybackAllowed) {
+      autoPlayed.current = null;
+      return;
+    }
+    if (card && autoPlaybackKey && autoPlayed.current !== autoPlaybackKey) {
+      const timer = setTimeout(() => {
+        autoPlayed.current = autoPlaybackKey;
+        void play(card);
+      }, 0);
       return () => clearTimeout(timer);
     }
-  }, [card, autoPlaybackAllowed, play]);
+  }, [card, autoPlaybackAllowed, autoPlaybackKey, play]);
   const submit = useCallback(
     async (rating: Rating, existingKey?: string) => {
       if (!session || !card || savingRef.current) return;
@@ -441,10 +488,23 @@ function StudyContent() {
             <button
               type="button"
               className="btn rounded-full bg-primary/10 px-4 text-primary"
-              onClick={() => play(card)}
-              aria-label={isKana ? "글자 발음 듣기" : "단어 발음 듣기"}
+              onClick={() => (playbackBlocked ? resumeAudio() : play(card))}
+              aria-label={
+                playbackBlocked
+                  ? settings.data?.autoPlayAudio
+                    ? "자동재생 시작"
+                    : "준비된 음성 재생"
+                  : isKana
+                    ? "글자 발음 듣기"
+                    : "단어 발음 듣기"
+              }
             >
-              ▶ 발음 듣기
+              ▶{" "}
+              {playbackBlocked
+                ? settings.data?.autoPlayAudio
+                  ? "자동재생 시작"
+                  : "준비된 음성 재생"
+                : "발음 듣기"}
             </button>
             <div className="flex flex-wrap items-center justify-center gap-1.5">
               {card.audioId && settings.data?.audioEngine !== "ORIGINAL" && (
@@ -499,7 +559,10 @@ function StudyContent() {
           preload="none"
           aria-label="현재 발음 오디오"
           className={audioUrl ? "mx-auto mt-3 w-full max-w-sm" : "hidden"}
-          onPlaying={() => setAudioMessage("재생 중")}
+          onPlaying={() => {
+            setPlaybackBlocked(false);
+            setAudioMessage("재생 중");
+          }}
           onEnded={() => setAudioMessage("재생 완료")}
           onPause={() => {
             if (

@@ -23,7 +23,11 @@ const toggles: { key: keyof Settings; label: string; help?: string }[] = [
     label: "한글 발음 보조 표시",
     help: "일본어 발음의 근사 표기입니다.",
   },
-  { key: "autoPlayAudio", label: "카드 음성 자동재생" },
+  {
+    key: "autoPlayAudio",
+    label: "카드 음성 자동재생",
+    help: "앱을 다시 열거나 새로고침한 뒤에는 처음 한 번 재생 버튼을 눌러야 할 수 있습니다.",
+  },
   { key: "allowAudioBeforeReveal", label: "정답 전에 발음 듣기" },
 ];
 export default function SettingsPage() {

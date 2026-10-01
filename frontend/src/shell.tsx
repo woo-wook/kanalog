@@ -9,10 +9,12 @@ import {
   Home,
   LogOut,
   NotebookTabs,
+  RefreshCw,
   Settings,
 } from "lucide-react";
 import { useEffect } from "react";
-import { api, me, setCsrfToken } from "./api";
+import { api, ApiError, me, setCsrfToken } from "./api";
+import { reloadApp } from "./reload-app";
 const nav = [
   { href: "/", label: "홈", icon: Home },
   { href: "/courses", label: "코스", icon: GraduationCap },
@@ -25,9 +27,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
     path = usePathname(),
     client = useQueryClient();
   const user = useQuery({ queryKey: ["me"], queryFn: me, retry: false });
+  const loginRequired =
+    user.error instanceof ApiError && user.error.status === 401;
   useEffect(() => {
-    if (user.error) router.replace("/login");
-  }, [user.error, router]);
+    if (loginRequired) router.replace("/login");
+  }, [loginRequired, router]);
   async function logout() {
     try {
       await api("/auth/logout", { method: "POST" });
@@ -60,11 +64,30 @@ export function Shell({ children }: { children: React.ReactNode }) {
         로그인 상태를 확인하고 있습니다…
       </div>
     );
-  if (user.error)
+  if (loginRequired)
     return (
       <div className="grid min-h-screen place-items-center" role="status">
         로그인 화면으로 이동합니다…
       </div>
+    );
+  if (user.error)
+    return (
+      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-4 px-5">
+        <h1 className="text-xl font-semibold">연결을 확인해 주세요</h1>
+        <p role="alert" className="muted">
+          로그인 상태를 확인하지 못했습니다. 연결이 돌아오면 다시 확인해 주세요.
+        </p>
+        <button
+          className="btn btn-primary"
+          disabled={user.isFetching}
+          onClick={() => void user.refetch()}
+        >
+          {user.isFetching ? "확인 중…" : "다시 확인"}
+        </button>
+        <button className="btn" onClick={reloadApp}>
+          새로고침
+        </button>
+      </main>
     );
   return (
     <div
@@ -94,6 +117,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <div className="border-t border-border px-3 py-4">
+          <button
+            onClick={reloadApp}
+            className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground hover:bg-secondary"
+            aria-label="새로고침"
+          >
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+            새로고침
+          </button>
           <div className="flex items-center gap-2 rounded-xl px-2 py-2">
             <span
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary"
@@ -118,13 +149,22 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <Link href="/" className="flex items-center gap-2.5">
           {brand}
         </Link>
-        <button
-          onClick={logout}
-          className="flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary"
-          aria-label="로그아웃"
-        >
-          <LogOut className="h-4 w-4" aria-hidden="true" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={reloadApp}
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary"
+            aria-label="새로고침"
+          >
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <button
+            onClick={logout}
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary"
+            aria-label="로그아웃"
+          >
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
       </header>
       <main
         id="main-content"
