@@ -363,9 +363,9 @@ function StudyContent() {
         ]
       : [];
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-5 flex items-center justify-between text-sm muted">
-        <span>
+    <div className="study-screen mx-auto max-w-2xl">
+      <div className="study-progress mb-3 flex shrink-0 items-center justify-between gap-3 text-xs muted sm:text-sm">
+        <span className="min-w-0 truncate">
           {session.lessonTitle ??
             (isKana
               ? "문자 읽기"
@@ -373,13 +373,13 @@ function StudyContent() {
                 ? "문법 회상"
                 : "단어 연습")}
         </span>
-        <span>
+        <span className="shrink-0 rounded-full bg-primary/8 px-2.5 py-1 font-semibold tabular-nums text-primary">
           {index + 1} / {session.cards.length}
         </span>
       </div>
-      <article className="surface min-h-[360px] p-6 sm:p-9">
+      <article className="study-card surface p-4 sm:p-8" aria-label="학습 카드">
         <div className="text-center">
-          <p className="muted text-sm">
+          <p className="muted text-xs sm:text-sm">
             {revealed
               ? "정답"
               : isKana
@@ -388,67 +388,90 @@ function StudyContent() {
                   ? "질문을 보고 답을 떠올려 보세요"
                   : "일본어를 보고 뜻을 떠올려 보세요"}
           </p>
-          <h1 className="jp mt-7 text-5xl font-semibold leading-tight sm:text-6xl">
+          <h1
+            className={`study-prompt jp mt-4 font-semibold leading-tight ${isKana ? "study-prompt-kana text-7xl" : "text-4xl sm:text-5xl"}`}
+          >
             {card.front}
           </h1>
-          {card.reading &&
-            (revealed || settings.data?.showReadingHint || hint) && (
-              <p className="jp mt-4 text-xl text-[var(--muted-foreground)]">
-                {card.reading}
-              </p>
-            )}
-          {!revealed && card.reading && !settings.data?.showReadingHint && (
-            <button
-              onClick={() => setHint(true)}
-              className="mt-4 text-sm font-semibold text-[var(--accent)]"
-            >
-              읽기 힌트 보기
-            </button>
+          {((card.reading &&
+            (revealed || settings.data?.showReadingHint || hint)) ||
+            (revealed &&
+              (isKana ||
+                (settings.data?.showHangulHint && card.hangulHint)))) && (
+            <div className="study-reading mx-auto mt-4 flex w-fit max-w-full items-center justify-center gap-6 rounded-2xl bg-primary/5 px-5 py-3">
+              {card.reading &&
+                (revealed || settings.data?.showReadingHint || hint) && (
+                  <div className="min-w-0">
+                    <span className="block text-[11px] font-medium text-muted-foreground">
+                      {isKana ? "로마자" : "가나 읽기"}
+                    </span>
+                    <p className="jp mt-1 text-xl font-medium text-foreground">
+                      {card.reading}
+                    </p>
+                  </div>
+                )}
+              {revealed &&
+                (isKana ||
+                  (settings.data?.showHangulHint && card.hangulHint)) && (
+                  <div className="min-w-0 border-l border-primary/15 pl-6">
+                    <span className="block text-[11px] font-medium text-muted-foreground">
+                      근사 발음
+                    </span>
+                    <p className="mt-1 text-2xl font-semibold text-primary">
+                      {card.hangulHint ?? (isKana ? card.meaning : "")}
+                    </p>
+                  </div>
+                )}
+            </div>
           )}
-          {revealed &&
-            !isKana &&
-            settings.data?.showHangulHint &&
-            card.hangulHint && (
-              <p className="muted mt-2 text-sm">
-                한글 발음 보조: {card.hangulHint}{" "}
-                <span className="text-xs">(근사 표기)</span>
-              </p>
+          {!revealed &&
+            card.reading &&
+            !settings.data?.showReadingHint &&
+            !hint && (
+              <button
+                onClick={() => setHint(true)}
+                className="mt-2 min-h-11 px-3 text-sm font-medium text-primary"
+              >
+                읽기 힌트 보기
+              </button>
             )}
         </div>
         {canHearBefore && hasSound && (
-          <div className="mt-5 text-center">
+          <div className="study-voice-controls mt-3 flex flex-wrap items-center justify-center gap-1.5 text-center">
             <button
               type="button"
-              className="btn"
+              className="btn rounded-full bg-primary/10 px-4 text-primary"
               onClick={() => play(card)}
               aria-label={isKana ? "글자 발음 듣기" : "단어 발음 듣기"}
             >
               ▶ 발음 듣기
             </button>
-            <div className="mt-3 flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
               {card.audioId && settings.data?.audioEngine !== "ORIGINAL" && (
                 <button
                   type="button"
-                  className="btn text-sm"
+                  className="btn rounded-full px-3 text-xs"
+                  aria-label="기본 음성 듣기"
                   onClick={() => play(card, undefined, "ORIGINAL")}
                 >
-                  기본 음성 듣기
+                  기본 음성
                 </button>
               )}
               {card.kind !== "grammar" &&
                 settings.data?.audioEngine !== "DEVICE" && (
                   <button
                     type="button"
-                    className="text-sm muted underline"
+                    className="min-h-11 rounded-full px-3 text-xs text-muted-foreground hover:bg-secondary"
+                    aria-label="기기 음성 듣기"
                     onClick={() => play(card, undefined, "DEVICE")}
                   >
-                    기기 음성 듣기
+                    기기 음성
                   </button>
                 )}
               {generating && (
                 <button
                   type="button"
-                  className="text-sm muted underline"
+                  className="min-h-11 px-3 text-xs text-primary"
                   onClick={() => {
                     stopAudio();
                     setAudioMessage("음성 준비를 취소했습니다.");
@@ -466,7 +489,7 @@ function StudyContent() {
           </p>
         )}
         {audioMessage && (
-          <p role="status" className="muted mt-3 text-center text-sm">
+          <p role="status" className="muted mt-2 text-center text-xs">
             {audioMessage}
           </p>
         )}
@@ -493,30 +516,36 @@ function StudyContent() {
           }
         />
         {revealed && (
-          <div className="mt-8 border-t border-[#dce4df] pt-6">
-            <h2 className="text-2xl font-bold">
-              {isKana
-                ? `${card.meaning} (근사 발음)`
-                : card.meaning || "뜻 정보 없음"}
-            </h2>
-            {card.partOfSpeech && (
-              <p className="muted mt-2 text-sm">품사: {card.partOfSpeech}</p>
+          <div
+            className={`${isKana ? "mt-3" : "mt-4 border-t border-border pt-4"}`}
+          >
+            {!isKana && (
+              <h2 className="text-center text-xl font-semibold leading-snug sm:text-2xl">
+                {card.meaning || "뜻 정보 없음"}
+              </h2>
             )}
-            {examples.map((example, exampleIndex) => (
+            {card.partOfSpeech && (
+              <p className="muted mt-1 text-center text-xs">
+                {card.partOfSpeech}
+              </p>
+            )}
+            {examples.slice(0, 1).map((example, exampleIndex) => (
               <div
                 key={exampleIndex}
-                className="mt-5 rounded-xl bg-[#f4f7f4] p-4"
+                className="mt-3 rounded-xl bg-secondary/70 p-3"
               >
-                <p className="jp text-lg">{example.japanese}</p>
+                <p className="jp text-base leading-relaxed">
+                  {example.japanese}
+                </p>
                 {"reading" in example && example.reading && (
                   <p className="jp muted mt-2">{example.reading}</p>
                 )}
                 {example.korean && (
-                  <p className="muted mt-2">{example.korean}</p>
+                  <p className="muted mt-1 text-sm">{example.korean}</p>
                 )}
                 {canPlayExample(example, settings.data?.audioEngine) && (
                   <button
-                    className="mt-3 text-sm font-semibold text-[var(--accent)]"
+                    className="mt-1 min-h-11 text-xs font-medium text-primary"
                     onClick={() => play(card, example)}
                     aria-label={`${exampleIndex + 1}번 예문 듣기`}
                   >
@@ -525,11 +554,45 @@ function StudyContent() {
                 )}
               </div>
             ))}
-            {card.explanation && (
-              <div className="mt-5">
-                <h3 className="text-sm font-bold">설명</h3>
-                <p className="mt-2 whitespace-pre-wrap">{card.explanation}</p>
-              </div>
+            {(examples.length > 1 || card.explanation) && (
+              <details
+                className="study-details mt-3 rounded-xl border border-border p-3"
+                open={card.kind === "grammar"}
+              >
+                <summary className="min-h-6 cursor-pointer text-xs font-medium text-muted-foreground">
+                  {isKana ? "발음 안내" : "예문과 설명 더 보기"}
+                </summary>
+                {examples.slice(1).map((example, offset) => (
+                  <div
+                    key={offset}
+                    className="mt-3 border-t border-border pt-3"
+                  >
+                    <p className="jp text-base leading-relaxed">
+                      {example.japanese}
+                    </p>
+                    {"reading" in example && example.reading && (
+                      <p className="jp muted mt-1 text-sm">{example.reading}</p>
+                    )}
+                    {example.korean && (
+                      <p className="muted mt-1 text-sm">{example.korean}</p>
+                    )}
+                    {canPlayExample(example, settings.data?.audioEngine) && (
+                      <button
+                        className="mt-1 min-h-11 text-xs font-medium text-primary"
+                        aria-label={`${offset + 2}번 예문 듣기`}
+                        onClick={() => play(card, example)}
+                      >
+                        ▶ 예문 듣기
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {card.explanation && (
+                  <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">
+                    {card.explanation}
+                  </p>
+                )}
+              </details>
             )}
           </div>
         )}
@@ -537,21 +600,28 @@ function StudyContent() {
       {!revealed ? (
         <button
           onClick={() => setRevealed(true)}
-          className="btn btn-primary mt-5 w-full py-4 text-lg"
+          className="study-actions btn btn-primary mt-3 min-h-14 w-full text-base"
         >
-          정답 보기 <span className="text-sm opacity-70">Space</span>
+          정답 보기{" "}
+          <span className="hidden text-xs opacity-70 md:inline">Space</span>
         </button>
       ) : (
-        <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div
+          className="study-actions mt-3 grid grid-cols-4 gap-2"
+          role="group"
+          aria-label="기억 정도 평가"
+        >
           {ratings.map((r, i) => (
             <button
               key={r.value}
-              className={`btn min-h-16 ${r.value === "GOOD" ? "btn-primary" : ""}`}
+              className={`btn min-h-14 flex-col gap-0.5 px-1.5 text-sm ${r.value === "GOOD" ? "btn-primary" : r.value === "AGAIN" ? "btn-danger" : ""}`}
               disabled={saving || Boolean(retry)}
               onClick={() => submit(r.value)}
             >
               {r.label}
-              <span className="text-xs opacity-70">{i + 1}</span>
+              <span className="hidden text-[10px] opacity-70 md:inline">
+                {i + 1}
+              </span>
             </button>
           ))}
         </div>

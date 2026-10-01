@@ -43,6 +43,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     path === href ||
     (href !== "/" && path.startsWith(`${href}/`)) ||
     (href === "/courses" && path === "/study");
+  const isStudy = path === "/study";
   const brand = (
     <>
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
@@ -66,7 +67,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </div>
     );
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className={`${isStudy ? "study-shell-root" : "min-h-screen"} bg-background`}
+    >
       <a
         href="#main-content"
         className="sr-only fixed left-4 top-4 z-50 rounded-xl bg-card px-4 py-3 font-semibold text-primary focus:not-sr-only"
@@ -126,9 +129,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <main
         id="main-content"
         tabIndex={-1}
-        className="page-pad min-w-0 pt-[calc(4.5rem+env(safe-area-inset-top))] md:ml-60 md:pt-0"
+        className={`page-pad ${isStudy ? "study-shell" : ""} min-w-0 pt-[calc(4.5rem+env(safe-area-inset-top))] md:ml-60 md:pt-0`}
       >
-        <div className="mx-auto max-w-4xl px-4 py-6 md:px-8 md:py-8">
+        <div
+          className={`${isStudy ? "study-shell-content px-3 py-2" : "px-4 py-6"} mx-auto max-w-4xl md:px-8 md:py-8`}
+        >
           {children}
         </div>
       </main>

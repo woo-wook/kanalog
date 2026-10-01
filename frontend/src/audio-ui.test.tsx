@@ -5,6 +5,8 @@ import SettingsPage from "../app/(app)/settings/page";
 import StudyPage from "../app/(app)/study/page";
 import NotesPage from "../app/(app)/notes/page";
 import { api } from "./api";
+import userEvent from "@testing-library/user-event";
+import { within } from "@testing-library/react";
 
 vi.mock("./api", () => ({
   api: vi.fn(),
@@ -124,4 +126,44 @@ it("단어장은 출처를 표시하지 않으면서 가져온 단어의 편집 
   expect(
     screen.queryByRole("button", { name: "수정" }),
   ).not.toBeInTheDocument();
+});
+
+it("가나 정답의 근사 발음은 카드 안에 표시하고 평가는 별도 하단 영역에 둔다", async () => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { staleTime: Infinity } },
+  });
+  client.setQueryData(["settings"], {
+    audioEngine: "SUPERTONIC",
+    allowAudioBeforeReveal: true,
+    showHangulHint: false,
+  });
+  vi.mocked(api).mockResolvedValue({
+    id: "session",
+    answered: 0,
+    cards: [
+      {
+        id: "kana",
+        version: 0,
+        kind: "katakana",
+        front: "ア",
+        reading: "a",
+        meaning: "아",
+        hangulHint: "아",
+      },
+    ],
+  });
+  render(
+    <QueryClientProvider client={client}>
+      <StudyPage />
+    </QueryClientProvider>,
+  );
+  const reveal = await screen.findByRole("button", { name: /정답 보기/ });
+  expect(screen.queryByText("아")).not.toBeInTheDocument();
+  await userEvent.click(reveal);
+  const card = screen.getByRole("article");
+  expect(within(card).getByText("근사 발음")).toBeVisible();
+  expect(within(card).getByText("아")).toBeVisible();
+  const actions = screen.getByRole("group", { name: "기억 정도 평가" });
+  expect(within(actions).getAllByRole("button")).toHaveLength(4);
+  expect(card.contains(actions)).toBe(false);
 });

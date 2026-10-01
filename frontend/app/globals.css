@@ -139,6 +139,48 @@ progress::-moz-progress-bar {
   .page-pad {
     padding-bottom: calc(6rem + env(safe-area-inset-bottom));
   }
+  .study-shell-root {
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .page-pad.study-shell {
+    height: 100dvh;
+    overflow: hidden;
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+  .study-shell-content {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .study-screen {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .study-card {
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  .study-actions {
+    flex-shrink: 0;
+  }
+  .study-actions.btn,
+  .study-actions .btn {
+    min-height: 56px;
+    padding-inline: 0.5rem;
+  }
+  .study-prompt {
+    font-size: clamp(1.75rem, 9vw, 2.5rem);
+  }
+  .study-prompt-kana {
+    font-size: clamp(3.5rem, 18vw, 5rem);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   *,
