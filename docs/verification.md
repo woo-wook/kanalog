@@ -1,5 +1,15 @@
 # 검증 기록
 
+## 레벨별 커리큘럼 변경의 최종 확인
+
+2026-10-01 후속 변경에서 Backend 21개(Builder 7, PostgreSQL 통합 9, FSRS 4, 날짜 1), Frontend 28개 테스트가 통과했다. 프런트 타입 검사·lint, Kotlin/Next.js Docker production build와 Compose 재배포가 성공했다.
+
+`python3 tools/e2e/check_curriculum_api.py`로 현재 서버의 실제 QA 계정 로그인을 사용해 인증 필수, 6레벨 순서, 기존 모든 레슨 ID의 단일 연결, core 집계, 레벨 상세 응답, 없는 키 404를 확인했다. QA 계정은 왕초보 기본 92장·20레슨과 N5 878장·59레슨을 제공하고 N4~N1은 `available=false`다. 전체 개인 데이터의 목차는 `curriculum.md`에 기록했다.
+
+재배포 전후 모든 UserCardState·ReviewLog 전체 행 해시와 카드·레슨 ID 목록 해시가 동일했다. 새로운 migration이나 학습 기록 초기화가 없다. 현재 backend는 healthy이고 readiness는 UP이다.
+
+컴포넌트 테스트에서는 6레벨·현재 레슨·단원 접기/펼치기·완료·데이터 없음·홈의 이어서 학습·세션 완료 후 다음 단계·레벨 통계를 확인했다. 브라우저의 저장된 접근 차단으로 실제 화면 청취·모바일 크기·E2E 재실행은 계속 미확인이다. 기존 E2E는 새로운 레벨 경로와 접힌 단원 구조에 맞게 갱신했으나 통과로 표시하지 않는다. 아래는 이전 Supertonic 변경 시점의 검증 기록이다.
+
 2026-10-01, Apple Silicon 개발 환경과 현재 로컬 Compose 기준이다. 실제 MAX 콘텐츠·음성·QA 비밀번호·백업은 `private-data` 또는 개인 volume에 두고 Git과 이미지에서 제외한다.
 
 ## 이번 변경에서 실행한 검증

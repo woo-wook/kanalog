@@ -75,3 +75,10 @@
 - 설정 GET/PATCH의 `audioEngine`: SUPERTONIC(기본값), ORIGINAL, DEVICE. `supertonicVoice`: F1(기본값)..F5/M1..M5. 설정은 사용자별로 저장한다. 잘못된 선택은 BAD_AUDIO_ENGINE/BAD_SUPERTONIC_VOICE(400).
 
 음성 합성은 DB 진도 변경이 없으며 브라우저에서 실행한다. 생성 WAV와 개인 학습 데이터는 공개 캐시에 저장하지 않는다.
+# 레벨별 커리큘럼
+
+- `GET /api/curriculum`: 인증된 사용자 콘텐츠를 왕초보~고급 6레벨·단원·기존 레슨으로 구성한다. `version`, `levels`, `recommendedLevelKey`, `recommendedLessonId`를 반환한다.
+- `GET /api/curriculum/levels/{key}`: `starter`, `n5`, `n4`, `n3`, `n2`, `n1` 중 한 레벨. 잘못된 키는 404 `CURRICULUM_LEVEL_NOT_FOUND`.
+- 레벨에는 `goal`, `outcomes`, `units`, `available`와 기본 레슨의 `totalCards`, `studiedCards`, `completedCards`, `totalLessons`, `completedLessons`가 있다. 단원은 순서·선택 여부·기존 레슨을 포함하며 레슨에는 기존 `id`와 `courseId`, `kind`를 보존한다.
+- 조회는 카드 예약·진도 갱신을 하지 않는다. 없는 급수는 `available=false`이고 가짜 레슨을 생성하지 않는다. 선택 확장은 레벨 기본 진도에서 제외한다. `completed`는 첫 연습 완료이며 장기 암기 완료를 뜻하지 않는다.
+- 실제 카드 평가 저장 성공 뒤 클라이언트가 `curriculum` 조회를 갱신한다. 기존 `/api/courses`와 학습 세션/평가 계약은 유지한다.
