@@ -26,7 +26,35 @@ const ratings: { value: Rating; label: string }[] = [
 function StudyContent() {
   const params = useSearchParams(),
     deckId = params.get("deckId"),
-    lessonId = params.get("lessonId");
+    lessonId = params.get("lessonId"),
+    kanaScript = params.get("kana"),
+    kanaGroups = params.get("groups") ?? "basic",
+    kanaSize = params.get("size") ?? "10",
+    kanaPractice = params.get("practice") === "1";
+  const startSession = useCallback(
+    () =>
+      api<StudySession>(
+        "/study/sessions",
+        json("POST", {
+          ...(deckId ? { deckId } : {}),
+          ...(lessonId ? { lessonId } : {}),
+          ...(kanaScript
+            ? {
+                kana: {
+                  scripts:
+                    kanaScript === "both"
+                      ? ["hiragana", "katakana"]
+                      : [kanaScript],
+                  groups: kanaGroups.split(","),
+                  size: Number(kanaSize),
+                  practice: kanaPractice,
+                },
+              }
+            : {}),
+        }),
+      ),
+    [deckId, lessonId, kanaScript, kanaGroups, kanaSize, kanaPractice],
+  );
   const queryClient = useQueryClient();
   const settings = useQuery({
     queryKey: ["settings"],
@@ -60,22 +88,18 @@ function StudyContent() {
   const savingRef = useRef(false);
   const started = useRef(false);
   useEffect(() => {
-    if (started.current || (!deckId && !lessonId)) return;
+    if (started.current || (!deckId && !lessonId && !kanaScript)) return;
     started.current = true;
-    const selected = lessonId
-      ? api(`/courses/lessons/${lessonId}/select`, { method: "POST" })
-      : Promise.resolve();
+    const selected =
+      lessonId && !kanaScript
+        ? api(`/courses/lessons/${lessonId}/select`, { method: "POST" })
+        : Promise.resolve();
     selected
-      .then(() =>
-        api<StudySession>(
-          "/study/sessions",
-          json("POST", lessonId ? { lessonId } : { deckId }),
-        ),
-      )
+      .then(startSession)
       .then(setSession)
       .catch(setStartError)
       .finally(() => setLoading(false));
-  }, [deckId, lessonId]);
+  }, [deckId, lessonId, kanaScript, startSession]);
   const card = session?.cards[index];
   const stopAudio = useCallback(() => {
     playbackAttempt.current += 1;
@@ -264,7 +288,7 @@ function StudyContent() {
         setUniqueCards((previous) =>
           previous.includes(card.id) ? previous : [...previous, card.id],
         );
-        setNextDue(result.due);
+        setNextDue(result.due ?? null);
         setIndex((previous) => previous + 1);
         setRevealed(false);
         setHint(false);
@@ -314,7 +338,7 @@ function StudyContent() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [revealed, card, saving, retry, submit]);
-  if (!deckId && !lessonId)
+  if (!deckId && !lessonId && !kanaScript)
     return (
       <div>
         <ErrorMessage error={new Error("학습할 레슨을 골라 주세요.")} />
@@ -347,7 +371,11 @@ function StudyContent() {
     };
     return (
       <div className="surface mx-auto max-w-2xl p-7 text-center">
-        <h1 className="text-2xl font-bold">이번 학습을 마쳤습니다</h1>
+        <h1 className="text-2xl font-bold">
+          {session.practice
+            ? "자유 연습을 마쳤습니다"
+            : "이번 학습을 마쳤습니다"}
+        </h1>
         <p className="muted mt-4">
           학습한 고유 카드 {uniqueCards.length}장 · 답변 {answerCount}회
         </p>
@@ -360,23 +388,64 @@ function StudyContent() {
           ))}
         </div>
         <p className="muted mt-5 text-sm">
-          다시 평가한 카드는 복습 시각이 되면 같은 세션에서 이어서 학습할 수
-          있습니다.
+          {session.practice
+            ? "자유 연습 답변을 따로 저장했습니다. 복습 일정과 코스 진도는 그대로 유지됩니다."
+            : "다시 평가한 카드는 복습 시각이 되면 같은 세션에서 이어서 학습할 수 있습니다."}
         </p>
         {nextDue && (
           <p className="muted mt-2 text-sm">
             최근 카드의 다음 복습: {new Date(nextDue).toLocaleString("ko-KR")}
           </p>
         )}
-        <button className="btn mt-5" onClick={refreshDue} disabled={refreshing}>
-          {refreshing ? "확인 중…" : "복습할 카드 다시 확인"}
-        </button>
+        {!session.practice && (
+          <button
+            className="btn mt-5"
+            onClick={refreshDue}
+            disabled={refreshing}
+          >
+            {refreshing ? "확인 중…" : "복습할 카드 다시 확인"}
+          </button>
+        )}
         {error !== null && (
           <p role="alert" className="mt-3 text-sm text-[#993d36]">
             복습 카드를 불러오지 못했습니다. 다시 눌러 주세요.
           </p>
         )}
-        <StudyNextStep lessonId={lessonId} />
+        {kanaScript && (
+          <button
+            className="btn btn-primary mt-5"
+            onClick={async () => {
+              if (savingRef.current) return;
+              savingRef.current = true;
+              setLoading(true);
+              setStartError(null);
+              stopAudio();
+              try {
+                const next = await startSession();
+                setSession(next);
+                setIndex(0);
+                setRevealed(false);
+                setHint(false);
+                setUniqueCards([]);
+                setNextDue(null);
+                setRetry(null);
+                setError(null);
+                setAudioUrl("");
+                setAudioMessage("");
+                autoPlayed.current = null;
+                setCounts({ AGAIN: 0, HARD: 0, GOOD: 0, EASY: 0 });
+              } catch (e) {
+                setStartError(e);
+              } finally {
+                savingRef.current = false;
+                setLoading(false);
+              }
+            }}
+          >
+            다시 섞어 연습
+          </button>
+        )}
+        {!session.practice && <StudyNextStep lessonId={lessonId} />}
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link className="btn btn-primary" href="/">
             홈으로

@@ -89,3 +89,18 @@
 `POST /api/speech`는 로그인 쿠키, `Origin`, `X-CSRF-Token`이 필요하다. 본문은 `{"text":"ア","voice":"F1"}`이며 비어 있지 않은 text 최대 500자, voice `F1`..`F5`/`M1`..`M5`만 허용한다. 성공은 JSON 대신 `Content-Type: audio/wav`와 `Cache-Control: private, no-store`의 이진 응답이다. 학습 상태를 변경하지 않는다. 주소·언어·모델 설정은 클라이언트가 지정할 수 없다.
 
 잘못된 입력 400, 미인증 401, Origin/CSRF 오류 403, 계산 중 429 `SPEECH_BUSY`, 잘못된 WAV 502 `BAD_SPEECH`, 계산 실패 503 `SPEECH_UNAVAILABLE`을 반환한다. 일반 오류 envelope를 사용한다. 클라이언트는 받은 WAV의 Blob URL을 재생하며 취소·페이지 이동 때 해제한다.
+
+
+## 가나 섞어 학습과 자유 연습
+
+`POST /api/study/sessions`에서 `deckId`·`lessonId`·`kana` 중 정확히 하나만 보낸다.
+
+```json
+{"kana":{"scripts":["hiragana","katakana"],"groups":["basic","voiced","semiVoiced","yoon"],"size":10,"practice":false}}
+```
+
+`scripts`는 히라가나·가타카나, `groups`는 기본(46)·탁음(20)·반탁음(5)·요음(33)의 중복 없는 비어 있지 않은 목록이다. 숫자는 문자 체계 한 종류당 수다. `size`는 1~208, 기본 10이다. 요청마다 무작위로 범위 안의 카드를 고르되 세션에 저장한 순서는 GET으로 재조회할 때 유지한다. 학습·복습(`practice:false`)은 복습할 카드부터 선택하고 남은 슬롯에 일일 한도 안의 새 카드를 추가한다. 전체 범위를 골라도 하루 한도와 복습일 때문에 응답 장수는 적을 수 있다.
+
+`practice:true`는 복습일과 무관하게 해당 범위의 활성·미제외 카드에서 고른다. 응답의 `practice`와 `lessonTitle`로 모드를 구분한다. 기존 `/study/reviews`에 같은 평가·idempotency key를 제출하되 자유 연습은 서버에 저장된 세션 모드로 판단한다. 응답은 `{version,state:"PRACTICED"}`이며 `due`는 없다. 답변을 `practice_answer`에 따로 저장하고 FSRS 상태·일일 새 카드 한도·ReviewLog·코스 완료·복습 통계를 변경하지 않는다. 자유 연습 한 세션에서는 카드당 한 번만 답변하며 같은 키의 재전송은 기존 성공을 반환한다. 같은 키의 다른 요청은 409 `IDEMPOTENCY_CONFLICT`, 다른 키의 중복 카드 답변은 409 `PRACTICE_ALREADY_ANSWERED`다. 자유 연습과 일반 복습 사이에서도 이미 사용한 사용자 요청 키는 재사용할 수 없다.
+
+`GET /api/study/sessions/{id}`는 소유자만 조회하며 자유 연습에서는 미답변 카드와 저장된 답변 수를 반환한다. 제외된 카드는 빠진다. 범위가 잘못되면 400 `BAD_KANA_SCOPE`, 학습 범위를 동시에 지정하면 400 `BAD_STUDY_SCOPE`다.

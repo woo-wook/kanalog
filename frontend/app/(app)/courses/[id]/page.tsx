@@ -4,6 +4,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api, type Course } from "@/api";
+import { KanaMix } from "@/kana-mix";
 import { Loading, ErrorMessage } from "@/shell";
 export default function CoursePage() {
   const { id } = useParams<{ id: string }>();
@@ -76,6 +77,11 @@ export default function CoursePage() {
       <p className="muted mt-2 text-sm">
         순서대로 조금씩 연습하거나 필요한 레슨을 골라 시작할 수 있습니다.
       </p>
+      {["hiragana", "katakana"].includes(course.kind) && (
+        <div className="mt-7">
+          <KanaMix />
+        </div>
+      )}
       <section className="mt-7">
         <h2 className="text-base font-semibold">
           {optional.length > 0 ? "기본 문자" : "레슨"}

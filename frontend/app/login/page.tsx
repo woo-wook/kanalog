@@ -35,7 +35,7 @@ export default function LoginPage() {
         일본어 학습
       </h1>
       <p className="muted mt-3 text-center">
-        가타카나부터, 오늘의 학습을 이어가세요.
+        히라가나부터, 오늘의 학습을 이어가세요.
       </p>
       <form onSubmit={submit} className="surface mt-8 space-y-5 p-6 sm:p-7">
         <div>

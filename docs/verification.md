@@ -1,5 +1,32 @@
 # 검증 기록
 
+## 히라가나 우선·가나 섞어 학습 (2026-10-02)
+
+새 계정의 기본 코스·왕초보 단원은 히라가나 → 가타카나다. 기존 카드·레슨 ID·선택 레슨·학습 기록은 유지한다. 왕초보 화면에서 문자 종류, 기본/탁음/반탁음/요음, 5·10·20·30장/선택 범위 전체를 고른다. 학습·복습은 같은 FSRS 상태로 원래 레슨 진도를 갱신하고, 자유 연습은 서버의 세션 모드와 별도 답변 표를 사용해 복습일·진도·통계를 보존한다.
+
+| 검증 | 이번 실행 결과 |
+| --- | --- |
+| 백엔드 | JUnit 25개 통과. 히라가나 우선, 섞기 범위·소유권·208개 전체·중복 없음·세션 순서 유지·일일 한도·미래 카드 자유 연습·제외·중복 키 재전송/충돌·다른 키 중복 답변·연습과 FSRS의 키 충돌·FSRS 불변 포함 |
+| 프런트엔드 | 타입·lint·Vitest 47개 통과. 모든 범위 조합과 전체 장수, 범위 없는 시작 차단, 선택한 요청 계약, 자유 연습 완료·답변 저장·새 세션 다시 섞기 포함 |
+| 실제 모바일 흐름 | 최종 공개 WebKit에서 반탁음 두 문자 체계 10장 연습 완료·DB 답변 재조회·FSRS 통계/첫 연습 불변·다시 섞기·실제 서버 음성 재생·모델 다운로드 없음 확인. 로그인 안내도 히라가나 우선. 기존 모바일 카드 4개·Safari 음성 1개·새로고침/다음 카드 자동재생 1개의 회귀도 통과(브라우저 총 7개 케이스) |
+| 모바일 입력 | 공개 WebKit에서 새 select의 실제 높이 19/21px 실패를 확인. 기존 `.field`에 명시적인 48px 높이·appearance·화살표·16px 글자 크기를 적용. 최종 360/390px에서 모든 select ≥44px·가로 넘침 없음 통과 |
+| 배포와 보존 | V7 마이그레이션·Kotlin/Next.js Docker build·Compose healthy·공개 HTTPS·Secure 쿠키 검사 성공. 배포 전 DB dump(권한 0600) 보관, 배포 전후 전체 UserCardState/ReviewLog 행 해시 및 카드/레슨 ID 목록 해시 일치 |
+
+초기 단계의 순서·섞기 API·자유 연습·프런트 연동 테스트를 각각 실패시킨 뒤 구현했다. 공개 주소의 Python `check_curriculum_api.py`는 Cloudflare가 403으로 차단하여 이번 실행은 통과로 기록하지 않는다. 공개 WebKit에서 같은 커리큘럼의 히라가나 우선 응답과 학습 흐름을 검증했다. 원문 콘텐츠나 비밀번호는 검증 산출물에 포함하지 않는다. 실제 iPhone·설치 PWA·청취 품질은 이번에도 실기기 검증을 하지 않았다.
+
+```sh
+cd backend
+JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ./gradlew test --rerun-tasks --no-daemon
+cd ../frontend
+pnpm exec tsc --noEmit
+pnpm lint
+pnpm test
+cd ..
+docker compose up -d --build
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/kana-mix.spec.ts e2e/mobile-study.spec.ts e2e/safari-speech.spec.ts e2e/refresh-autoplay.spec.ts
+python3 tools/e2e/check_deployment.py
+```
+
 ## 모바일 Safari의 반복 모델 다운로드 방지 (2026-10-02)
 
 사용자가 보고한 재생 후 자동 재로드에 대해 코드상의 자동 reload는 없었다. 약 401MB 모델과 브라우저 추론 메모리로 인한 WebKit 프로세스 재시작을 의심하지만 실기기 종료 로그를 확보하지 않아 원인을 확정하지 않는다. iPhone/iPad(데스크톱 UA iPad 포함)는 브라우저 worker를 초기화하지 않고 인증된 자체 서버의 동일 Supertonic 계산 결과 WAV만 받도록 변경했다. Desktop browser mode와 MAX 기본 음성은 유지한다.

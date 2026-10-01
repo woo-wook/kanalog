@@ -119,9 +119,10 @@ export interface StudySession {
   answered: number;
   lessonId?: string | null;
   lessonTitle?: string | null;
+  practice?: boolean;
 }
 export interface ReviewResult {
-  due: string;
+  due?: string | null;
   version: number;
 }
 export interface Settings {

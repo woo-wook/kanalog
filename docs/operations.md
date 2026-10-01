@@ -137,3 +137,8 @@ docker compose restart voice
 ```
 
 voice는 manifest 누락·크기/해시 불일치 시 준비 완료로 표시하지 않는다. 기존 기본 음성·학습 진도는 음성 계산과 독립적이며, 계산 실패 시 휴대폰에서 대형 모델을 다시 받지 않고 재시도 오류를 표시한다. 생성 WAV 캐시는 RAM에만 있으므로 별도 백업 대상이 아니며 기존 DB·MAX 미디어 백업 절차는 유지한다. 모델은 서버가 재시작해도 디스크에서 읽고 휴대폰으로 전송하지 않는다. 공개 TTS 모델 URL은 다른 기기의 기존 브라우저 모드를 위해 유지한다.
+
+
+## 가나 혼합 세션 업데이트
+
+V7은 혼합 세션의 표시 이름·자유 연습 모드·`practice_answer` 표를 추가한다. 기존 카드와 ReviewLog/UserCardState를 초기화하지 않는다. 적용 전 DB dump를 보관하고 `docker compose up -d --build` 후 backend healthy와 왕초보 화면의 히라가나 우선 순서, 섞어 연습을 확인한다. 표는 기존 PostgreSQL DB 안에 있으며 기존 `pg_dump` 백업에 자동 포함된다. 자유 연습은 ReviewLog와 분리되어 기존 복습 통계에 포함되지 않는다.

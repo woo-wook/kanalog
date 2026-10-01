@@ -61,6 +61,81 @@ class PersistenceFlowTest @Autowired constructor(
         assertEquals(1,jdbc.queryForObject("select count(*) from review_log where user_id=?",Int::class.java,owner))
     }
 
+    @Test fun `mixed kana spans selected scripts and groups while preserving owner scope and daily cap`() {
+        val owner=user();val other=user()
+        courses.synchronize(owner);courses.synchronize(other)
+        val mixed=study.start(owner,kana=KanaMixRequest(listOf("hiragana","katakana"),listOf("voiced","semiVoiced"),50))
+        assertEquals(10,mixed.cards.size)
+        assertTrue(mixed.cards.all { it.kind in listOf("hiragana","katakana") })
+        assertTrue(mixed.cards.all { it.front in "が ぎ ぐ げ ご ざ じ ず ぜ ぞ だ ぢ づ で ど ば び ぶ べ ぼ ぱ ぴ ぷ ぺ ぽ ガ ギ グ ゲ ゴ ザ ジ ズ ゼ ゾ ダ ヂ ヅ デ ド バ ビ ブ ベ ボ パ ピ プ ペ ポ".split(' ') })
+        assertTrue(mixed.cards.all { study.card(other,it.id)==null })
+        assertEquals(mixed.cards.map { it.id },study.session(owner,mixed.id).cards.map { it.id })
+        assertEquals("SESSION_NOT_FOUND",assertThrows(ApiFailure::class.java) { study.session(other,mixed.id) }.code)
+        val selected=study.start(owner,kana=KanaMixRequest(listOf("hiragana"),listOf("semiVoiced"),5))
+        assertEquals(setOf("ぱ","ぴ","ぷ","ぺ","ぽ"),selected.cards.map { it.front }.toSet())
+        assertEquals(5,selected.cards.size)
+        assertEquals("BAD_KANA_SCOPE",assertThrows(ApiFailure::class.java) { study.start(owner,kana=KanaMixRequest(listOf("vocabulary"),listOf("basic"),10)) }.code)
+        assertEquals("BAD_STUDY_SCOPE",assertThrows(ApiFailure::class.java) { study.start(owner,lessonId=courses.list(owner).first().lessons.first().id,kana=KanaMixRequest()) }.code)
+        assertThrows(ApiFailure::class.java) { study.start(owner,kana=KanaMixRequest(groups=emptyList())) }
+        assertThrows(ApiFailure::class.java) { study.start(owner,kana=KanaMixRequest(size=209)) }
+    }
+
+    @Test fun `free kana practice includes future cards stores answers idempotently without changing FSRS or limits`() {
+        val owner=user();courses.synchronize(owner)
+        val initial=study.start(owner,kana=KanaMixRequest(groups=listOf("semiVoiced"),size=5))
+        val learned=initial.cards.first()
+        study.review(owner,ReviewRequest(initial.id,learned.id,learned.version,"GOOD",UUID.randomUUID().toString()))
+        val before=study.card(owner,learned.id)!!
+        jdbc.update("update user_settings set daily_new_limit=1 where user_id=?",owner)
+        val mix=KanaMixRequest(groups=listOf("semiVoiced"),size=5,practice=true)
+        val free=study.start(owner,kana=mix)
+        assertTrue(free.practice)
+        assertEquals(5,free.cards.size)
+        assertTrue(free.cards.any { it.id==learned.id })
+        val req=ReviewRequest(free.id,learned.id,before.version,"EASY",UUID.randomUUID().toString())
+        val answer=study.review(owner,req)
+        assertEquals("PRACTICED",answer.state)
+        assertEquals(null,answer.due)
+        assertEquals(answer,study.review(owner,req))
+        assertEquals("IDEMPOTENCY_CONFLICT",assertThrows(ApiFailure::class.java) { study.review(owner,req.copy(sessionId=initial.id)) }.code)
+        assertEquals("IDEMPOTENCY_CONFLICT",assertThrows(ApiFailure::class.java) { study.review(owner,req.copy(rating="HARD")) }.code)
+        assertEquals("PRACTICE_ALREADY_ANSWERED",assertThrows(ApiFailure::class.java) { study.review(owner,req.copy(idempotencyKey=UUID.randomUUID().toString())) }.code)
+        assertEquals(before,study.card(owner,learned.id))
+        assertEquals(1,jdbc.queryForObject("select count(*) from review_log where user_id=?",Int::class.java,owner))
+        assertEquals(1,jdbc.queryForObject("select count(*) from practice_answer where user_id=?",Int::class.java,owner))
+        val remaining=study.session(owner,free.id)
+        assertEquals(4,remaining.cards.size)
+        assertEquals(1,remaining.answered)
+        assertTrue(remaining.practice)
+        assertEquals(free.lessonTitle,remaining.lessonTitle)
+        assertTrue(study.start(owner,kana=KanaMixRequest(groups=listOf("semiVoiced"))).cards.isEmpty())
+        val excluded=free.cards.last { it.id!=learned.id }
+        jdbc.update("insert into user_card_state(id,user_id,card_id,suspended) values(?,?,?,true) on conflict(user_id,card_id) do update set suspended=true",UUID.randomUUID(),owner,excluded.id)
+        assertTrue(study.start(owner,kana=mix).cards.none { it.id==excluded.id })
+        assertEquals(0,overview.dashboard(owner).dailyNewRemaining)
+    }
+
+    @Test fun `mixed sessions enforce new limit across groups and free answers stay owner scoped`() {
+        val owner=user();val other=user();courses.synchronize(owner);courses.synchronize(other)
+        jdbc.update("update user_settings set daily_new_limit=1 where user_id=?",owner)
+        val first=study.start(owner,kana=KanaMixRequest(groups=listOf("semiVoiced"),size=5))
+        val second=study.start(owner,kana=KanaMixRequest(groups=listOf("voiced"),size=5))
+        assertEquals(1,first.cards.size);assertEquals(1,second.cards.size)
+        val a=first.cards.single();val b=second.cards.single()
+        study.review(owner,ReviewRequest(first.id,a.id,a.version,"GOOD",UUID.randomUUID().toString()))
+        assertEquals("NEW_LIMIT",assertThrows(ApiFailure::class.java) { study.review(owner,ReviewRequest(second.id,b.id,b.version,"GOOD",UUID.randomUUID().toString())) }.code)
+        val free=study.start(owner,kana=KanaMixRequest(groups=listOf("voiced"),size=5,practice=true))
+        val card=free.cards.first()
+        assertEquals("CARD_NOT_IN_SESSION",assertThrows(ApiFailure::class.java) { study.review(other,ReviewRequest(free.id,card.id,card.version,"EASY",UUID.randomUUID().toString())) }.code)
+        assertEquals("BAD_RATING",assertThrows(ApiFailure::class.java) { study.review(owner,ReviewRequest(free.id,card.id,card.version,"WRONG",UUID.randomUUID().toString())) }.code)
+        assertEquals(0,jdbc.queryForObject("select count(*) from practice_answer where user_id=?",Int::class.java,owner))
+        val groups=listOf("basic","voiced","semiVoiced","yoon")
+        val all=study.start(owner,kana=KanaMixRequest(listOf("hiragana","katakana"),groups,208,true))
+        assertEquals(208,all.cards.size)
+        assertEquals(setOf("hiragana","katakana"),all.cards.map { it.kind }.toSet())
+        assertEquals(208,all.cards.map { it.id }.toSet().size)
+    }
+
     @Test fun `audio engine and Supertonic voice settings persist per user and reject invalid choices`() {
         val owner=user();val other=user()
         assertEquals("SUPERTONIC",overview.settings(owner).audioEngine)
