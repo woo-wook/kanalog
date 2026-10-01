@@ -83,11 +83,11 @@ class PersistenceFlowTest @Autowired constructor(
         assertEquals("device-ja-JP",overview.settings(owner).preferredVoice)
     }
 
-    @Test fun `kana courses start with ordered katakana and preserve practice on synchronization`() {
+    @Test fun `kana courses start with ordered hiragana and preserve practice on synchronization`() {
         val owner=user(); val other=user()
         courses.synchronize(owner)
         val all=courses.list(owner)
-        assertEquals(listOf("katakana","hiragana"),all.map { it.kind })
+        assertEquals(listOf("hiragana","katakana"),all.map { it.kind })
         assertEquals(46,all.first().lessons.filter { !it.optional }.sumOf { it.totalCards })
         val lesson=all.first().lessons.first()
         assertEquals(5,lesson.totalCards)
@@ -96,7 +96,7 @@ class PersistenceFlowTest @Autowired constructor(
         assertEquals(5,overview.dashboard(owner).newRemaining)
         assertEquals(10,overview.dashboard(owner).dailyNewRemaining)
         val session=study.start(owner,lessonId=lesson.id)
-        assertEquals(listOf("ア","イ","ウ","エ","オ"),session.cards.map { it.front })
+        assertEquals(listOf("あ","い","う","え","お"),session.cards.map { it.front })
         val card=session.cards.first()
         val request=ReviewRequest(session.id,card.id,card.version,"GOOD",UUID.randomUUID().toString())
         study.review(owner,request)

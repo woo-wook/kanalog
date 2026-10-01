@@ -55,7 +55,7 @@ class CourseService(private val jdbc:JdbcTemplate) {
 
     @Transactional fun synchronize(owner:UUID) {
         jdbc.queryForObject("select id from app_user where id=? for update",UUID::class.java,owner)
-        for((kind,position) in listOf("katakana" to 0,"hiragana" to 1)) seedKana(owner,kind,position)
+        for((kind,position) in listOf("hiragana" to 0,"katakana" to 1)) seedKana(owner,kind,position)
         val decks=jdbc.query("""select d.id,d.title,d.kind,d.level from deck d join content_source s on s.id=d.source_id
             where d.owner_id=? and d.import_status='READY' and s.source_key='jlpt-max' and d.kind in ('vocabulary','grammar')
             order by d.level desc,d.kind desc,d.source_path""",{rs,_->

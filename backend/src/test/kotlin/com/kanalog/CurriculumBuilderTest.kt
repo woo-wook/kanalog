@@ -27,13 +27,13 @@ class CurriculumBuilderTest {
         val result=CurriculumBuilder().build(listOf(course("hiragana",lessons=kana.map { it.copy(id=UUID.randomUUID()) }),
             course("katakana",lessons=kana)))
         val starter=result.levels.first()
-        assertEquals(listOf("katakana-basic-1","katakana-basic-2","hiragana-basic-1","hiragana-basic-2", "katakana-extra","hiragana-extra"),starter.units.map { it.key })
+        assertEquals(listOf("hiragana-basic-1","hiragana-basic-2","katakana-basic-1","katakana-basic-2", "hiragana-extra","katakana-extra"),starter.units.map { it.key })
         assertEquals(listOf(25,21,25,21,58,58),starter.units.map { it.totalCards })
-        assertEquals(listOf("가타카나 시작","가타카나 기본 완성","히라가나 시작","히라가나 기본 완성"),
+        assertEquals(listOf("히라가나 시작","히라가나 기본 완성","가타카나 시작","가타카나 기본 완성"),
             starter.units.filter { !it.optional }.map { it.title })
         assertEquals(92,starter.totalCards)
         assertEquals(20,starter.totalLessons)
-        assertEquals(kana.first().id,result.recommendedLessonId)
+        assertEquals(starter.units.first().lessons.first().id,result.recommendedLessonId)
         assertEquals("starter",result.recommendedLevelKey)
         assertTrue(starter.available)
         assertFalse(starter.completed)

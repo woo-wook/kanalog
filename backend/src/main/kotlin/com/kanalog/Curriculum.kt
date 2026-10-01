@@ -23,8 +23,8 @@ data class CurriculumLessonView(val id:UUID,val title:String,val position:Int,va
 class CurriculumBuilder {
     private data class Level(val key:String,val title:String,val subtitle:String,val jlpt:String?,val goal:String,val outcomes:List<String>)
     private val definitions=listOf(
-        Level("starter","왕초보","일본어 문자부터",null,"가타카나와 히라가나 기본 46자를 각각 읽는 첫 연습을 마칩니다.",
-            listOf("가타카나 기본 문자와 읽기를 연결합니다.","히라가나 기본 문자와 읽기를 연결합니다.","탁음·반탁음·요음은 선택해서 더 연습합니다.")),
+        Level("starter","왕초보","일본어 문자부터",null,"히라가나와 가타카나 기본 46자를 각각 읽는 첫 연습을 마칩니다.",
+            listOf("히라가나 기본 문자와 읽기를 연결합니다.","가타카나 기본 문자와 읽기를 연결합니다.","탁음·반탁음·요음은 선택해서 더 연습합니다.")),
         Level("n5","입문","N5 · 기초 단어와 문장","N5","N5 어휘의 읽기와 한국어 뜻, 확보된 문법 설명과 예문을 연습합니다.",
             listOf("N5 단어를 보고 읽기와 뜻을 떠올립니다.","덱에 있는 기초 문법의 설명과 예문을 확인합니다.")),
         Level("n4","초급","N4 · 단어와 문장 넓히기","N4","N4 어휘와 문법을 단위별로 나누어 반복 연습합니다.",
@@ -59,7 +59,7 @@ class CurriculumBuilder {
     private fun kanaUnits(courses:List<CourseView>):List<CurriculumUnitView> {
         val core=mutableListOf<CurriculumUnitView>()
         val optional=mutableListOf<CurriculumUnitView>()
-        for(kind in listOf("katakana","hiragana")) {
+        for(kind in listOf("hiragana","katakana")) {
             val title=if(kind=="katakana") "가타카나" else "히라가나"
             val lessons=lessons(courses.filter { it.kind==kind })
             for((index,range) in listOf(0..4,5..9).withIndex()) {
