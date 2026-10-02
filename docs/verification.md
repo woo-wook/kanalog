@@ -1,5 +1,31 @@
 # 검증 기록
 
+## 원본 문법 제목·하이라이팅 복원 (2026-10-02)
+
+- 실제 v2.1.2 APKG의 기본 문법 `FrontHTML`에 있던 `_j4y` mark를 확인하고 안전한 텍스트 조각으로 변환했다. 전체 **1,078개**, 그중 N5 **99개** 모두 원본 질문·강조 위치·기존 전체 해설과 일치한다. 강조 미복원 **0개**. 변환 결과 전체 **10,237장/음성 20,157개**, N5 **878장/음성 1,795개**와 모든 미디어 해시도 다시 확인했다.
+- 문형 제목·뜻·쓰임·접속 → 강조 예문 → 정답 확인 후 해석·비교 설명 흐름을 구현했다. 문형은 원본에서 강조한 일본어이며 임의의 활용 공식을 생성하지 않는다. 정확한 원본 위치만 강조하므로 같은 글자가 반복되어도 다른 출현에 강조를 붙이지 않는다. 일본어 제목 **28~34px**, 예문 **24px**, 뜻·해석 **20px**, 설명 **18px**다.
+- synthetic 변환기 **9개**, Kotlin/PostgreSQL 통합·도메인 **32개**, Vitest **59개** 통과. TypeScript·ESLint·Kotlin/Next.js Docker production build 성공. 원본 mark와 ruby/스크립트 제거, 반복 표현의 특정 출현만 강조, 재import/메타데이터 갱신 후 기존 카드 version 보존, 다른 소유자 갱신 거부, 잘못된 조각 거부 및 기존 저장 내용 보존을 검증했다.
+- DB dump를 권한 0600 개인 백업에 저장한 후 메타데이터 전용 CLI로 실제 두 계정 **1,177개**(개인 1,078 + QA 99)를 갱신했다. 갱신 전후 모든 UserCardState·ReviewLog·가나 평가·자유 연습 답변·설정·세션·카드/레슨/덱/미디어 등 19개 표 전체 행 해시와 문법 메타데이터 외 노트 본문 해시가 같았다. 새로운 migration이 없고 미디어·voice 서비스는 유지했다. 브라우저 검사는 이후 QA 계정에만 연습 답변을 추가했다.
+- 공개 서버에서 **브라우저 7개 케이스** 통과: 실제 `あの` 제목·강조·쓰임·해석, 긴 문법 모바일/태블릿/PC, 가나 3개 화면 크기, 긴 어휘 카드. WebKit **360×640·390×740·390×844**, Chromium **768×1024·1280×900**에서 API의 원본 강조 조각과 DOM 일치, 원문 전체 보존, 글자 크기·섹션 구분·가로 넘침 없음·카드 내부 스크롤·평가 버튼 유지·다음 카드 스크롤 초기화를 검증했다. 실제 질문/정답/설명 캡처도 시각적으로 확인했다.
+- `https://kanalog.hanwook.me`에 backend/frontend 재배포. HTTPS·Secure 쿠키·backend healthy 확인. 실제 iPhone Safari·설치 PWA 실기기 검증은 미실행이다. 원본 덱·변환 본문·개인 스크린샷·QA 비밀번호·백업은 Git/이미지에 포함하지 않았다.
+
+```sh
+python3 -m unittest discover -s tools/deck-import -p 'test_*.py' -v
+node --experimental-strip-types tools/e2e/check_grammar_content.mjs private-data/converted/all/notes.jsonl
+node --experimental-strip-types tools/e2e/check_grammar_content.mjs private-data/converted/n5/notes.jsonl
+python3 tools/deck-import/verify_conversion.py private-data/converted/all
+python3 tools/deck-import/verify_conversion.py private-data/converted/n5
+cd backend
+./gradlew test --rerun-tasks --no-daemon
+cd ../frontend
+pnpm test
+pnpm exec tsc --noEmit
+pnpm lint
+cd ..
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/grammar-layout.spec.ts e2e/grammar-desktop.spec.ts e2e/mobile-study.spec.ts
+python3 tools/e2e/check_deployment.py
+```
+
 ## 문법 구조와 큰 글씨 디자인 (2026-10-02)
 
 - 전체 변환본 **문법 1,078개(N5 99개)** 모두 예문→한국어 해석→핵심 표현→뉘앙스→접속→헷갈리는 문형 순서임을 확인했다. 화면에서도 정확한 제목·순서·앞면과의 예문 일치를 검사해 구조화한다. 미확인 구조는 전체 원문을 유지한다. 기존 예문 중복 표시는 제거하고 해석·핵심 표현·세 설명은 별도 제목으로 표시한다.

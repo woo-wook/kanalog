@@ -92,12 +92,21 @@ export interface Deck {
   unseenCards: number;
   selected: boolean;
 }
+export interface HighlightSegment {
+  text: string;
+  highlighted: boolean;
+}
+export interface GrammarFocus {
+  title: string;
+  segments: HighlightSegment[];
+}
 export interface StudyCard {
   lastRating?: Rating | null;
   id: string;
   version: number;
   kind: string;
   front: string;
+  grammarFocus?: GrammarFocus | null;
   reading?: string | null;
   meaning?: string | null;
   example?: string | null;

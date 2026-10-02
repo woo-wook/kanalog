@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import java.time.*
 import java.util.*
+import tools.jackson.databind.ObjectMapper
 
 data class DeckView(val id: UUID, val title: String, val level: String?, val kind: String,
                     val totalCards: Int, val studiedCards: Int, val unseenCards: Int, val selected: Boolean)
@@ -18,7 +19,7 @@ data class ExampleView(val japanese: String, val reading: String?, val korean: S
 data class CardView(val id: UUID, val version: Long, val kind: String, val front: String, val reading: String?,
                     val meaning: String?, val example: String?, val exampleMeaning: String?,
                     val explanation: String?, val partOfSpeech: String?, val hangulHint: String?, val audioId: UUID?, val exampleAudioId: UUID?,
-                    val due: Instant?, val examples: List<ExampleView> = emptyList(), val lastRating:String? = null)
+                    val due: Instant?, val examples: List<ExampleView> = emptyList(), val lastRating:String? = null, val grammarFocus:GrammarFocus? = null)
 data class SessionRequest(val deckId: UUID? = null, val lessonId: UUID? = null, val kana: KanaMixRequest? = null, val practice:Boolean = false)
 data class QueueInfo(val eligibleCards:Int, val unseenCards:Int, val newRemaining:Int, val nextDueAt:Instant?, val reason:String?)
 data class SessionView(val id: UUID, val cards: List<CardView>, val answered: Int, val lessonId: UUID? = null, val lessonTitle: String? = null, val practice:Boolean = false, val queueInfo:QueueInfo? = null)
@@ -41,7 +42,7 @@ class FsrsAdapter {
 }
 
 @Service
-class StudyService(private val jdbc: JdbcTemplate, private val fsrs: FsrsAdapter, private val courses: CourseService, private val kanaMix: KanaMixService) {
+class StudyService(private val jdbc: JdbcTemplate, private val fsrs: FsrsAdapter, private val courses: CourseService, private val kanaMix: KanaMixService, private val mapper:ObjectMapper) {
     fun decks(userId: UUID): List<DeckView> = jdbc.query("""
         select d.id,d.title,d.level,d.kind,d.selected,count(c.id)::int total,
         count(s.first_seen_at)::int studied from deck d
@@ -143,7 +144,7 @@ class StudyService(private val jdbc: JdbcTemplate, private val fsrs: FsrsAdapter
 
     fun card(userId: UUID, cardId: UUID): CardView? {
         val base = jdbc.query("""select c.id,n.kind,n.front,n.reading,n.meaning,n.example,n.example_meaning,
-          n.explanation,n.part_of_speech,n.hangul_hint,c.word_audio_id,c.example_audio_id,s.version,s.due_at,p.last_rating
+          n.explanation,n.part_of_speech,n.hangul_hint,n.raw_fields,c.word_audio_id,c.example_audio_id,s.version,s.due_at,p.last_rating
           from card c join study_note n on n.id=c.note_id
           left join user_card_state s on s.card_id=c.id and s.user_id=?
           left join kana_practice_state p on p.card_id=c.id and p.user_id=?
@@ -151,7 +152,8 @@ class StudyService(private val jdbc: JdbcTemplate, private val fsrs: FsrsAdapter
             rs.getString("kind"),rs.getString("front"),rs.getString("reading"),rs.getString("meaning"),
             rs.getString("example"),rs.getString("example_meaning"),rs.getString("explanation"),rs.getString("part_of_speech"),
             rs.getString("hangul_hint"),rs.getObject("word_audio_id",UUID::class.java),
-            rs.getObject("example_audio_id",UUID::class.java),rs.getTimestamp("due_at")?.toInstant(),lastRating=rs.getString("last_rating"))},
+            rs.getObject("example_audio_id",UUID::class.java),rs.getTimestamp("due_at")?.toInstant(),lastRating=rs.getString("last_rating"),
+            grammarFocus=if(rs.getString("kind")=="grammar") rs.getString("raw_fields")?.let {convertedGrammarFocus(mapper.readTree(it),rs.getString("front"))} else null)},
             userId,userId,cardId,userId).firstOrNull() ?: return null
         val examples = jdbc.query("""select e.japanese,e.reading,e.korean,e.audio_id from note_example e
             join card c on c.note_id=e.note_id where c.id=? and c.owner_id=? and e.owner_id=?

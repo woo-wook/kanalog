@@ -42,6 +42,12 @@ class AdminCli(private val jdbc:JdbcTemplate,private val importer:MaxImportServi
                     println("Reset password and revoked sessions for $normalized")
                 }
             }
+            "refresh-grammar-focus" -> {
+                if(inputDir.isBlank()) error("--app.input-dir is required")
+                val owner=accounts.idByEmail(normalized) ?: error("Account does not exist")
+                val updated=importer.refreshGrammarFocus(owner,Path.of(inputDir).toAbsolutePath().normalize())
+                println("Updated original grammar highlights for $updated notes")
+            }
             "import-max" -> {
                 if(inputDir.isBlank()) error("--app.input-dir is required")
                 val owner=accounts.idByEmail(normalized) ?: error("Account does not exist")
@@ -107,6 +113,7 @@ class MaxImportService(private val jdbc:JdbcTemplate,private val mapper:ObjectMa
             val path=row.requireText("deckPath"); val guid=row.requireText("sourceGuid")
             val kind=row.requireText("kind"); val direction=row.requireText("cardDirection")
             val front=row.requireText("front")
+            if(kind=="grammar") convertedGrammarFocus(row,front)
             if(kind !in setOf("vocabulary","grammar") || direction !in setOf("recognition","recall"))
                 error("Unsupported card kind or direction")
             val deck=deckCache.getOrPut(path) { findOrCreateDeck(owner,source,path,row.path("level").asString(""),kind) }
@@ -155,6 +162,29 @@ class MaxImportService(private val jdbc:JdbcTemplate,private val mapper:ObjectMa
         deckCache.values.forEach { jdbc.update("update deck set import_status='READY' where id=? and owner_id=?",it,owner) }
         courses.synchronize(owner)
         return ImportResult(source,cards,media.size,reportText)
+    }
+
+    @Transactional
+    fun refreshGrammarFocus(owner:UUID,dir:Path):Int {
+        val report=mapper.readTree(Files.readString(dir.resolve("report.json")))
+        check(report.requireText("version")=="2.1.2" && report.requireText("sha256")=="c0898a086a7d440e4081c8a68fcd0c63e678bb345012888d1fc8e5270d762532") { "Unsupported MAX version or checksum" }
+        var updated=0
+        Files.newBufferedReader(dir.resolve("notes.jsonl")).useLines { lines -> lines.filter {it.isNotBlank()}.forEach { line ->
+            val row=mapper.readTree(line)
+            if(row.path("kind").asString("")!="grammar") return@forEach
+            check(row.path("schemaVersion").asInt()==1 && row.requireText("sourceVersion")=="2.1.2") { "Unsupported converted grammar version" }
+            val front=row.requireText("front")
+            check(convertedGrammarFocus(row,front)!=null) { "Original grammar highlight is unavailable" }
+            val existing=jdbc.query("""select n.id,n.front,n.meaning from study_note n join content_source s on s.id=n.source_id
+                where n.owner_id=? and s.owner_id=? and s.source_key=? and s.source_version='2.1.2' and n.source_guid=? and n.kind='grammar'""",
+                {rs,_->Triple(rs.getObject(1,UUID::class.java),rs.getString(2),rs.getString(3))},owner,owner,sourceKey,row.requireText("sourceGuid")).singleOrNull()
+                ?: error("Matching owned grammar note was not found")
+            check(existing.second==front && existing.third==row.requireText("answer")) { "Grammar content differs; use reviewed reimport" }
+            jdbc.update("update study_note set raw_fields=?,updated_at=now() where id=? and owner_id=?",line,existing.first,owner)
+            updated++
+        } }
+        check(updated>0) { "No original grammar highlights to update" }
+        return updated
     }
 
     private fun findOrCreateDeck(owner:UUID,source:UUID,path:String,level:String,kind:String):UUID {

@@ -23,6 +23,21 @@
 
 `POST /api/study/sessions` 본문은 `{"deckId":"UUID"}`다. 응답은 `{id,cards,answered}`이며 각 카드는 `id`, `version`, `kind`, `front`, `reading`, `meaning`, `example`, `exampleMeaning`, `examples`, `explanation`, `hangulHint`, `audioId`, `exampleAudioId`, `due`를 가진다. `examples`는 순서대로 `{japanese,reading,korean,audioId}`를 담는다. 선택한 덱의 복습 예정 카드를 먼저 담는다. `GET /api/study/sessions/{id}`는 저장된 세션에서 지금 학습 가능한 카드를 다시 조회한다.
 
+### 문법 강조
+
+문법 카드의 선택적 `grammarFocus`는 `{title,segments:[{text,highlighted}]}`다. `title`은 원본에서 강조한 일본어이고, 각 조각은 순서대로 합치면 `front`가 된다. 기존 변환본·문법 외 카드에서는 null일 수 있다. 프런트는 원본 HTML 없이 해당 위치만 `<mark>`로 렌더링한다. 예를 들어 합성 테스트 문장의 두 번째 `この`만 강조하는 계약은 다음과 같다.
+
+```json
+{
+  "title": "この",
+  "segments": [
+    { "text": "この本は", "highlighted": false },
+    { "text": "この", "highlighted": true },
+    { "text": "人のです。", "highlighted": false }
+  ]
+}
+```
+
 `POST /api/study/reviews` 예시:
 
 ```json

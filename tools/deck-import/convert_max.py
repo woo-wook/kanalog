@@ -69,6 +69,72 @@ def clean(value: str) -> str:
     return "\n".join(line.strip() for line in html.unescape("".join(parser.parts)).splitlines() if line.strip())
 
 
+class MarkedText(TextOnly):
+    """Use the existing text sanitizer and retain only the confirmed MAX mark flag."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.marks: list[bool] = []
+        self.characters: list[tuple[str, bool]] = []
+
+    def capture(self, previous: int) -> None:
+        for part in self.parts[previous:]:
+            self.characters.extend((char, any(self.marks)) for char in html.unescape(part))
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "mark":
+            self.marks.append(not self.suppressed and "_j4y" in (dict(attrs).get("class") or "").split())
+        previous = len(self.parts)
+        super().handle_starttag(tag, attrs)
+        self.capture(previous)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "mark" and self.marks:
+            self.marks.pop()
+        previous = len(self.parts)
+        super().handle_endtag(tag)
+        self.capture(previous)
+
+    def handle_data(self, data: str) -> None:
+        previous = len(self.parts)
+        super().handle_data(data)
+        self.capture(previous)
+
+
+def grammar_focus(raw: str) -> dict | None:
+    parser = MarkedText()
+    parser.feed(SOUND.sub("", raw))
+    parser.close()
+    lines: list[list[tuple[str, bool]]] = [[]]
+    for char, highlighted in parser.characters:
+        if char == "\n":
+            lines.append([])
+        else:
+            lines[-1].append((char, highlighted))
+    normalized: list[tuple[str, bool]] = []
+    for line in lines:
+        start, end = 0, len(line)
+        while start < end and line[start][0].isspace():
+            start += 1
+        while end > start and line[end - 1][0].isspace():
+            end -= 1
+        if start == end:
+            continue
+        if normalized:
+            normalized.append(("\n", False))
+        normalized.extend(line[start:end])
+    segments: list[dict] = []
+    for char, flag in normalized:
+        if segments and segments[-1]["highlighted"] == flag:
+            segments[-1]["text"] += char
+        else:
+            segments.append({"text": char, "highlighted": flag})
+    title = " … ".join(part["text"].strip() for part in segments if part["highlighted"] and part["text"].strip())
+    if not title or "".join(part["text"] for part in segments) != clean(raw):
+        return None
+    return {"title": title, "segments": segments}
+
+
 def safe_name(value: str) -> str:
     if not value or value in (".", "..") or "\x00" in value or "\\" in value:
         raise ValueError("unsafe media filename")
@@ -195,6 +261,7 @@ def main() -> int:
             "sourceMedia": len(manifest), "scope": args.scope,
             "convertedCards": 0, "convertedByDeck": {}, "excludedByReason": {},
             "mediaExtracted": 0, "missingMediaReferences": 0,
+            "grammarHighlights": 0, "grammarHighlightUnavailable": 0,
         }
         by_deck = collections.Counter()
         excluded = collections.Counter()
@@ -256,13 +323,16 @@ def main() -> int:
                         back = clean(fields["BackHTML"])
                         if not (front and back):
                             raise ValueError("missing-required-grammar-field")
+                        focus = grammar_focus(fields["FrontHTML"])
+                        report["grammarHighlights" if focus else "grammarHighlightUnavailable"] += 1
                         for field in (fields["FrontHTML"], fields["BackHTML"]):
                             needed_media.update(safe_name(name) for name in SOUND.findall(field))
                         record = {"schemaVersion": 1, "sourceVersion": VERSION, "sourceNoteId": note_id,
                                   "sourceGuid": guid, "sourceCardId": card_id, "cardDirection": "recall",
                                   "deckPath": deck, "kind": "grammar", "level": level,
                                   "front": front, "answer": back, "grammarKind": clean(fields.get("Kind", "")),
-                                  "unitId": clean(fields.get("UnitID", "")), "tags": raw_tags.strip().split()}
+                                  "unitId": clean(fields.get("UnitID", "")), "tags": raw_tags.strip().split(),
+                                  "grammarFocus": focus}
                     write_jsonl(out, record)
                     by_deck[deck] += 1
                 except (KeyError, ValueError) as error:

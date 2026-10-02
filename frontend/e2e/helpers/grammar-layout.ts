@@ -6,6 +6,7 @@ export async function checkGrammar(
   sizes: [number, number][],
   screenshot: string,
   lessonPosition = 2,
+  focusTitle?: string,
 ) {
   await page.goto("/login");
   await page.getByLabel("이메일").fill(process.env.E2E_EMAIL!);
@@ -51,13 +52,20 @@ export async function checkGrammar(
     await page.setViewportSize({ width: sizes[0]![0], height: sizes[0]![1] });
     await page.goto(`/study?lessonId=${lesson.id}&practice=1`);
     const session = await (await started).json();
-    const target = session.cards.reduce(
-      (best: number, c: { meaning?: string }, i: number) =>
-        (c.meaning?.length ?? 0) > (session.cards[best].meaning?.length ?? 0)
-          ? i
-          : best,
-      0,
-    );
+    const target = focusTitle
+      ? session.cards.findIndex(
+          (c: { grammarFocus?: { title: string } }) =>
+            c.grammarFocus?.title === focusTitle,
+        )
+      : session.cards.reduce(
+          (best: number, c: { meaning?: string }, i: number) =>
+            (c.meaning?.length ?? 0) >
+            (session.cards[best].meaning?.length ?? 0)
+              ? i
+              : best,
+          0,
+        );
+    expect(target).toBeGreaterThanOrEqual(0);
     expect(session.cards[target].meaning.length).toBeGreaterThan(
       lessonPosition === 2 ? 400 : 100,
     );
@@ -71,6 +79,34 @@ export async function checkGrammar(
       await expect(page.locator(".study-progress")).toContainText(`${i + 2} /`);
     }
     const prompt = page.locator(".study-prompt");
+    const example = page.locator(".grammar-example");
+    const focus = session.cards[target].grammarFocus;
+    expect(Boolean(focus)).toBe(true);
+    expect((await prompt.textContent()) === focus.title).toBe(true);
+    await expect(
+      page.getByRole("region", { name: "문형의 쓰임" }),
+    ).toBeVisible();
+    await expect(page.getByRole("region", { name: "정답과 해설" })).toHaveCount(
+      0,
+    );
+    const highlighted = await example.evaluate((el) =>
+      Array.from(el.children).map((part) => ({
+        text: part.textContent,
+        highlighted: part.tagName === "MARK",
+      })),
+    );
+    expect(JSON.stringify(highlighted) === JSON.stringify(focus.segments)).toBe(
+      true,
+    );
+    const markStyle = await example
+      .locator("mark")
+      .first()
+      .evaluate((el) => ({
+        background: getComputedStyle(el).backgroundColor,
+        weight: Number(getComputedStyle(el).fontWeight),
+      }));
+    expect(markStyle.background).not.toBe("rgba(0, 0, 0, 0)");
+    expect(markStyle.weight).toBeGreaterThanOrEqual(600);
     const questionFont = await prompt.evaluate((el) =>
       parseFloat(getComputedStyle(el).fontSize),
     );
@@ -86,9 +122,9 @@ export async function checkGrammar(
       .map((s: string) => s.trim())
       .filter(Boolean);
     const restored = [
-      await prompt.textContent(),
+      await example.textContent(),
       await answer.locator(".grammar-translation").textContent(),
-      await answer.locator(".grammar-expression").textContent(),
+      await page.locator(".grammar-point-meaning").textContent(),
     ];
     for (const title of ["뉘앙스", "접속", "헷갈리는 문형"]) {
       const section = answer.getByRole("region", { name: title, exact: true });
@@ -133,7 +169,7 @@ export async function checkGrammar(
               .fontSize,
           ),
           expressionFont: parseFloat(
-            getComputedStyle(document.querySelector(".grammar-expression")!)
+            getComputedStyle(document.querySelector(".grammar-point-meaning")!)
               .fontSize,
           ),
           headingWeight: Number(
@@ -161,7 +197,7 @@ export async function checkGrammar(
       expect(layout.widthOverflow).toBeLessThanOrEqual(1);
       expect(layout.bodyFont).toBe(18);
       expect(layout.translationFont).toBeGreaterThanOrEqual(20);
-      expect(layout.expressionFont).toBeGreaterThanOrEqual(24);
+      expect(layout.expressionFont).toBeGreaterThanOrEqual(20);
       expect(layout.headingWeight).toBeGreaterThanOrEqual(600);
       expect(layout.topicBorder).toBeGreaterThan(0);
       expect(layout.topicRadius).toBeGreaterThanOrEqual(12);

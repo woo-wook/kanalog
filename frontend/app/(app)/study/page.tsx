@@ -16,6 +16,7 @@ import {
 import { Loading, ErrorMessage } from "@/shell";
 import { canPlayExample, speechText } from "@/speech";
 import { useGeneratedAudio } from "@/use-generated-audio";
+import { GrammarPrompt } from "@/grammar-prompt";
 import { GrammarAnswer } from "@/grammar-answer";
 import { StudyNextStep } from "@/study-next-step";
 const ratings: { value: Rating; label: string }[] = [
@@ -581,7 +582,7 @@ function StudyContent() {
       </div>
       <article
         ref={cardPanel}
-        className={`study-card surface p-5 sm:p-8 ${card.kind === "grammar" && !revealed ? "study-card-grammar-question" : ""}`}
+        className={`study-card surface p-5 sm:p-8 ${card.kind === "grammar" && !revealed && !card.grammarFocus ? "study-card-grammar-question" : ""}`}
         aria-label="학습 카드"
         tabIndex={0}
       >
@@ -590,30 +591,36 @@ function StudyContent() {
             card.kind === "grammar" ? "grammar-prompt text-left" : "text-center"
           }
         >
-          <p
-            className={
-              card.kind === "grammar"
-                ? "inline-flex rounded-lg bg-primary/8 px-3 py-1.5 text-sm font-semibold text-primary"
-                : "muted text-xs sm:text-sm"
-            }
-          >
-            {card.kind === "grammar"
-              ? "문법 회상"
-              : revealed
-                ? "정답"
-                : isKana
-                  ? "이 문자는 어떻게 읽을까요?"
-                  : "일본어를 보고 뜻을 떠올려 보세요"}
-          </p>
-          <h1
-            className={`study-prompt mt-4 font-semibold ${isKana ? "jp study-prompt-kana text-7xl leading-tight" : card.kind === "grammar" ? "study-prompt-grammar study-prose" : "jp text-4xl sm:text-5xl leading-tight"}`}
-          >
-            {card.front}
-          </h1>
-          {card.kind === "grammar" && !revealed && (
-            <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-              문장의 뜻과 쓰임을 떠올린 뒤 정답을 확인해 보세요.
-            </p>
+          {card.kind === "grammar" && card.grammarFocus ? (
+            <GrammarPrompt card={card} revealed={revealed} />
+          ) : (
+            <>
+              <p
+                className={
+                  card.kind === "grammar"
+                    ? "inline-flex rounded-lg bg-primary/8 px-3 py-1.5 text-sm font-semibold text-primary"
+                    : "muted text-xs sm:text-sm"
+                }
+              >
+                {card.kind === "grammar"
+                  ? "문법 회상"
+                  : revealed
+                    ? "정답"
+                    : isKana
+                      ? "이 문자는 어떻게 읽을까요?"
+                      : "일본어를 보고 뜻을 떠올려 보세요"}
+              </p>
+              <h1
+                className={`study-prompt mt-4 font-semibold ${isKana ? "jp study-prompt-kana text-7xl leading-tight" : card.kind === "grammar" ? "study-prompt-grammar study-prose" : "jp text-4xl sm:text-5xl leading-tight"}`}
+              >
+                {card.front}
+              </h1>
+              {card.kind === "grammar" && !revealed && (
+                <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
+                  문장의 뜻과 쓰임을 떠올린 뒤 정답을 확인해 보세요.
+                </p>
+              )}
+            </>
           )}
           {((card.reading &&
             (revealed || settings.data?.showReadingHint || hint)) ||
@@ -759,7 +766,11 @@ function StudyContent() {
           >
             {!isKana &&
               (card.kind === "grammar" ? (
-                <GrammarAnswer answer={card.meaning} front={card.front} />
+                <GrammarAnswer
+                  answer={card.meaning}
+                  front={card.front}
+                  hideExpression={Boolean(card.grammarFocus)}
+                />
               ) : (
                 <h2 className="text-center text-xl font-semibold leading-snug sm:text-2xl">
                   {card.meaning || "뜻 정보 없음"}

@@ -414,6 +414,27 @@ class PersistenceFlowTest @Autowired constructor(
         assertEquals(1,jdbc.queryForObject("select count(*) from review_log where user_id=?",Int::class.java,owner))
     }
 
+    @Test fun `grammar focus survives owner scoped reimport without changing progress`() {
+        val owner=user();val other=user();val dir=Files.createTempDirectory("kanalog-grammar-focus-")
+        Files.createDirectory(dir.resolve("media"));Files.writeString(dir.resolve("media.jsonl"),"")
+        Files.writeString(dir.resolve("report.json"),"""{"version":"2.1.2","sha256":"c0898a086a7d440e4081c8a68fcd0c63e678bb345012888d1fc8e5270d762532","convertedCards":1,"mediaExtracted":0}""")
+        val raw="""{"schemaVersion":1,"sourceVersion":"2.1.2","sourceNoteId":72,"sourceGuid":"grammar-highlight-fixture","sourceCardId":73,"cardDirection":"recall","deckPath":"JLPT MAX::문법::N5","kind":"grammar","level":"N5","front":"この本はこの人のです。","answer":"Synthetic answer","tags":[],"grammarFocus":{"title":"この","segments":[{"text":"この本は","highlighted":false},{"text":"この","highlighted":true},{"text":"人のです。","highlighted":false}]}}"""
+        Files.writeString(dir.resolve("notes.jsonl"),raw)
+        importer.importData(owner,dir)
+        val card=jdbc.queryForObject("select id from card where owner_id=? and direction='recall'",UUID::class.java,owner)!!
+        jdbc.update("insert into user_card_state(id,user_id,card_id,first_seen_at,version) values(?,?,?,now(),3)",UUID.randomUUID(),owner,card)
+        importer.importData(owner,dir)
+        assertEquals(1,importer.refreshGrammarFocus(owner,dir))
+        assertThrows(IllegalStateException::class.java) {importer.refreshGrammarFocus(other,dir)}
+        assertEquals("この",study.card(owner,card)?.grammarFocus?.title)
+        assertEquals(listOf(false,true,false),study.card(owner,card)?.grammarFocus?.segments?.map {it.highlighted})
+        assertEquals(null,study.card(other,card))
+        assertEquals(3L,study.card(owner,card)?.version)
+        Files.writeString(dir.resolve("notes.jsonl"),raw.replace("人のです。\",\"highlighted", "BROKEN\",\"highlighted"))
+        assertThrows(IllegalStateException::class.java) {importer.importData(owner,dir)}
+        assertEquals("この",study.card(owner,card)?.grammarFocus?.title)
+    }
+
     @Test fun `reimport retains card id and review state`() {
         val owner=user()
         val dir=Files.createTempDirectory("kanalog-converted-")

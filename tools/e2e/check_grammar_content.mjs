@@ -30,6 +30,10 @@ for await (const line of createInterface({
   ];
   if (JSON.stringify(restored) !== JSON.stringify(grammarLines(note.answer)))
     throw new Error(`Grammar content mismatch at item ${checked + 1}`);
+  const focus = note.grammarFocus;
+  if (!focus || focus.segments.map((part) => part.text).join("") !== note.front ||
+      focus.segments.filter((part) => part.highlighted).map((part) => part.text.trim()).filter(Boolean).join(" … ") !== focus.title)
+    throw new Error(`Original grammar highlight mismatch at item ${checked + 1}`);
   checked++;
 }
 if (!checked) throw new Error("No grammar content found");
@@ -38,5 +42,6 @@ console.log(
     grammarItems: checked,
     structured: true,
     contentPreserved: true,
+    originalHighlights: checked,
   }),
 );

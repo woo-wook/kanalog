@@ -3,9 +3,11 @@ import { grammarLines, structureGrammarAnswer } from "./grammar-content";
 export function GrammarAnswer({
   answer,
   front,
+  hideExpression = false,
 }: {
   answer?: string | null;
   front?: string;
+  hideExpression?: boolean;
 }) {
   const content = structureGrammarAnswer(answer, front);
   const paragraphs = grammarLines(answer);
@@ -27,17 +29,19 @@ export function GrammarAnswer({
               {content.translation}
             </p>
           </section>
-          <section
-            aria-label="핵심 표현"
-            className="grammar-key rounded-2xl border border-primary/15 bg-primary/5 p-4 sm:p-5"
-          >
-            <h3 className="mb-2 text-base font-semibold text-primary">
-              핵심 표현
-            </h3>
-            <p className="grammar-expression study-prose font-semibold text-primary">
-              {content.expression}
-            </p>
-          </section>
+          {!hideExpression && (
+            <section
+              aria-label="핵심 표현"
+              className="grammar-key rounded-2xl border border-primary/15 bg-primary/5 p-4 sm:p-5"
+            >
+              <h3 className="mb-2 text-base font-semibold text-primary">
+                핵심 표현
+              </h3>
+              <p className="grammar-expression study-prose font-semibold text-primary">
+                {content.expression}
+              </p>
+            </section>
+          )}
           {content.topics.map(({ title, paragraphs }, index) => (
             <section
               key={title}

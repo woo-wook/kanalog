@@ -60,6 +60,23 @@ E2E_BASE_URL=http://localhost:3200 python3 tools/e2e/check_deployment.py
 
 ## 일반 재시작과 업데이트
 
+### 기존 문법 강조 정보 갱신
+
+2026-10-02 문법 강조 업데이트에는 DB migration이 없다. 같은 공식 APKG를 기존 계정의 import 범위로 다시 변환한 후 `refresh-grammar-focus` 명령으로 원본 강조 정보만 갱신한다. 상세 변환 명령과 계약은 [가져오기 형식](import-format.md)을 참고한다. 기존 학습 기록은 초기화하지 않는다.
+
+```sh
+docker compose build backend frontend
+# 아래 DB 백업 절차에 따라 갱신 전 dump 보관
+docker compose run --rm --no-deps -T backend \
+  --spring.main.web-application-type=none \
+  --app.cli=refresh-grammar-focus --app.email=YOUR_EMAIL \
+  --app.input-dir=/app/import/n5
+docker compose up -d --no-deps backend frontend
+python3 tools/e2e/check_deployment.py
+```
+
+모든 문법을 import한 계정에는 전체 변환 디렉터리(`/app/import/all`)를 사용한다. 원본 출처·GUID·질문·정답이 기존 콘텐츠와 다르면 갱신하지 않고 실패한다. 미디어 volume과 내부 음성 서비스는 변경하지 않는다.
+
 ```sh
 docker compose restart
 docker compose ps

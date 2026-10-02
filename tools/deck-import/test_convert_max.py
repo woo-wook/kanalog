@@ -10,6 +10,7 @@ import sys
 import tempfile
 import unittest
 import zipfile
+import convert_max
 
 
 SCRIPT = Path(__file__).with_name("convert_max.py")
@@ -122,6 +123,17 @@ class ConvertMaxTests(unittest.TestCase):
         self.assertNotIn("onerror", json.dumps(records, ensure_ascii=False))
         self.assertEqual(grammar["front"], "질문")
         self.assertTrue((self.output / "media" / "word.mp3").is_file())
+
+    def test_grammar_marks_keep_exact_occurrence_and_remove_ruby_scripts(self) -> None:
+        raw = '<section class="_j4t"><div>この本は<mark class="_j4y"><ruby>この<rt>ignored</rt></ruby><script>stealSecret()</script></mark>人のです。</div></section>'
+        focus = convert_max.grammar_focus(raw)
+        self.assertEqual(focus, {"title": "この", "segments": [
+            {"text": "この本は", "highlighted": False},
+            {"text": "この", "highlighted": True},
+            {"text": "人のです。", "highlighted": False},
+        ]})
+        self.assertEqual(''.join(part['text'] for part in focus['segments']), convert_max.clean(raw))
+        self.assertIsNone(convert_max.grammar_focus('<p>Unknown plain sentence</p>'))
 
     def test_zip_path_traversal_is_rejected(self) -> None:
         result = self.convert(unsafe_entry=True)

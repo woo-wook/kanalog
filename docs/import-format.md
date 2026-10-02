@@ -27,7 +27,7 @@ python3 -m unittest discover -s tools/deck-import -p 'test_*.py' -v
 
 - `notes.jsonl`: 한 줄에 앱 카드 하나. 공통 필드는 `schemaVersion`, `sourceVersion`, `sourceNoteId`, `sourceGuid`, `sourceCardId`, `cardDirection`, `deckPath`, `kind`, `level`, `front`, `tags`다.
 - 어휘 행: `reading`, `meaning`, `partOfSpeech`, `wordAudio`, `examples` 배열. 각 예문은 `japanese`, `reading`, `korean`, `audio`를 가진다. 현재 `ExamplesRendered`의 ruby를 제거해 일본어 본문과 한국어 해석을 추출하므로 예문 `reading`은 빈 문자열이다.
-- 문법 행: `answer`, `grammarKind`, `unitId`. `FrontHTML`과 `BackHTML`은 태그와 스크립트를 제거한 일반 텍스트다. 원본의 복잡한 표 스타일은 보존하지 않는다.
+- 문법 행: `answer`, `grammarKind`, `unitId`, 선택적 `grammarFocus`. `FrontHTML`과 `BackHTML`은 태그와 스크립트를 제거한 일반 텍스트다. 원본의 복잡한 표 스타일은 보존하지 않는다.
 - `media.jsonl`: `name`, 변환 디렉터리 기준 상대 `path` (`media/<name>`), `sha256`, `contentType`. 예전 변환본은 절대 경로를 가질 수 있으므로 검증기는 둘 다 읽는다. DB importer는 `name`을 검사하고 입력 디렉터리의 `media/<name>`에서만 파일을 읽는다.
 - `media/`: 참조된 음성 원본. API는 이 경로를 외부에 직접 노출하지 않고 계정 소유권을 확인해야 한다.
 - `report.json`: 원본 note/card/media 수, 변환 카드와 하위 덱별 수, 제외 사유별 카드 수, 추출·누락 미디어 수. 원본 본문을 담지 않는다.
@@ -37,5 +37,18 @@ DB 반영 시 `sourceGuid`와 `cardDirection`을 소유자·콘텐츠 출처 범
 어휘의 `examples` 배열은 순서를 유지해 `note_example`에 저장하고 각 항목의 음성 ID를 연결한다. 카드 API는 모든 예문을 반환한다. 변환 report에 미디어 누락이 있거나 JSONL의 음성 이름이 media map과 일치하지 않으면 import를 실패 처리한다.
 
 ## 안전성과 한계
+
+`grammarFocus`는 실제 기본 문법의 `FrontHTML`에 있는 `<mark class="_j4y">`만 추출한다. `{title,segments:[{text,highlighted}]}`이며 조각을 합치면 `front`와 정확히 일치해야 한다. `title`은 표시된 일본어 텍스트를 그대로 사용한다. 같은 표현이 반복되어도 지정된 위치만 강조하고 일본어 문형·활용 공식을 추측해 추가하지 않는다. 원본 HTML·CSS·이벤트·스크립트는 전달하지 않는다. 확인할 수 없으면 null이며 `report.json`의 `grammarHighlightUnavailable`에 집계한다. v2.1.2의 지원 문법 1,078개(그중 N5 99개)는 모두 복원됐다. `schemaVersion=1`의 추가 선택 필드로 이전 변환본도 읽을 수 있다.
+
+기존 계정에 강조 정보만 반영하려면 같은 APKG와 기존 import 범위로 다시 변환한 다음 아래 명령을 쓴다. 전체 범위를 가져왔던 계정은 `--scope vocabulary-and-grammar` 변환 디렉터리를 사용한다.
+
+```sh
+docker compose run --rm --no-deps -T backend \
+  --spring.main.web-application-type=none \
+  --app.cli=refresh-grammar-focus --app.email=YOUR_EMAIL \
+  --app.input-dir=/app/import/n5
+```
+
+이 명령은 출처 버전·공식 체크섬·소유자·GUID·기존 질문과 정답의 정확한 일치를 확인하고 `study_note.raw_fields`와 갱신 시각만 트랜잭션으로 갱신한다. 일치하는 항목이 없거나 본문이 다르면 전체 작업을 실패 처리한다. 카드·덱·학습 상태·평가·미디어는 변경하지 않는다. 신규 import와 일반 재import도 동일한 강조 검증을 적용한다.
 
 ZIP 엔트리 이름은 한 단계의 안전한 파일명만 허용하고 중복 이름을 거부한다. 압축 파일 2 GB, 전체 해제 3 GB, 개별 항목 500 MB, 항목 50,000개의 제한을 둔다. DB 파일은 임시 디스크에 스트리밍 추출하고 미디어도 한 파일씩 처리한다. 노트 HTML의 스크립트와 원본 카드 템플릿은 실행하지 않는다. 손상된 압축, 다른 note type, 필드 개수 차이, 미디어 누락은 오류 또는 report에 명시한다. 출력에 `report.json`이 생성되기 전까지 완료된 변환으로 취급하지 않는다. 재실행은 같은 출력 파일을 갱신하며 기존 DB 진도에는 직접 접근하지 않는다.
