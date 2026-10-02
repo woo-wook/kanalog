@@ -22,19 +22,21 @@ data class LessonScope(val id:UUID,val deckId:UUID,val title:String)
 class CourseService(private val jdbc:JdbcTemplate) {
     fun list(owner:UUID):List<CourseView> = jdbc.query("select * from learning_course where owner_id=? order by position,course_key",{rs,_->
         val id=rs.getObject("id",UUID::class.java)
+        val kana=rs.getString("kind") in listOf("hiragana","katakana")
         val lessons=jdbc.query("""select l.*,count(c.id) filter(where coalesce(s.suspended,false)=false)::int total,
-            count(s.first_seen_at) filter(where coalesce(s.suspended,false)=false)::int studied,
-            count(c.id) filter(where coalesce(s.suspended,false)=false and exists(select 1 from review_log r where r.user_id=? and r.card_id=c.id and r.rating in ('GOOD','EASY')))::int practiced,
-            count(c.id) filter(where s.first_seen_at is not null and s.suspended=false and s.due_at<=now())::int due,
+            count(c.id) filter(where coalesce(s.suspended,false)=false and (s.first_seen_at is not null or p.card_id is not null))::int studied,
+            count(c.id) filter(where coalesce(s.suspended,false)=false and (exists(select 1 from review_log r where r.user_id=? and r.card_id=c.id and r.rating in ('GOOD','EASY')) or p.card_id is not null and exists(select 1 from practice_answer a where a.user_id=p.user_id and a.card_id=c.id and a.rating in ('GOOD','EASY'))))::int practiced,
+            count(c.id) filter(where coalesce(s.suspended,false)=false and ${if(kana) "p.last_rating in ('AGAIN','HARD')" else "s.first_seen_at is not null and s.due_at<=now()"})::int due,
             (us.active_lesson_id=l.id) selected
             from course_lesson l left join lesson_card lc on lc.lesson_id=l.id
             left join card c on c.id=lc.card_id and c.active=true
             left join user_card_state s on s.card_id=c.id and s.user_id=?
+            left join kana_practice_state p on p.card_id=c.id and p.user_id=?
             join user_settings us on us.user_id=? where l.course_id=? group by l.id,us.active_lesson_id order by l.position""",{row,_->
                 val total=row.getInt("total");val practiced=row.getInt("practiced")
                 LessonView(row.getObject("id",UUID::class.java),row.getString("title"),row.getInt("position"),row.getBoolean("optional"),
                     total,row.getInt("studied"),practiced,row.getInt("due"),row.getBoolean("selected"),total>0 && practiced==total)
-            },owner,owner,owner,id)
+            },owner,owner,owner,owner,id)
         CourseView(id,rs.getString("title"),rs.getString("description"),rs.getString("kind"),rs.getString("level"),rs.getInt("position"),
             lessons.sumOf{it.totalCards},lessons.sumOf{it.studiedCards},lessons.sumOf{it.completedCards},lessons.sumOf{it.dueCount},lessons,
             lessons.firstOrNull{it.totalCards>0 && !it.optional && !it.completed}?.id ?: lessons.firstOrNull{it.totalCards>0 && !it.completed}?.id)
@@ -97,7 +99,7 @@ class CourseService(private val jdbc:JdbcTemplate) {
     }
     private fun seedKana(owner:UUID,kind:String,position:Int) {
         val title=if(kind=="katakana") "가타카나" else "히라가나"
-        val course=course(owner,"kana:$kind",title,"기본 46자를 행별로 익힌 뒤 탁음·반탁음·요음을 선택해 연습합니다. 한글은 근사 발음입니다.",kind,null,position)
+        val course=course(owner,"kana:$kind",title,"행 구분 없이 선택한 문자 전체를 연습합니다. 다시·어려움으로 평가한 문자가 다음 연습에서 먼저 나옵니다.",kind,null,position)
         val source=UUID.randomUUID()
         jdbc.update("""insert into content_source(id,owner_id,source_key,source_version,notice) values(?,?,'kanalog-kana','1','App-authored canonical kana character inventory; not JLPT MAX content') on conflict do nothing""",source,owner)
         val sourceId=jdbc.queryForObject("select id from content_source where owner_id=? and source_key='kanalog-kana'",UUID::class.java,owner)!!

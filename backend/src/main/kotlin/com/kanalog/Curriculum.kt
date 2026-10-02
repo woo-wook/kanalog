@@ -53,7 +53,7 @@ class CurriculumBuilder {
             ?: all.firstOrNull { (_,optional,lesson) -> !optional && !lesson.completed }
             ?: all.firstOrNull { (_,_,lesson) -> !lesson.completed }
             ?: all.firstOrNull { (_,_,lesson) -> lesson.dueCount>0 }
-        return CurriculumView("1",levels,recommended?.first,recommended?.third?.id)
+        return CurriculumView("2",levels,recommended?.first,recommended?.third?.id)
     }
 
     private fun kanaUnits(courses:List<CourseView>):List<CurriculumUnitView> {
@@ -62,13 +62,18 @@ class CurriculumBuilder {
         for(kind in listOf("hiragana","katakana")) {
             val title=if(kind=="katakana") "가타카나" else "히라가나"
             val lessons=lessons(courses.filter { it.kind==kind })
-            for((index,range) in listOf(0..4,5..9).withIndex()) {
-                val rows=lessons.filter { !it.optional && it.position in range }
-                if(rows.isNotEmpty()) core+=unit("$kind-basic-${index+1}","$title ${if(index==0) "시작" else "기본 완성"}",
-                    "$title 문자를 보고 읽기를 떠올립니다.",false,rows)
+            fun combined(rows:List<CurriculumLessonView>,label:String):List<CurriculumLessonView> {
+                val active=rows.filter {it.totalCards>0}
+                val first=active.firstOrNull() ?: rows.firstOrNull() ?: return emptyList()
+                return listOf(first.copy(title=label,totalCards=active.sumOf{it.totalCards},
+                    studiedCards=active.sumOf{it.studiedCards},completedCards=active.sumOf{it.completedCards},
+                    dueCount=active.sumOf{it.dueCount},selected=active.any{it.selected},
+                    completed=active.isNotEmpty() && active.all{it.completed}))
             }
-            val rows=lessons.filter { it.optional }
-            if(rows.isNotEmpty()) optional+=unit("$kind-extra","$title 확장", "탁음·반탁음·요음을 추가로 연습합니다.",true,rows)
+            val basic=combined(lessons.filter { !it.optional },title)
+            if(basic.isNotEmpty()) core+=unit("$kind-basic",title,"행 구분 없이 전체 문자를 연습합니다.",false,basic)
+            val extra=combined(lessons.filter { it.optional },"$title 확장")
+            if(extra.isNotEmpty()) optional+=unit("$kind-extra","$title 확장", "탁음·반탁음·요음을 선택해 함께 연습합니다.",true,extra)
         }
         return (core+optional).mapIndexed { index,unit -> unit.copy(position=index) }
     }

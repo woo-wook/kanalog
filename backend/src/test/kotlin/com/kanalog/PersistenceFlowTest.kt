@@ -39,6 +39,64 @@ class PersistenceFlowTest @Autowired constructor(
         return id
     }
 
+    @Test fun `V8 backfills latest kana rating from both histories and rejects foreign or vocabulary history`() {
+        val schema="kana_migration_"+UUID.randomUUID().toString().replace("-","")
+        val owner=UUID.randomUUID();val other=UUID.randomUUID();val kana=UUID.randomUUID();val word=UUID.randomUUID()
+        jdbc.dataSource!!.connection.use { connection ->
+            connection.createStatement().use { sql ->
+                sql.execute("create schema $schema")
+                try {
+                    sql.execute("set search_path to $schema")
+                    sql.execute("create table app_user(id uuid primary key); create table study_note(id uuid primary key,kind text); create table card(id uuid primary key,owner_id uuid,note_id uuid); create table practice_answer(id uuid,user_id uuid,card_id uuid,rating text,answered_at timestamptz); create table review_log(id uuid,user_id uuid,card_id uuid,rating text,reviewed_at timestamptz)")
+                    sql.execute("insert into app_user values('$owner'),('$other'); insert into study_note values('$kana','hiragana'),('$word','vocabulary'); insert into card values('$kana','$owner','$kana'),('$word','$owner','$word')")
+                    sql.execute("insert into review_log values('${UUID.randomUUID()}','$owner','$kana','GOOD','2026-10-01T00:00:00Z'); insert into practice_answer values('${UUID.randomUUID()}','$owner','$kana','AGAIN','2026-10-02T00:00:00Z'),('${UUID.randomUUID()}','$owner','$word','HARD','2026-10-02T00:00:00Z'),('${UUID.randomUUID()}','$other','$kana','EASY','2026-10-03T00:00:00Z')")
+                    val migration=org.springframework.core.io.ClassPathResource("db/migration/V8__kana_practice_priority.sql").inputStream.bufferedReader().use{it.readText()}
+                    sql.execute(migration)
+                    sql.executeQuery("select user_id,card_id,last_rating,attempts from kana_practice_state").use { rows ->
+                        assertTrue(rows.next());assertEquals(owner,rows.getObject(1,UUID::class.java));assertEquals(kana,rows.getObject(2,UUID::class.java))
+                        assertEquals("AGAIN",rows.getString(3));assertEquals(2,rows.getInt(4));assertTrue(!rows.next())
+                    }
+                } finally {
+                    sql.execute("set search_path to public");sql.execute("drop schema $schema cascade")
+                }
+            }
+        }
+    }
+
+    @Test fun `last kana rating prioritizes retry and hard across mixed and single script sessions`() {
+        val owner=user();val other=user();courses.synchronize(owner);courses.synchronize(other)
+        val input=KanaMixRequest(listOf("hiragana","katakana"),listOf("semiVoiced"))
+        val session=study.start(owner,kana=input)
+        val a=session.cards.first {it.kind=="hiragana"};val b=session.cards.first {it.kind=="katakana"}
+        val req=ReviewRequest(session.id,a.id,a.version,"AGAIN",UUID.randomUUID().toString())
+        study.review(owner,req);study.review(owner,req)
+        study.review(owner,ReviewRequest(session.id,b.id,b.version,"HARD",UUID.randomUUID().toString()))
+        val next=study.start(owner,kana=input)
+        assertEquals(listOf(a.id,b.id),next.cards.take(2).map {it.id})
+        assertEquals(a.id,study.start(owner,kana=KanaMixRequest(groups=listOf("semiVoiced"))).cards.first().id)
+        assertEquals(1,jdbc.queryForObject("select attempts from kana_practice_state where user_id=? and card_id=?",Int::class.java,owner,a.id))
+        study.review(owner,ReviewRequest(next.id,a.id,a.version,"EASY",UUID.randomUUID().toString()))
+        val changed=study.start(owner,kana=input)
+        assertEquals(b.id,changed.cards.first().id);assertEquals(a.id,changed.cards.last().id)
+        assertEquals(0,jdbc.queryForObject("select count(*) from kana_practice_state where user_id=?",Int::class.java,other))
+        assertEquals(0,jdbc.queryForObject("select count(*) from user_card_state where user_id=?",Int::class.java,owner))
+        assertEquals(0,jdbc.queryForObject("select count(*) from review_log where user_id=?",Int::class.java,owner))
+    }
+
+    @Test fun `kana practice updates course progress and retry counts without FSRS reviews`() {
+        val owner=user();courses.synchronize(owner)
+        val first=study.start(owner,kana=KanaMixRequest(groups=listOf("semiVoiced")))
+        first.cards.forEachIndexed { i,c -> study.review(owner,ReviewRequest(first.id,c.id,c.version,
+            listOf("AGAIN","HARD","GOOD","EASY","AGAIN")[i],UUID.randomUUID().toString())) }
+        val course=courses.list(owner).first {it.kind=="hiragana"}
+        assertEquals(5,course.studiedCards);assertEquals(2,course.completedCards);assertEquals(3,course.dueCount)
+        val next=study.start(owner,kana=KanaMixRequest(groups=listOf("semiVoiced")))
+        next.cards.forEach {c -> study.review(owner,ReviewRequest(next.id,c.id,c.version,"GOOD",UUID.randomUUID().toString()))}
+        val after=courses.list(owner).first {it.kind=="hiragana"}
+        assertEquals(5,after.studiedCards);assertEquals(5,after.completedCards);assertEquals(0,after.dueCount)
+        assertEquals(0,jdbc.queryForObject("select count(*) from review_log where user_id=?",Int::class.java,owner))
+    }
+
     @Test fun `kana always practices whole category even when old client sends size and scheduled mode`() {
         val owner=user();courses.synchronize(owner)
         val regular=study.start(owner,lessonId=courses.list(owner).first().lessons.first().id)
@@ -117,7 +175,9 @@ class PersistenceFlowTest @Autowired constructor(
         assertEquals("IDEMPOTENCY_CONFLICT",assertThrows(ApiFailure::class.java) { study.review(owner,req.copy(sessionId=initial.id)) }.code)
         assertEquals("IDEMPOTENCY_CONFLICT",assertThrows(ApiFailure::class.java) { study.review(owner,req.copy(rating="HARD")) }.code)
         assertEquals("PRACTICE_ALREADY_ANSWERED",assertThrows(ApiFailure::class.java) { study.review(owner,req.copy(idempotencyKey=UUID.randomUUID().toString())) }.code)
-        assertEquals(before,study.card(owner,learned.id))
+        val after=study.card(owner,learned.id)!!
+        assertEquals("EASY",after.lastRating)
+        assertEquals(before,after.copy(lastRating=before.lastRating))
         assertEquals(1,jdbc.queryForObject("select count(*) from review_log where user_id=?",Int::class.java,owner))
         assertEquals(1,jdbc.queryForObject("select count(*) from practice_answer where user_id=?",Int::class.java,owner))
         val remaining=study.session(owner,free.id)
