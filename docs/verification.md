@@ -1,5 +1,23 @@
 # 검증 기록
 
+## 가나 단일 코스·다음 연습 평가 반영 (2026-10-02)
+
+- PostgreSQL 16 Testcontainers/JUnit **31개** 통과. 최근 AGAIN/HARD 우선, AGAIN→EASY 변경 시 뒤로 이동, 혼합·단일 문자 기록 공유, 멱등 재전송 시 횟수 불변, 사용자 분리·범위·제외·FSRS 상태 불변 검증. V8 실제 SQL을 별도 synthetic 스키마에서 실행해 일반/연습 기록 통합 이관과 어휘·타 사용자 기록 제외를 확인했다.
+- TypeScript·ESLint·Vitest **53개** 통과. 왕초보에서 두 코스만 표시, 행 링크 제거, 고정 문자 코스의 분류 선택, 홈·재연습의 코스 진입과 평가 저장 설명을 확인했다.
+- Kotlin/Next.js Docker production build 및 Compose 재배포 성공. HTTPS·Secure 쿠키·backend healthy, V8 성공 확인. 배포 직전 DB dump를 개인 백업 디렉터리에 저장했다. 배포 전후 UserCardState/ReviewLog 전체 행 해시, 카드/레슨 ID 목록 해시가 일치했다. 이관 건수와 최근 평가도 원본 로그 집계에 일치했다.
+- 공개 주소 실제 로그인 후 데스크톱 가타카나 코스와 모바일 WebKit의 히라가나/가타카나 각 기본 46자, 반탁음 혼합 10자, 다시·어려움 우선순위, 쉬움 변경, 재로그인 뒤 단일 코스에서 같은 평가 적용을 확인했다. 360·390px/740px 화면에서 가로 넘침 없음과 네 평가 버튼의 화면 내 배치를 확인했다. 모바일 혼합 10자 완주·인증 WAV HTTP 200·실제 브라우저 재생도 통과했다.
+- 전체 분류 208자를 실제 UI로 끝까지 제출하고 세션 재조회·반복·이전 제한 URL·일일 한도 소진 뒤 동일 범위 자유 연습도 재검증해 통과했다.
+- 첫 브라우저 배치에서 데스크톱 단축키 숫자를 빠뜨린 버튼 선택자와 이동 완료 전 URL을 저장한 검사 코드가 실패했다. 선택자·이동 대기를 수정한 단독 재실행은 통과했다. N5 회귀 검사도 화면 이동 완료 전 레슨의 보임 여부를 판단해 두 항목이 실패하여 입문 화면·행 렌더링 대기를 추가한 뒤 두 항목도 통과했다. 설정 복원 오류가 원래 실패를 가리지 않도록 검사도 수정했다.
+
+전체 범위 1개, N5·인증·음성·설정·화면 5개, 가나 단일 코스·혼합·평가 반영 3개로 **서로 다른 브라우저 9개 케이스**를 재실행 포함 최종 통과했다.
+
+실제 iPhone와 설치 PWA의 실기기 검증은 미실행이다. 테스트는 전용 QA 계정에만 평가를 추가했다.
+
+```sh
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/kana-rating-priority.spec.ts e2e/courses.spec.ts e2e/kana-mix.spec.ts
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/kana-complete-range.spec.ts e2e/learning.spec.ts
+```
+
 ## 가나 분류 선택과 전체 연습 (2026-10-02)
 
 가나 화면에서 장수와 연습 방식 선택을 제거했다. 히라가나/가타카나/둘 다와 기본·탁음·반탁음·요음만 고른다. 클라이언트는 scripts/groups만 전송하고, 서버는 항상 선택한 활성·미제외 문자 전체를 자유 연습으로 저장한다. 이전 링크와 요청의 `size`·`practice`도 범위를 줄이지 않는다.

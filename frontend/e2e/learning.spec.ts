@@ -42,7 +42,11 @@ async function startN5Lesson(page: Page) {
     .locator('[data-level-key="n5"]')
     .getByRole("link", { name: "입문 코스 보기" })
     .click();
+  await expect(
+    page.getByRole("heading", { name: "입문", exact: true }),
+  ).toBeVisible();
   const row = page.locator(`[data-lesson-id="${lesson.id}"]`);
+  await expect(row).toBeAttached();
   const link = row.getByRole("link");
   if (!(await link.isVisible()))
     await page

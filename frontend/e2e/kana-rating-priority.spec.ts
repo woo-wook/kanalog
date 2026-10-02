@@ -41,6 +41,7 @@ test("단일 가나 코스와 섞기 평가가 다음 연습·재접속에 반�
   const scope = {
     kana: { scripts: ["hiragana", "katakana"], groups: ["semiVoiced"] },
   };
+  let failed = false;
   try {
     expect(
       (
@@ -84,10 +85,11 @@ test("단일 가나 코스와 섞기 평가가 다음 연습·재접속에 반�
     await courses
       .getByRole("link", { name: "히라가나 연습", exact: true })
       .click();
-    const hiraUrl = page.url();
     await expect(
       page.getByRole("heading", { name: "히라가나 연습", exact: true }),
     ).toBeVisible();
+    await expect(page).toHaveURL(/\/courses\/[a-f0-9-]+$/);
+    const hiraUrl = page.url();
     await expect(page.getByLabel("문자 종류")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "레슨 시작" })).toHaveCount(0);
     await expect(page.getByText("총 46개 문자")).toBeVisible();
@@ -184,7 +186,12 @@ test("단일 가나 코스와 섞기 평가가 다음 연습·재접속에 반�
     expect(changed.cards[0].id).toBe(hardCard.id);
     expect(changed.cards[9].id).toBe(retryCard.id);
     await page.goto("/settings");
+    const logout = page.waitForResponse((r) =>
+      r.url().endsWith("/api/auth/logout"),
+    );
     await page.getByRole("button", { name: "로그아웃", exact: true }).click();
+    expect((await logout).status()).toBe(200);
+    await expect(page).toHaveURL(/\/login$/);
     await login();
     await page.goto(hiraUrl);
     await page
@@ -201,21 +208,23 @@ test("단일 가나 코스와 섞기 평가가 다음 연습·재접속에 반�
       (c: { kind: string }) => c.kind === "hiragana",
     );
     const rank = (r?: string) =>
-      ({ AGAIN: 0, HARD: 1, GOOD: 3, EASY: 4 })[r ?? ""] ?? 2;
+      (({ AGAIN: 0, HARD: 1, GOOD: 3, EASY: 4 }) as Record<string, number>)[
+        r ?? ""
+      ] ?? 2;
     expect(
       single.cards.map((c: { lastRating?: string }) => rank(c.lastRating)),
     ).toEqual(
       hiraRetry.map((c: { lastRating?: string }) => rank(c.lastRating)),
     );
+  } catch (error) {
+    failed = true;
+    throw error;
   } finally {
     const currentMe = await (await page.request.get("/api/me")).json();
-    expect(
-      (
-        await page.request.patch("/api/settings", {
-          headers: { ...headers, "X-CSRF-Token": currentMe.csrfToken },
-          data: settings,
-        })
-      ).ok(),
-    ).toBe(true);
+    const restored = await page.request.patch("/api/settings", {
+      headers: { ...headers, "X-CSRF-Token": currentMe.csrfToken },
+      data: settings,
+    });
+    if (!failed) expect(restored.status()).toBe(200);
   }
 });
