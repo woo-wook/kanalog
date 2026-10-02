@@ -23,15 +23,15 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.clearAllMocks();
 });
-function mount() {
+function mount(front?: string, allowAudioBeforeReveal = true) {
   vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
   const client = new QueryClient({
     defaultOptions: { queries: { staleTime: Infinity } },
   });
   client.setQueryData(["settings"], {
     audioEngine: "SUPERTONIC",
-    autoPlayAudio: true,
-    allowAudioBeforeReveal: true,
+    autoPlayAudio: !front,
+    allowAudioBeforeReveal,
   });
   vi.mocked(api).mockImplementation(async (path) =>
     path === "/study/reviews"
@@ -44,7 +44,7 @@ function mount() {
             id: `grammar-${i}`,
             version: 0,
             kind: "grammar",
-            front: `문법 질문 ${i + 1}`,
+            front: front ?? `문법 질문 ${i + 1}`,
             meaning: "あの本です。\n저 책입니다.\n추가 설명입니다.",
             explanation: "\u2063",
           })),
@@ -56,6 +56,20 @@ function mount() {
     </QueryClientProvider>,
   );
 }
+it("일본어 문법 예문 듣기는 정답 전 허용 설정을 지키고 해설을 합성하지 않는다", async () => {
+  mount("あの本です。", false);
+  await screen.findByRole("heading", { name: "あの本です。" });
+  expect(
+    screen.queryByRole("button", { name: "문법 예문 듣기" }),
+  ).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: /정답 보기/ }));
+  await userEvent.click(screen.getByRole("button", { name: "문법 예문 듣기" }));
+  expect(voice.generate).toHaveBeenCalledWith(
+    "あの本です。",
+    "F1",
+    expect.any(Function),
+  );
+});
 it("음성 없는 문법을 자동 재생하려 하지 않고 내용 없는 설명 상자를 만들지 않는다", async () => {
   mount();
   await screen.findByRole("heading", { name: "문법 질문 1" });

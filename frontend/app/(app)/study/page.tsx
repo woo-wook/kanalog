@@ -197,8 +197,9 @@ function StudyContent() {
             settings.data?.supertonicVoice ?? "F1",
             setAudioMessage,
           );
-          if (url) playUrl(url);
+          if (url && attempt === playbackAttempt.current) playUrl(url);
         } catch (error) {
+          if (attempt !== playbackAttempt.current) return;
           setAudioMessage(
             error instanceof Error
               ? error.message
@@ -545,8 +546,7 @@ function StudyContent() {
   const isKana = ["katakana", "hiragana"].includes(card.kind);
   const hasSound = Boolean(
     card.audioId ||
-    (card.kind !== "grammar" && settings.data?.audioEngine !== "ORIGINAL") ||
-    (isKana && settings.data?.audioEngine !== "ORIGINAL"),
+    (settings.data?.audioEngine !== "ORIGINAL" && speechText(card)),
   );
   const explanationText = card.explanation?.replace(/\p{Cf}/gu, "").trim();
   const explanation =
@@ -678,7 +678,9 @@ function StudyContent() {
                     : "준비된 음성 재생"
                   : isKana
                     ? "글자 발음 듣기"
-                    : "단어 발음 듣기"
+                    : card.kind === "grammar"
+                      ? "문법 예문 듣기"
+                      : "단어 발음 듣기"
               }
             >
               ▶{" "}
@@ -686,7 +688,9 @@ function StudyContent() {
                 ? settings.data?.autoPlayAudio
                   ? "자동재생 시작"
                   : "준비된 음성 재생"
-                : "발음 듣기"}
+                : card.kind === "grammar"
+                  ? "예문 듣기"
+                  : "발음 듣기"}
             </button>
             <div className="flex flex-wrap items-center justify-center gap-1.5">
               {card.audioId && settings.data?.audioEngine !== "ORIGINAL" && (
@@ -699,17 +703,16 @@ function StudyContent() {
                   기본 음성
                 </button>
               )}
-              {card.kind !== "grammar" &&
-                settings.data?.audioEngine !== "DEVICE" && (
-                  <button
-                    type="button"
-                    className="min-h-11 rounded-full px-3 text-xs text-muted-foreground hover:bg-secondary"
-                    aria-label="기기 음성 듣기"
-                    onClick={() => play(card, undefined, "DEVICE")}
-                  >
-                    기기 음성
-                  </button>
-                )}
+              {speechText(card) && settings.data?.audioEngine !== "DEVICE" && (
+                <button
+                  type="button"
+                  className="min-h-11 rounded-full px-3 text-xs text-muted-foreground hover:bg-secondary"
+                  aria-label="기기 음성 듣기"
+                  onClick={() => play(card, undefined, "DEVICE")}
+                >
+                  기기 음성
+                </button>
+              )}
               {generating && (
                 <button
                   type="button"
