@@ -5,7 +5,13 @@ async function login(page: Page) {
   await page.goto("/login");
   await page.getByLabel("이메일").fill(process.env.E2E_EMAIL!);
   await page.getByLabel("비밀번호").fill(process.env.E2E_PASSWORD!);
+  const loginResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/auth/login") &&
+      response.request().method() === "POST",
+  );
   await page.getByRole("button", { name: "로그인", exact: true }).click();
+  expect((await loginResponse).status(), "로그인 HTTP 응답").toBe(200);
   await expect(
     page.getByRole("heading", { name: "오늘도 한 레슨씩" }),
   ).toBeVisible();

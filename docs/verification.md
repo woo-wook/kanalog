@@ -1,5 +1,20 @@
 # 검증 기록
 
+## 가나 분류 선택과 전체 연습 (2026-10-02)
+
+가나 화면에서 장수와 연습 방식 선택을 제거했다. 히라가나/가타카나/둘 다와 기본·탁음·반탁음·요음만 고른다. 클라이언트는 scripts/groups만 전송하고, 서버는 항상 선택한 활성·미제외 문자 전체를 자유 연습으로 저장한다. 이전 링크와 요청의 `size`·`practice`도 범위를 줄이지 않는다.
+
+- PostgreSQL Testcontainers/JUnit **28개** 통과. 신규 한도 소진·미래 복습 카드가 있는 상태에서도 기본 46자/모든 분류 208자 전부 포함, 이전 size=4/practice=false 무시, 기존 FSRS 상태 보존, 소유권·제외·멱등 저장 검증.
+- TypeScript·ESLint·Vitest **50개** 통과. 불필요한 두 select 제거, 분류만으로 시작, 범위 없는 시작 차단, 이전 URL 제한값을 API에 전송하지 않음, 완료 후 새 세션 반복 검증.
+- Kotlin/Next.js production Docker build와 Compose 배포 성공. 공개 HTTPS·Secure 쿠키·backend healthy 확인. 배포 전후 UserCardState/ReviewLog 행 해시 및 카드/레슨 ID 목록 해시 일치.
+- 공개 모바일 WebKit에서 장수/모드 select 없음, 기본 46자, 이전 `size=4&practice=0` 링크도 46자, 모든 분류 208자 끝까지 제출·재조회·반복, 반탁음 혼합 10자와 실제 음성 재생을 확인했다. 기존 모바일 배치·음성 재로드·다음 카드 자동재생 포함 8개 케이스를 검증했다. 첫 일괄 실행은 7개 통과, 360x740 검사는 로그인 시 일반 오류로 실패했다. 해당 검사 단독 재실행에서 로그인 HTTP 200과 배치가 통과했다. 최초 오류의 HTTP 응답을 수집하지 못해 발생 지점은 확정하지 않았다.
+
+실제 iPhone·설치 PWA 실기기 검증은 미실행이다. 공개 모바일 WebKit의 실제 사용자 흐름 검증 명령은 다음과 같다.
+
+```sh
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/kana-complete-range.spec.ts e2e/kana-mix.spec.ts e2e/mobile-study.spec.ts e2e/safari-speech.spec.ts e2e/refresh-autoplay.spec.ts
+```
+
 ## 선택 범위 조기 종료와 빈 큐 수정 (2026-10-02)
 
 실제 개인 계정의 하루 신규 한도 10장을 모두 사용한 상태를 확인했다. 최근 일반 세션에는 0장인 큐도 있었으며 기존 UI는 답변 0회도 완료로 표시했다. 섞기 UI의 기본 모드를 자유 연습으로 변경했고, 예정된 학습·복습은 한도 적용을 명시하여 따로 선택한다. 완료한 레슨 중 복습 시각 미도래는 바로 다시 연습한다. 빈 일반 세션은 서버의 한도·미도래·제외 상태와 다음 복습 시각을 표시하고 같은 범위 자유 연습으로 연결한다. 409 오류는 서버의 실제 메시지와 재조회·연습 버튼을 제공한다.

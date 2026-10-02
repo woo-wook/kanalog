@@ -58,7 +58,7 @@ test("히라가나 우선과 혼합 자유 연습을 모바일에서 선택하�
     ).toBeVisible();
     for (const width of [360, 390]) {
       await page.setViewportSize({ width, height: 844 });
-      for (const label of ["문자 종류", "한 번에 연습할 문자", "연습 방식"]) {
+      for (const label of ["문자 종류"]) {
         expect(
           (await page.getByLabel(label).boundingBox())!.height,
         ).toBeGreaterThanOrEqual(44);
@@ -76,7 +76,6 @@ test("히라가나 우선과 혼합 자유 연습을 모바일에서 선택하�
     await page
       .getByRole("checkbox", { name: "반탁음 5자", exact: true })
       .check();
-    await page.getByLabel("연습 방식").selectOption("practice");
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,

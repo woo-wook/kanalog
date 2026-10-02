@@ -69,38 +69,38 @@ class StudyService(private val jdbc: JdbcTemplate, private val fsrs: FsrsAdapter
         val lesson=lessonId?.let { courses.scope(userId,it) }
         val targetDeck=lesson?.deckId ?: deckId
         val mixed=kana?.let { kanaMix.cards(userId,it) }
-        val isPractice=practice || kana?.practice==true
+        val isPractice=practice || kana!=null
         val scopeSql=when {
             mixed!=null -> if(mixed.isEmpty()) " and false" else " and c.id in (${mixed.joinToString(",") { "'$it'" }})"
             lessonId!=null -> " and exists(select 1 from lesson_card lc where lc.card_id=c.id and lc.lesson_id='$lessonId')"
             else -> ""
         }
         val deckSql=targetDeck?.let { " and c.deck_id='$it'" } ?: ""
-        val newOrder=if(kana!=null) "random()" else if(lessonId==null) "c.id" else "(select lc.position from lesson_card lc where lc.card_id=c.id and lc.lesson_id='$lessonId')"
+        val newOrder=if(lessonId==null) "c.id" else "(select lc.position from lesson_card lc where lc.card_id=c.id and lc.lesson_id='$lessonId')"
         jdbc.queryForObject("select id from app_user where id=? for update",UUID::class.java,userId)
         if(targetDeck!=null) {
             val deck=jdbc.queryForObject("select count(*) from deck where id=? and owner_id=? and import_status='READY'",Int::class.java,targetDeck,userId) ?: 0
             if(deck==0) fail("DECK_NOT_FOUND","덱을 찾을 수 없습니다",HttpStatus.NOT_FOUND)
         }
         // A lesson is a fixed learning scope: free repetition includes its entire range.
-        val size=kana?.size ?: if(isPractice && lessonId!=null) Int.MAX_VALUE else 50
+        val size=if(kana!=null || (isPractice && lessonId!=null)) Int.MAX_VALUE else 50
         val zone=zone(userId);val today=LocalDate.now(zone)
         val start=today.atStartOfDay(zone).toInstant();val end=today.plusDays(1).atStartOfDay(zone).toInstant()
         val limit=jdbc.queryForObject("select daily_new_limit from user_settings where user_id=?",Int::class.java,userId) ?: 10
         val used=jdbc.queryForObject("select count(*) from user_card_state where user_id=? and first_seen_at>=? and first_seen_at<?",
             Int::class.java,userId,java.sql.Timestamp.from(start),java.sql.Timestamp.from(end)) ?: 0
-        val dueIds=jdbc.query("""select c.id from card c join user_card_state s on s.card_id=c.id and s.user_id=?
+        val dueIds=if(isPractice) emptyList() else jdbc.query("""select c.id from card c join user_card_state s on s.card_id=c.id and s.user_id=?
             where c.owner_id=? $deckSql and c.active=true and s.suspended=false
             and s.first_seen_at is not null and s.due_at<=now() $scopeSql order by s.due_at limit ?""",
             {rs,_->rs.getObject(1,UUID::class.java)},userId,userId,size)
-        val remaining=if(kana==null) limit-used else minOf(limit-used,size-dueIds.size)
-        val newIds=if(remaining>0) jdbc.query("""select c.id from card c left join user_card_state s on s.card_id=c.id and s.user_id=?
+        val remaining=limit-used
+        val newIds=if(!isPractice && remaining>0) jdbc.query("""select c.id from card c left join user_card_state s on s.card_id=c.id and s.user_id=?
             where c.owner_id=? $deckSql and c.active=true and (s.id is null or (s.first_seen_at is null and s.suspended=false))
             $scopeSql order by $newOrder limit ?""",{rs,_->rs.getObject(1,UUID::class.java)},userId,userId,remaining) else emptyList()
         val ids=if(isPractice) jdbc.query("""select c.id from card c left join user_card_state s on s.card_id=c.id and s.user_id=?
             where c.owner_id=? $deckSql and c.active=true and coalesce(s.suspended,false)=false $scopeSql order by random() limit ?""",
             {rs,_->rs.getObject(1,UUID::class.java)},userId,userId,size)
-        else (dueIds+newIds).distinct().let { if(kana==null) it else it.shuffled() }
+        else (dueIds+newIds).distinct()
         val availability=jdbc.query("""select count(*)::int total,
             count(*) filter(where s.first_seen_at is null)::int unseen,
             min(s.due_at) filter(where s.first_seen_at is not null and s.due_at>now()) next_due

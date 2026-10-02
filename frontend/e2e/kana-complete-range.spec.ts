@@ -42,11 +42,30 @@ test("전체 섞기 208장을 끝까지 저장하고 빈 레슨에서도 자유 
     ).toBe(true);
     const before = await (await page.request.get("/api/stats")).json();
     await page.goto("/courses/levels/starter");
-    await expect(page.getByLabel("연습 방식")).toHaveValue("practice");
+    await expect(page.getByLabel("한 번에 연습할 문자")).toHaveCount(0);
+    await expect(page.getByLabel("연습 방식")).toHaveCount(0);
+    const basicStart = page.waitForResponse(
+      (r) =>
+        r.url().endsWith("/api/study/sessions") &&
+        r.request().method() === "POST",
+    );
+    await page.getByRole("link", { name: "섞어서 시작", exact: true }).click();
+    const basic = await (await basicStart).json();
+    expect(basic.practice).toBe(true);
+    expect(basic.cards).toHaveLength(46);
+    const legacyStart = page.waitForResponse(
+      (r) =>
+        r.url().endsWith("/api/study/sessions") &&
+        r.request().method() === "POST",
+    );
+    await page.goto("/study?kana=hiragana&groups=basic&size=4&practice=0");
+    const legacy = await (await legacyStart).json();
+    expect(legacy.practice).toBe(true);
+    expect(legacy.cards).toHaveLength(46);
+    await page.goto("/courses/levels/starter");
     await page.getByLabel("문자 종류").selectOption("both");
     for (const name of ["탁음 20자", "반탁음 5자", "요음 33개"])
       await page.getByRole("checkbox", { name, exact: true }).check();
-    await page.getByLabel("한 번에 연습할 문자").selectOption("all");
     const start = page.waitForResponse(
       (r) =>
         r.url().endsWith("/api/study/sessions") &&

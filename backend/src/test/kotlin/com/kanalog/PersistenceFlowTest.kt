@@ -39,6 +39,22 @@ class PersistenceFlowTest @Autowired constructor(
         return id
     }
 
+    @Test fun `kana always practices whole category even when old client sends size and scheduled mode`() {
+        val owner=user();courses.synchronize(owner)
+        val regular=study.start(owner,lessonId=courses.list(owner).first().lessons.first().id)
+        val learned=regular.cards.first()
+        study.review(owner,ReviewRequest(regular.id,learned.id,learned.version,"GOOD",UUID.randomUUID().toString()))
+        val before=study.card(owner,learned.id)
+        jdbc.update("update user_settings set daily_new_limit=1 where user_id=?",owner)
+        val basic=study.start(owner,kana=KanaMixRequest())
+        assertTrue(basic.practice);assertEquals(46,basic.cards.size)
+        val all=study.start(owner,kana=KanaMixRequest(listOf("hiragana","katakana"),listOf("basic","voiced","semiVoiced","yoon"),4,false))
+        assertTrue(all.practice);assertEquals(208,all.cards.size)
+        assertEquals(208,all.cards.map {it.id}.toSet().size)
+        assertTrue(all.cards.any {it.id==learned.id})
+        assertEquals(before,study.card(owner,learned.id))
+    }
+
     @Test fun `curriculum read model scopes progress and existing lesson ids to the authenticated owner`() {
         val owner=user(); val other=user()
         courses.synchronize(owner); courses.synchronize(other)
@@ -61,11 +77,12 @@ class PersistenceFlowTest @Autowired constructor(
         assertEquals(1,jdbc.queryForObject("select count(*) from review_log where user_id=?",Int::class.java,owner))
     }
 
-    @Test fun `mixed kana spans selected scripts and groups while preserving owner scope and daily cap`() {
+    @Test fun `mixed kana spans all selected scripts and groups while preserving owner scope`() {
         val owner=user();val other=user()
         courses.synchronize(owner);courses.synchronize(other)
         val mixed=study.start(owner,kana=KanaMixRequest(listOf("hiragana","katakana"),listOf("voiced","semiVoiced"),50))
-        assertEquals(10,mixed.cards.size)
+        assertEquals(50,mixed.cards.size)
+        assertTrue(mixed.practice)
         assertTrue(mixed.cards.all { it.kind in listOf("hiragana","katakana") })
         assertTrue(mixed.cards.all { it.front in "が ぎ ぐ げ ご ざ じ ず ぜ ぞ だ ぢ づ で ど ば び ぶ べ ぼ ぱ ぴ ぷ ぺ ぽ ガ ギ グ ゲ ゴ ザ ジ ズ ゼ ゾ ダ ヂ ヅ デ ド バ ビ ブ ベ ボ パ ピ プ ペ ポ".split(' ') })
         assertTrue(mixed.cards.all { study.card(other,it.id)==null })
@@ -77,12 +94,12 @@ class PersistenceFlowTest @Autowired constructor(
         assertEquals("BAD_KANA_SCOPE",assertThrows(ApiFailure::class.java) { study.start(owner,kana=KanaMixRequest(listOf("vocabulary"),listOf("basic"),10)) }.code)
         assertEquals("BAD_STUDY_SCOPE",assertThrows(ApiFailure::class.java) { study.start(owner,lessonId=courses.list(owner).first().lessons.first().id,kana=KanaMixRequest()) }.code)
         assertThrows(ApiFailure::class.java) { study.start(owner,kana=KanaMixRequest(groups=emptyList())) }
-        assertThrows(ApiFailure::class.java) { study.start(owner,kana=KanaMixRequest(size=209)) }
+        assertEquals(46,study.start(owner,kana=KanaMixRequest(size=209)).cards.size)
     }
 
     @Test fun `free kana practice includes future cards stores answers idempotently without changing FSRS or limits`() {
         val owner=user();courses.synchronize(owner)
-        val initial=study.start(owner,kana=KanaMixRequest(groups=listOf("semiVoiced"),size=5))
+        val initial=study.start(owner,lessonId=courses.list(owner).first().lessons.single { it.position==14 }.id)
         val learned=initial.cards.first()
         study.review(owner,ReviewRequest(initial.id,learned.id,learned.version,"GOOD",UUID.randomUUID().toString()))
         val before=study.card(owner,learned.id)!!
@@ -108,18 +125,18 @@ class PersistenceFlowTest @Autowired constructor(
         assertEquals(1,remaining.answered)
         assertTrue(remaining.practice)
         assertEquals(free.lessonTitle,remaining.lessonTitle)
-        assertTrue(study.start(owner,kana=KanaMixRequest(groups=listOf("semiVoiced"))).cards.isEmpty())
+        assertEquals(5,study.start(owner,kana=KanaMixRequest(groups=listOf("semiVoiced"))).cards.size)
         val excluded=free.cards.last { it.id!=learned.id }
         jdbc.update("insert into user_card_state(id,user_id,card_id,suspended) values(?,?,?,true) on conflict(user_id,card_id) do update set suspended=true",UUID.randomUUID(),owner,excluded.id)
         assertTrue(study.start(owner,kana=mix).cards.none { it.id==excluded.id })
         assertEquals(0,overview.dashboard(owner).dailyNewRemaining)
     }
 
-    @Test fun `mixed sessions enforce new limit across groups and free answers stay owner scoped`() {
+    @Test fun `scheduled lessons enforce new limit while whole kana practice stays owner scoped`() {
         val owner=user();val other=user();courses.synchronize(owner);courses.synchronize(other)
         jdbc.update("update user_settings set daily_new_limit=1 where user_id=?",owner)
-        val first=study.start(owner,kana=KanaMixRequest(groups=listOf("semiVoiced"),size=5))
-        val second=study.start(owner,kana=KanaMixRequest(groups=listOf("voiced"),size=5))
+        val first=study.start(owner,lessonId=courses.list(owner).first().lessons.single { it.position==14 }.id)
+        val second=study.start(owner,lessonId=courses.list(owner).first().lessons.single { it.position==10 }.id)
         assertEquals(1,first.cards.size);assertEquals(1,second.cards.size)
         val a=first.cards.single();val b=second.cards.single()
         study.review(owner,ReviewRequest(first.id,a.id,a.version,"GOOD",UUID.randomUUID().toString()))

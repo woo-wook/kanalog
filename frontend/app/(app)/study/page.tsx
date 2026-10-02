@@ -29,7 +29,6 @@ function StudyContent() {
     lessonId = params.get("lessonId"),
     kanaScript = params.get("kana"),
     kanaGroups = params.get("groups") ?? "basic",
-    kanaSize = params.get("size") ?? "10",
     kanaPractice = params.get("practice") === "1";
   const startSession = useCallback(
     (forcePractice = false) =>
@@ -49,14 +48,12 @@ function StudyContent() {
                       ? ["hiragana", "katakana"]
                       : [kanaScript],
                   groups: kanaGroups.split(","),
-                  size: Number(kanaSize),
-                  practice: kanaPractice,
                 },
               }
             : {}),
         }),
       ),
-    [deckId, lessonId, kanaScript, kanaGroups, kanaSize, kanaPractice],
+    [deckId, lessonId, kanaScript, kanaGroups, kanaPractice],
   );
   const queryClient = useQueryClient();
   const settings = useQuery({

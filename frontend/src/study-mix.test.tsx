@@ -13,7 +13,7 @@ vi.mock("./api", () => ({
 }));
 vi.mock("next/navigation", () => ({
   useSearchParams: () =>
-    new URLSearchParams("kana=both&groups=semiVoiced&size=10&practice=1"),
+    new URLSearchParams("kana=both&groups=semiVoiced&size=4&practice=0"),
 }));
 vi.mock("./use-generated-audio", () => ({
   useGeneratedAudio: () => ({
@@ -69,8 +69,6 @@ it("섞기 선택으로 세션을 만들고 자유 연습 결과를 저장한 �
     kana: {
       scripts: ["hiragana", "katakana"],
       groups: ["semiVoiced"],
-      size: 10,
-      practice: true,
     },
   });
   const user = userEvent.setup();

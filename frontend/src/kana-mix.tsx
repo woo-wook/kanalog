@@ -31,8 +31,6 @@ function SelectControl({
 export function KanaMix() {
   const [script, setScript] = useState("hiragana");
   const [selected, setSelected] = useState(["basic"]);
-  const [size, setSize] = useState("10");
-  const [mode, setMode] = useState("practice");
   const total =
     groups
       .filter((g) => selected.includes(g.key))
@@ -43,8 +41,6 @@ export function KanaMix() {
       .filter((g) => selected.includes(g.key))
       .map((g) => g.key)
       .join(","),
-    size: size === "all" ? String(total) : size,
-    practice: mode === "practice" ? "1" : "0",
   });
   return (
     <section
@@ -58,10 +54,9 @@ export function KanaMix() {
         </h2>
       </div>
       <p className="muted mt-2 text-sm leading-relaxed">
-        행 순서 대신 여러 문자를 섞어 읽어 보세요. 시작할 때마다 순서가
-        바뀝니다.
+        연습할 분류를 골라 주세요. 포함한 문자를 모두 섞어 연습합니다.
       </p>
-      <div className="mt-5 grid min-w-0 gap-4 sm:grid-cols-2">
+      <div className="mt-5 min-w-0">
         <label className="min-w-0 text-sm font-medium">
           문자 종류
           <SelectControl
@@ -71,17 +66,6 @@ export function KanaMix() {
             <option value="hiragana">히라가나</option>
             <option value="katakana">가타카나</option>
             <option value="both">히라가나 + 가타카나</option>
-          </SelectControl>
-        </label>
-        <label className="min-w-0 text-sm font-medium">
-          한 번에 연습할 문자
-          <SelectControl value={size} onChange={(e) => setSize(e.target.value)}>
-            {[5, 10, 20, 30].map((n) => (
-              <option key={n} value={n}>
-                {n}장씩
-              </option>
-            ))}
-            <option value="all">선택한 범위 전체</option>
           </SelectControl>
         </label>
       </div>
@@ -109,20 +93,12 @@ export function KanaMix() {
           ))}
         </div>
       </fieldset>
-      <label className="mt-5 block text-sm font-medium">
-        연습 방식
-        <SelectControl value={mode} onChange={(e) => setMode(e.target.value)}>
-          <option value="practice">자유 연습 · 선택한 만큼</option>
-          <option value="study">예정된 학습·복습 · 하루 한도 적용</option>
-        </SelectControl>
-      </label>
       <p className="muted mt-3 text-xs leading-relaxed">
-        {mode === "practice"
-          ? "하루 한도와 복습 시각에 관계없이 선택한 만큼 연습합니다. 이미 본 문자도 포함하며 답변은 따로 저장합니다. 복습 일정과 코스 진도를 바꾸지 않아요."
-          : "복습할 문자부터 고르고 새 문자를 섞습니다. 새 문자는 하루 한도 안에서만 추가하므로 선택한 장수보다 적을 수 있어요."}
+        이미 본 문자도 포함해 전체를 연습합니다. 마치면 다시 섞어 시작할 수
+        있어요. 복습 일정과 코스 진도를 바꾸지 않아요.
       </p>
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-        <p className="muted text-sm">선택 범위 {total}장</p>
+        <p className="muted text-sm">총 {total}개 문자</p>
         {selected.length > 0 ? (
           <Link className="btn btn-primary" href={`/study?${params}`}>
             섞어서 시작
