@@ -142,13 +142,31 @@ progress::-moz-progress-bar {
   text-align: start;
 }
 .study-prompt.study-prompt-grammar {
-  font-size: clamp(1.125rem, 4.5vw, 1.375rem);
-  line-height: 1.65;
+  font-size: clamp(1.75rem, 7vw, 2.125rem);
+  line-height: 1.55;
   letter-spacing: -0.015em;
 }
 .grammar-answer .study-prose {
-  line-height: 1.85;
+  line-height: 1.8;
   letter-spacing: -0.01em;
+}
+.grammar-body {
+  font-size: 1.125rem;
+}
+.grammar-translation {
+  font-size: 1.25rem;
+}
+.grammar-expression {
+  font-size: 1.5rem;
+}
+.study-card-grammar-question {
+  display: flex;
+  min-height: min(28rem, 55dvh);
+  flex-direction: column;
+}
+.study-card-grammar-question .grammar-prompt {
+  margin-block: auto;
+  padding-block: 1.5rem;
 }
 @media (max-width: 767px) {
   .page-pad {

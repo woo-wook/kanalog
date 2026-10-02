@@ -581,15 +581,19 @@ function StudyContent() {
       </div>
       <article
         ref={cardPanel}
-        className="study-card surface p-5 sm:p-8"
+        className={`study-card surface p-5 sm:p-8 ${card.kind === "grammar" && !revealed ? "study-card-grammar-question" : ""}`}
         aria-label="학습 카드"
         tabIndex={0}
       >
-        <div className={card.kind === "grammar" ? "text-left" : "text-center"}>
+        <div
+          className={
+            card.kind === "grammar" ? "grammar-prompt text-left" : "text-center"
+          }
+        >
           <p
             className={
               card.kind === "grammar"
-                ? "inline-flex rounded-lg bg-primary/8 px-2.5 py-1 text-xs font-semibold text-primary"
+                ? "inline-flex rounded-lg bg-primary/8 px-3 py-1.5 text-sm font-semibold text-primary"
                 : "muted text-xs sm:text-sm"
             }
           >
@@ -606,6 +610,11 @@ function StudyContent() {
           >
             {card.front}
           </h1>
+          {card.kind === "grammar" && !revealed && (
+            <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
+              문장의 뜻과 쓰임을 떠올린 뒤 정답을 확인해 보세요.
+            </p>
+          )}
           {((card.reading &&
             (revealed || settings.data?.showReadingHint || hint)) ||
             (revealed &&
@@ -750,7 +759,7 @@ function StudyContent() {
           >
             {!isKana &&
               (card.kind === "grammar" ? (
-                <GrammarAnswer answer={card.meaning} />
+                <GrammarAnswer answer={card.meaning} front={card.front} />
               ) : (
                 <h2 className="text-center text-xl font-semibold leading-snug sm:text-2xl">
                   {card.meaning || "뜻 정보 없음"}

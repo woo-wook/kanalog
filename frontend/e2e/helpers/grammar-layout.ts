@@ -5,6 +5,7 @@ export async function checkGrammar(
   page: Page,
   sizes: [number, number][],
   screenshot: string,
+  lessonPosition = 2,
 ) {
   await page.goto("/login");
   await page.getByLabel("이메일").fill(process.env.E2E_EMAIL!);
@@ -30,7 +31,7 @@ export async function checkGrammar(
   );
   // This real N5 lesson includes a long multi-paragraph answer. No content is copied into fixtures.
   const lesson = grammar.lessons.find(
-    (l: { position: number }) => l.position === 2,
+    (l: { position: number }) => l.position === lessonPosition,
   );
   let failed = false;
   try {
@@ -57,7 +58,9 @@ export async function checkGrammar(
           : best,
       0,
     );
-    expect(session.cards[target].meaning.length).toBeGreaterThan(400);
+    expect(session.cards[target].meaning.length).toBeGreaterThan(
+      lessonPosition === 2 ? 400 : 100,
+    );
     for (let i = 0; i < target; i++) {
       await page.getByRole("button", { name: /정답 보기/ }).click();
       const save = page.waitForResponse((r) =>
@@ -67,6 +70,14 @@ export async function checkGrammar(
       expect((await save).status()).toBe(200);
       await expect(page.locator(".study-progress")).toContainText(`${i + 2} /`);
     }
+    const prompt = page.locator(".study-prompt");
+    const questionFont = await prompt.evaluate((el) =>
+      parseFloat(getComputedStyle(el).fontSize),
+    );
+    expect(questionFont).toBeGreaterThanOrEqual(28);
+    await page.screenshot({
+      path: resolve(`../private-data/e2e/question-${screenshot}`),
+    });
     await page.getByRole("button", { name: /정답 보기/ }).click();
     const answer = page.getByRole("region", { name: "정답과 해설" });
     await expect(answer).toBeVisible();
@@ -74,11 +85,20 @@ export async function checkGrammar(
       .split(/\n+/)
       .map((s: string) => s.trim())
       .filter(Boolean);
+    const restored = [
+      await prompt.textContent(),
+      await answer.locator(".grammar-translation").textContent(),
+      await answer.locator(".grammar-expression").textContent(),
+    ];
+    for (const title of ["뉘앙스", "접속", "헷갈리는 문형"]) {
+      const section = answer.getByRole("region", { name: title, exact: true });
+      await expect(
+        section.getByRole("heading", { name: title, exact: true }),
+      ).toBeVisible();
+      restored.push(title, ...(await section.locator("p").allTextContents()));
+    }
     // Boolean comparison prevents personal deck text being printed on assertion failure.
-    expect(
-      JSON.stringify(await answer.locator("p").allTextContents()) ===
-        JSON.stringify(paragraphs),
-    ).toBe(true);
+    expect(JSON.stringify(restored) === JSON.stringify(paragraphs)).toBe(true);
     await expect(
       page.getByText(/再生|재생할 음성이 없습니다|읽을 일본어가 없습니다/),
     ).toHaveCount(0);
@@ -93,7 +113,7 @@ export async function checkGrammar(
       const layout = await page.evaluate(() => {
         const panel = document.querySelector(".study-card")!;
         const question = document.querySelector(".study-prompt")!;
-        const paragraph = document.querySelector(".grammar-answer p")!;
+        const paragraph = document.querySelector(".grammar-body")!;
         const actions = document.querySelector(".study-actions")!;
         const nav = Array.from(document.querySelectorAll("nav")).find(
           (n) => getComputedStyle(n).position === "fixed",
@@ -108,6 +128,30 @@ export async function checkGrammar(
           questionFont: parseFloat(getComputedStyle(question).fontSize),
           bodyFont: parseFloat(style.fontSize),
           bodyWeight: Number(style.fontWeight),
+          translationFont: parseFloat(
+            getComputedStyle(document.querySelector(".grammar-translation")!)
+              .fontSize,
+          ),
+          expressionFont: parseFloat(
+            getComputedStyle(document.querySelector(".grammar-expression")!)
+              .fontSize,
+          ),
+          headingWeight: Number(
+            getComputedStyle(document.querySelector(".grammar-topic h3")!)
+              .fontWeight,
+          ),
+          topicBorder: parseFloat(
+            getComputedStyle(document.querySelector(".grammar-topic")!)
+              .borderTopWidth,
+          ),
+          topicRadius: parseFloat(
+            getComputedStyle(document.querySelector(".grammar-topic")!)
+              .borderRadius,
+          ),
+          topicBackground: getComputedStyle(
+            document.querySelector(".grammar-topic")!,
+          ).backgroundColor,
+          panelBackground: getComputedStyle(panel).backgroundColor,
           align: style.textAlign,
           actionsTop: actions.getBoundingClientRect().top,
           actionsBottom: actions.getBoundingClientRect().bottom,
@@ -115,10 +159,17 @@ export async function checkGrammar(
         };
       });
       expect(layout.widthOverflow).toBeLessThanOrEqual(1);
-      expect(layout.bodyFont).toBeLessThanOrEqual(18);
+      expect(layout.bodyFont).toBe(18);
+      expect(layout.translationFont).toBeGreaterThanOrEqual(20);
+      expect(layout.expressionFont).toBeGreaterThanOrEqual(24);
+      expect(layout.headingWeight).toBeGreaterThanOrEqual(600);
+      expect(layout.topicBorder).toBeGreaterThan(0);
+      expect(layout.topicRadius).toBeGreaterThanOrEqual(12);
+      expect(layout.topicBackground).not.toBe(layout.panelBackground);
       expect(layout.bodyWeight).toBeLessThanOrEqual(400);
       expect(["left", "start"]).toContain(layout.align);
-      expect(layout.questionFont).toBeLessThanOrEqual(22);
+      expect(layout.questionFont).toBeGreaterThanOrEqual(28);
+      expect(layout.questionFont).toBeLessThanOrEqual(34);
       expect(layout.questionTop).toBeGreaterThan(layout.panelTop);
       if (width < 768) {
         expect(layout.heightOverflow).toBeLessThanOrEqual(1);
@@ -138,6 +189,16 @@ export async function checkGrammar(
     });
     await page.screenshot({
       path: resolve(`../private-data/e2e/${screenshot}`),
+    });
+    await page.locator(".study-card").evaluate((panel) => {
+      const topic = panel.querySelector(".grammar-topic")!;
+      panel.scrollTop +=
+        topic.getBoundingClientRect().top -
+        panel.getBoundingClientRect().top -
+        20;
+    });
+    await page.screenshot({
+      path: resolve(`../private-data/e2e/sections-${screenshot}`),
     });
     // Submit a scrolled answer and confirm the next question starts at the top.
     if (target < session.cards.length - 1) {

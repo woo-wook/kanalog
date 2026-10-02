@@ -20,3 +20,10 @@ test("긴 MAX 해설은 문단으로 표시되고 카드만 스크롤되며 평�
     "grammar-mobile-390.png",
   );
 });
+
+test("첫 N5 문법도 큰 질문과 구분된 해석·핵심 표현·설명으로 표시한다", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await checkGrammar(page, [[390, 844]], "grammar-intro-390.png", 0);
+});

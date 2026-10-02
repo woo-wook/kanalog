@@ -1,5 +1,25 @@
 # 검증 기록
 
+## 문법 구조와 큰 글씨 디자인 (2026-10-02)
+
+- 전체 변환본 **문법 1,078개(N5 99개)** 모두 예문→한국어 해석→핵심 표현→뉘앙스→접속→헷갈리는 문형 순서임을 확인했다. 화면에서도 정확한 제목·순서·앞면과의 예문 일치를 검사해 구조화한다. 미확인 구조는 전체 원문을 유지한다. 기존 예문 중복 표시는 제거하고 해석·핵심 표현·세 설명은 별도 제목으로 표시한다.
+- 질문 **28~34px**, 해석 **20px**, 핵심 표현 **24px**, 설명 **18px**. 정답 전 질문은 카드 중앙에 배치하고, 핵심 표현은 파란 강조 영역·설명은 번호/굵은 제목/배경/테두리가 있는 섹션으로 구분했다. 기존 모바일 카드 스크롤·고정 평가 버튼·카드 전환 스크롤 초기화를 유지한다.
+- Vitest **58개**, TypeScript·ESLint 통과. synthetic 문법으로 섹션 제목/해석/핵심 표현/내용 연결과 미확인 형식의 전체 내용 보존을 확인했다. 검사 코드의 Testing Library 옵션 타입 오류를 수정하고 타입 검사를 다시 통과했다.
+- 실제 UI와 동일한 TypeScript 표시 parser로 전체 **1,078개**·N5 **99개**를 검증했다. 구조화 결과를 원본 순서로 다시 결합하면 모든 문단·제목이 일치한다. 검증 도구는 원문을 출력하지 않는다.
+- 공개 서버의 실제 QA 계정과 MAX 문법으로 **브라우저 7개 케이스** 통과: 첫 N5 문법 모바일 1개, 긴 문법 모바일 1개·태블릿/PC 1개, 가나 3개 크기·긴 어휘 예문 1개. 모바일 WebKit **360×640·390×740·390×844**, Chromium **768×1024·1280×900**에서 글자 크기·본문 정렬·제목 대비·섹션 배경/테두리·원문 보존·가로 넘침 없음·마지막 문장 스크롤·평가 버튼 위치·다음 카드 scrollTop=0을 확인했다. 질문/정답/설명 영역의 실제 캡처를 개인 디렉터리에 저장하고 시각적으로 확인했다.
+- Next.js Docker production build와 frontend 재배포 성공. HTTPS·Secure 쿠키·backend healthy 확인. 백엔드·DB 스키마·원본 콘텐츠·기존 복습 기록은 변경하지 않았다. 실제 iPhone Safari·설치 PWA 실기기 검증은 미실행이다.
+
+```sh
+node --experimental-strip-types tools/e2e/check_grammar_content.mjs private-data/converted/all/notes.jsonl
+node --experimental-strip-types tools/e2e/check_grammar_content.mjs private-data/converted/n5/notes.jsonl
+pnpm -C frontend test
+pnpm -C frontend exec tsc --noEmit
+pnpm -C frontend lint
+docker compose up -d --no-deps --build frontend
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/grammar-layout.spec.ts e2e/grammar-desktop.spec.ts e2e/mobile-study.spec.ts
+python3 tools/e2e/check_deployment.py
+```
+
 ## 긴 문법 해설·모바일 배치 개선 (2026-10-02)
 
 - 원본 문법 정답의 줄바꿈을 보존하고 16px 왼쪽 정렬 본문으로 표시한다. 질문은 별도 18~22px 제목이며 가나·어휘의 큰 글자는 유지한다. 내용 없는 설명 패널과 재생할 수 없는 문법의 중복 음성 안내를 제거했다. 카드·세션 전환 시 스크롤을 초기화한다.
