@@ -1,5 +1,25 @@
 # 검증 기록
 
+## 문법·단어장 TTS 확장 (2026-10-02)
+
+- 문법 학습의 일본어 앞면/예문을 음성 대상으로 추가했다. 단어장 상세에서는 단어 읽기·가나 글자·문법 예문·단어 예문을 각각 듣는다. 한국어 질문·해설·메모는 합성하지 않으며 선택한 엔진·목소리·속도를 유지한다. 기존 원본 단어 음성도 별도 버튼으로 재생한다. 전체 변환본의 어휘 9,159개·문법 1,078개를 조사했으며 단어 읽기는 최대 12자, 문법 예문은 최대 49자로 서버 500자 제한 안에 있다. 모든 항목을 개별 청취했다는 뜻은 아니다.
+- Vitest **71개**, TypeScript·ESLint·Next.js Docker production build 통과. 일본어 선택·한국어 제외·정답 전 허용, Safari 재생 차단 후 같은 파일 재생, 항목 전환/상세 접기/분류 이동/화면 이탈 중지, 취소한 요청의 늦은 결과 무시, 합성 실패 후 재시도, 원본 엔진과 일본어 기기 목소리 선택을 검증했다.
+- 공개 도메인에서 iPhone UA WebKit **음성 2개 케이스** 통과. 실제 MAX 문법 예문·단어 읽기·단어 예문과 개인 단어 읽기·예문의 WAV 생성/디코딩/비무음/RMS/재생 시간 증가, 원본 media 200/206, 목소리·0.8배 속도, 상세 접기/분류 변경 중지, 모델/worker 다운로드 없음, 듣기만으로 ReviewLog 집계가 바뀌지 않음을 확인했다. 문법 자동재생의 요청 본문은 실제 앞면과 일치했고 정답 공개 때 음성 재요청 없이 같은 파일을 유지했다. 응답을 mock하지 않았다.
+- 추가 **화면 회귀 10개 케이스** 통과: WebKit 360×640·390×740·390×844, Chromium 768×1024·1280×900의 문법/단어장/가나 화면, 원본 강조, 상세 섹션, 개인 단어 저장·수정·재접속, 북마크·학습 제외·검색·페이지네이션, 평가 버튼 유지. 첫 실행에서 한 Chromium 모바일 크기 테스트가 `/login`의 `load` 대기로 60초 시간 초과됐고, 같은 테스트를 수정 없이 재실행해 7.2초에 통과했다. 오류 스냅샷의 개인 본문을 로그에 출력하지 않았다. 캡처는 개인 데이터 디렉터리에 보관하고 실제 화면도 확인했다.
+- `https://kanalog.hanwook.me`에 frontend만 재배포했다. HTTPS/Secure 쿠키·backend/voice healthy 확인. DB migration/콘텐츠 재import는 없으며 테스트는 QA 계정에만 수행했다. 실제 iPhone Safari/설치 PWA 청취 품질은 미검증이다. 이번 변경에서 데스크톱 브라우저 합성 엔진 전체 테스트는 재실행하지 않았으며 새 재생 UI의 실제 합성 확인은 모바일 서버 WAV 경로다.
+
+```sh
+pnpm -C frontend test
+pnpm -C frontend exec tsc --noEmit
+pnpm -C frontend lint
+docker compose build frontend
+docker compose up -d --no-deps frontend
+python3 tools/e2e/check_deployment.py
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/notes-speech.spec.ts
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/notes-layout.spec.ts e2e/notes-desktop.spec.ts e2e/grammar-layout.spec.ts e2e/grammar-desktop.spec.ts e2e/mobile-study.spec.ts
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/mobile-study.spec.ts -g 360x640
+```
+
 ## 단어장 요약·상세 디자인 (2026-10-02)
 
 - 긴 문법 정답 전체를 굵게 표시하던 목록을 문형/단어·읽기·짧은 뜻으로 바꿨다. 제목과 뜻은 최대 두 줄이며 문법 상세에서는 원본 강조 예문·해석·뉘앙스·접속·비교 설명을 구분한다. 단어 상세의 뜻·예문·개인 메모는 줄바꿈을 보존한다. 북마크는 별도 44px 버튼, 학습 제외와 개인 편집은 상세 하단에 표시한다. 가져온 원본의 편집 제한과 출처 미표시를 유지했다.
