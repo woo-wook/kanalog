@@ -3,17 +3,21 @@ import type { Note } from "./api";
 import { GrammarAnswer } from "./grammar-answer";
 import { structureGrammarAnswer } from "./grammar-content";
 import { HighlightedExample } from "./grammar-prompt";
+import { NoteAudio } from "./note-audio";
+import type { NoteAudioPlayer } from "./use-note-audio";
 
 export function NoteEntry({
   note,
   onPatch,
   onEdit,
   pending,
+  audio,
 }: {
   note: Note;
   onPatch: (note: Note, field: "bookmarked" | "excluded") => void;
   onEdit: (note: Note) => void;
   pending: boolean;
+  audio?: NoteAudioPlayer;
 }) {
   const front = note.japanese ?? note.front ?? "";
   const grammar = note.kind === "grammar" || Boolean(note.grammarFocus);
@@ -47,7 +51,13 @@ export function NoteEntry({
           aria-hidden="true"
         />
       </button>
-      <details className="group">
+      <details
+        className="group"
+        onToggle={(event) => {
+          if (!event.currentTarget.open && audio?.active?.noteId === note.id)
+            audio.stop();
+        }}
+      >
         <summary className="note-summary cursor-pointer list-none rounded-2xl p-5 [&::-webkit-details-marker]:hidden">
           <div className="flex min-h-6 flex-wrap items-center gap-2 pr-10 text-xs font-medium text-muted-foreground">
             <span className="rounded-md bg-secondary px-2 py-1">{type}</span>
@@ -95,6 +105,7 @@ export function NoteEntry({
           role="region"
           aria-label="상세 내용"
         >
+          {audio && <NoteAudio note={note} player={audio} />}
           {grammar ? (
             <>
               <h3 className="mb-2 text-sm font-semibold text-muted-foreground">

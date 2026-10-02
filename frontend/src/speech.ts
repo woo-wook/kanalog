@@ -25,6 +25,6 @@ export function speechText(
   if (example) return japaneseText(example.japanese);
   if (item.kind === "grammar") return japaneseText(item.front);
   if (item.kind === "katakana" || item.kind === "hiragana")
-    return item.front.trim() || null;
-  return item.reading?.trim() || item.front.trim() || null;
+    return japaneseText(item.front);
+  return japaneseText(item.reading) || japaneseText(item.front);
 }

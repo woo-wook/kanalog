@@ -1,10 +1,11 @@
 "use client";
 import { FormEvent, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, json, type Note, type Page } from "@/api";
+import { api, json, type Note, type Page, type Settings } from "@/api";
 import { Loading, ErrorMessage } from "@/shell";
 import { NoteEntry } from "@/note-entry";
 import { Plus, Search } from "lucide-react";
+import { useNoteAudio } from "@/use-note-audio";
 const categories = [
   ["", "전체"],
   ["vocabulary", "단어"],
@@ -29,6 +30,13 @@ export default function NotesPage() {
       memo: "",
     }),
     [message, setMessage] = useState("");
+  const settings = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => api<Settings>("/settings"),
+  });
+  const { attachAudio, onPlaying, onEnded, onError, ...audio } = useNoteAudio(
+    settings.data,
+  );
   const notes = useQuery({
     queryKey: ["notes", query, page, kind],
     queryFn: () =>
@@ -38,6 +46,7 @@ export default function NotesPage() {
   });
   function search(e: FormEvent) {
     e.preventDefault();
+    audio.stop();
     setPage(0);
     setQuery(input);
   }
@@ -76,6 +85,7 @@ export default function NotesPage() {
     }
   }
   function edit(note: Note) {
+    audio.stop();
     setEditing(note);
     setCreating(false);
     setForm({
@@ -106,6 +116,15 @@ export default function NotesPage() {
   }
   return (
     <div>
+      <audio
+        ref={attachAudio}
+        preload="none"
+        className="hidden"
+        aria-label="단어장 발음 오디오"
+        onPlaying={onPlaying}
+        onEnded={onEnded}
+        onError={onError}
+      />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -119,6 +138,7 @@ export default function NotesPage() {
           className="btn btn-primary text-sm"
           disabled={pending}
           onClick={() => {
+            audio.stop();
             setCreating(true);
             setEditing(null);
             setForm({
@@ -163,6 +183,7 @@ export default function NotesPage() {
             aria-pressed={kind === value}
             className={`min-h-11 min-w-0 flex-1 rounded-lg px-2 text-sm font-medium transition-colors ${kind === value ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
             onClick={() => {
+              audio.stop();
               setPage(0);
               setKind(value);
             }}
@@ -175,6 +196,18 @@ export default function NotesPage() {
         <p role="status" className="mt-4 text-sm">
           {message}
         </p>
+      )}
+      {settings.error && (
+        <div className="surface mt-4 p-4">
+          <ErrorMessage error={settings.error} />
+          <button
+            type="button"
+            className="btn mt-2 text-sm"
+            onClick={() => settings.refetch()}
+          >
+            음성 설정 다시 불러오기
+          </button>
+        </div>
       )}
       {(creating || editing) && (
         <form onSubmit={save} className="note-form surface mt-5 grid gap-4 p-5">
@@ -272,6 +305,7 @@ export default function NotesPage() {
                   onPatch={patch}
                   onEdit={edit}
                   pending={pending}
+                  audio={audio}
                 />
               ))
             )}
@@ -280,7 +314,10 @@ export default function NotesPage() {
             <button
               className="btn"
               disabled={page === 0}
-              onClick={() => setPage(page - 1)}
+              onClick={() => {
+                audio.stop();
+                setPage(page - 1);
+              }}
             >
               이전
             </button>
@@ -290,7 +327,10 @@ export default function NotesPage() {
             <button
               className="btn"
               disabled={page + 1 >= notes.data.totalPages}
-              onClick={() => setPage(page + 1)}
+              onClick={() => {
+                audio.stop();
+                setPage(page + 1);
+              }}
             >
               다음
             </button>

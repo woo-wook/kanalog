@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 import { canPlayExample, speechText } from "./speech";
 
 describe("학습 음성에 사용할 일본어", () => {
+  it("개인 단어의 한국어 표기는 읽지 않고 로마자 읽기만 있으면 일본어 표기를 읽는다", () => {
+    expect(speechText({ kind: "vocabulary", front: "한국어 메모" })).toBeNull();
+    expect(
+      speechText({ kind: "vocabulary", front: "猫", reading: "neko" }),
+    ).toBe("猫");
+  });
   it("문법의 일본어 앞면은 읽되 한국어가 섞인 해설은 읽지 않는다", () => {
     expect(
       speechText({ kind: "grammar", front: "あの本は田中さんのです。" }),

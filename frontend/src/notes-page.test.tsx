@@ -6,6 +6,7 @@ import NotesPage from "../app/(app)/notes/page";
 import { api } from "./api";
 vi.mock("./api", () => ({
   api: vi.fn(),
+  apiSpeech: vi.fn(),
   json: (method: string, body: unknown) => ({
     method,
     body: JSON.stringify(body),

@@ -40,7 +40,7 @@ export async function checkGrammar(
       (
         await page.request.patch("/api/settings", {
           headers,
-          data: { autoPlayAudio: true, allowAudioBeforeReveal: true },
+          data: { autoPlayAudio: false, allowAudioBeforeReveal: true },
         })
       ).ok(),
     ).toBe(true);
