@@ -9,11 +9,12 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
+import tools.jackson.databind.ObjectMapper
 
 data class NoteView(val id: UUID, val japanese: String, val front: String, val reading: String?,
     val meaning: String?, val example: String?, val exampleMeaning: String?, val explanation: String?,
     val memo: String?, val hangulHint: String?, val source: String, val bookmarked: Boolean,
-    val excluded: Boolean, val audioId: UUID?)
+    val excluded: Boolean, val audioId: UUID?, val kind:String, val level:String?, val grammarFocus:GrammarFocus?)
 data class NotePage(val content: List<NoteView>, val totalElements: Int, val totalPages: Int, val number: Int)
 data class NoteCreate(@field:NotBlank val japanese: String, @field:NotBlank val reading: String,
     @field:NotBlank val meaning: String, val example: String? = null, val exampleMeaning: String? = null,
@@ -23,21 +24,29 @@ data class NotePatch(val japanese: String? = null, val reading: String? = null, 
     val hangulHint: String? = null, val bookmarked: Boolean? = null, val excluded: Boolean? = null)
 
 @Service
-class NoteService(private val jdbc: JdbcTemplate) {
+class NoteService(private val jdbc: JdbcTemplate,private val mapper:ObjectMapper) {
     private val columns = """n.id,n.front,n.reading,n.meaning,n.example,n.example_meaning,n.explanation,
         n.personal_memo,n.hangul_hint,n.source_id,(b.note_id is not null) bookmarked,
-        coalesce(s.suspended,false) excluded,c.word_audio_id"""
+        coalesce(s.suspended,false) excluded,c.word_audio_id,n.kind,n.raw_fields,d.level"""
     private val joins = """from study_note n left join bookmark b on b.note_id=n.id and b.user_id=?
         left join card c on c.id=(select c2.id from card c2 where c2.note_id=n.id and c2.owner_id=? order by c2.id limit 1)
-        left join user_card_state s on s.card_id=c.id and s.user_id=?"""
+        left join user_card_state s on s.card_id=c.id and s.user_id=?
+        left join deck d on d.id=c.deck_id and d.owner_id=n.owner_id"""
     fun get(user: UUID, id: UUID): NoteView = jdbc.query("select $columns $joins where n.owner_id=? and n.id=?",
         ::map, user,user,user,user,id).firstOrNull()
         ?: fail("NOTE_NOT_FOUND", "단어를 찾을 수 없습니다", HttpStatus.NOT_FOUND)
 
-    fun list(user: UUID, query: String, page: Int, size: Int): NotePage {
+    fun list(user: UUID, query: String, page: Int, size: Int, kind:String=""): NotePage {
         if (page < 0 || size !in 1..100) fail("BAD_PAGE", "페이지 범위를 확인하세요")
         val pattern = "%" + query.trim().take(100).replace("\\","\\\\").replace("%","\\%").replace("_","\\_") + "%"
-        val where = "n.owner_id=? and (n.front ilike ? escape '\\' or n.reading ilike ? escape '\\' or n.meaning ilike ? escape '\\')"
+        val kindClause=when(kind) {
+            "" -> ""
+            "vocabulary" -> " and n.kind='vocabulary'"
+            "grammar" -> " and n.kind='grammar'"
+            "kana" -> " and n.kind in ('hiragana','katakana')"
+            else -> fail("BAD_NOTE_KIND","단어장 분류를 확인하세요")
+        }
+        val where = "n.owner_id=? and (n.front ilike ? escape '\\' or n.reading ilike ? escape '\\' or n.meaning ilike ? escape '\\')" + kindClause
         val total = jdbc.queryForObject("select count(*) from study_note n where $where",Int::class.java,user,pattern,pattern,pattern) ?: 0
         val rows = jdbc.query("select $columns $joins where $where order by n.updated_at desc,n.id limit ? offset ?",
             ::map,user,user,user,user,pattern,pattern,pattern,size,page*size)
@@ -91,15 +100,16 @@ class NoteService(private val jdbc: JdbcTemplate) {
         return NoteView(rs.getObject("id",UUID::class.java),front,front,rs.getString("reading"),rs.getString("meaning"),
             rs.getString("example"),rs.getString("example_meaning"),rs.getString("explanation"),
             rs.getString("personal_memo"),rs.getString("hangul_hint"),if(rs.getObject("source_id")==null) "PERSONAL" else "JLPT MAX",
-            rs.getBoolean("bookmarked"),rs.getBoolean("excluded"),rs.getObject("word_audio_id",UUID::class.java))
+            rs.getBoolean("bookmarked"),rs.getBoolean("excluded"),rs.getObject("word_audio_id",UUID::class.java),rs.getString("kind"),rs.getString("level"),
+            if(rs.getString("kind")=="grammar") rs.getString("raw_fields")?.let {convertedGrammarFocus(mapper.readTree(it),front)} else null)
     }
 }
 
 @RestController
 class NoteController(private val service: NoteService) {
     @GetMapping("/api/notes") fun list(@RequestParam(defaultValue="") query:String,
-        @RequestParam(defaultValue="0") page:Int,@RequestParam(defaultValue="20") size:Int,request:HttpServletRequest)=
-        service.list(request.user().id,query,page,size)
+        @RequestParam(defaultValue="0") page:Int,@RequestParam(defaultValue="20") size:Int,@RequestParam(defaultValue="") kind:String,request:HttpServletRequest)=
+        service.list(request.user().id,query,page,size,kind)
     @GetMapping("/api/notes/{id}") fun get(@PathVariable id:UUID,request:HttpServletRequest)=service.get(request.user().id,id)
     @PostMapping("/api/notes") fun create(@Valid @RequestBody body:NoteCreate,request:HttpServletRequest)=service.create(request.user().id,body)
     @PatchMapping("/api/notes/{id}") fun patch(@PathVariable id:UUID,@RequestBody body:NotePatch,request:HttpServletRequest)=

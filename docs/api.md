@@ -56,7 +56,7 @@
 
 | 메서드 | 경로 | 설명 |
 | --- | --- | --- |
-| GET | `/api/notes?query=&page=0&size=20` | 표기·읽기·뜻 검색 |
+| GET | `/api/notes?query=&page=0&size=20&kind=` | 표기·읽기·뜻 검색, 유형별 페이지네이션 |
 | POST | `/api/notes` | 개인 단어 등록 |
 | PATCH | `/api/notes/{id}` | 개인 단어 수정·메모·북마크·학습 제외 |
 | GET | `/api/imports` | 내 import 작업 목록, 최근 100건 |
@@ -66,6 +66,8 @@
 | GET | `/api/health/ready` | DB 준비 상태 |
 
 웹 APKG 업로드 API는 제공하지 않는다. 대형 파일은 로컬 변환 후 Kotlin CLI로 가져온다.
+
+단어장 `kind`는 빈 값(전체), `vocabulary`, `grammar`, `kana` 중 하나이며 `kana`는 히라가나와 가타카나를 함께 조회한다. 다른 값은 400 `BAD_NOTE_KIND`다. 검색·총 개수·페이지 수 모두 같은 사용자/유형 범위를 적용한다. 목록·단건·수정 응답에는 노트의 실제 `kind`, 선택적 `level`, 문법의 `grammarFocus`가 포함된다. 강조 계약은 학습 카드와 동일하고 소유권 검사 후에만 반환한다. 이 변경에는 DB migration이나 진도 갱신이 없다.
 
 ## 오류
 

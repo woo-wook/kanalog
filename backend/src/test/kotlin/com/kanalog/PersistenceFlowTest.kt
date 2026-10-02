@@ -430,6 +430,16 @@ class PersistenceFlowTest @Autowired constructor(
         assertEquals(listOf(false,true,false),study.card(owner,card)?.grammarFocus?.segments?.map {it.highlighted})
         assertEquals(null,study.card(other,card))
         assertEquals(3L,study.card(owner,card)?.version)
+        val noteId=jdbc.queryForObject("select note_id from card where id=?",UUID::class.java,card)!!
+        assertEquals("grammar",notes.get(owner,noteId).kind)
+        assertEquals("N5",notes.get(owner,noteId).level)
+        assertEquals("この",notes.get(owner,noteId).grammarFocus?.title)
+        notes.create(owner,NoteCreate("山","やま","산"))
+        val grammarList=notes.list(owner,"",0,1,"grammar")
+        assertEquals(1,grammarList.totalElements);assertEquals(noteId,grammarList.content.single().id)
+        assertEquals(0,notes.list(other,"",0,1,"grammar").totalElements)
+        assertThrows(ApiFailure::class.java) {notes.get(other,noteId)}
+        assertThrows(ApiFailure::class.java) {notes.list(owner,"",0,20,"unknown")}
         Files.writeString(dir.resolve("notes.jsonl"),raw.replace("人のです。\",\"highlighted", "BROKEN\",\"highlighted"))
         assertThrows(IllegalStateException::class.java) {importer.importData(owner,dir)}
         assertEquals("この",study.card(owner,card)?.grammarFocus?.title)
