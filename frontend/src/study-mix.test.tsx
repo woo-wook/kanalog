@@ -75,7 +75,9 @@ it("섞기 선택으로 세션을 만들고 자유 연습 결과를 저장한 �
   await user.click(screen.getByRole("button", { name: /정답 보기/ }));
   await user.click(screen.getByRole("button", { name: /^보통/ }));
   await screen.findByRole("heading", { name: "자유 연습을 마쳤습니다" });
-  expect(screen.getByText(/복습 일정과 코스 진도는 그대로/)).toBeVisible();
+  expect(
+    screen.getByText(/다시·어려움으로 평가한 문자가 다음 연습에서 먼저/),
+  ).toBeVisible();
   expect(
     screen.queryByRole("button", { name: "복습할 카드 다시 확인" }),
   ).not.toBeInTheDocument();

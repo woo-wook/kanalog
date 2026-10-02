@@ -300,6 +300,8 @@ function StudyContent() {
           queryClient.invalidateQueries({ queryKey: ["dashboard"] });
           queryClient.invalidateQueries({ queryKey: ["stats"] });
           queryClient.invalidateQueries({ queryKey: ["decks"] });
+        }
+        if (!session.practice || ["hiragana", "katakana"].includes(card.kind)) {
           queryClient.invalidateQueries({ queryKey: ["courses"] });
           queryClient.invalidateQueries({ queryKey: ["curriculum"] });
         }
@@ -472,7 +474,9 @@ function StudyContent() {
         </div>
         <p className="muted mt-5 text-sm">
           {session.practice
-            ? "자유 연습 답변을 따로 저장했습니다. 복습 일정과 코스 진도는 그대로 유지됩니다."
+            ? kanaScript
+              ? "평가를 저장했습니다. 다시·어려움으로 평가한 문자가 다음 연습에서 먼저 나옵니다. 보통·쉬움 기록은 첫 연습 진도에도 반영됩니다."
+              : "자유 연습 답변을 따로 저장했습니다. 복습 일정은 그대로 유지됩니다."
             : "다시 평가한 카드는 복습 시각이 되면 같은 세션에서 이어서 학습할 수 있습니다."}
         </p>
         {nextDue && (

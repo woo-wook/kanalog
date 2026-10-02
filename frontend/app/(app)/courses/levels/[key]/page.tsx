@@ -4,6 +4,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api, type Curriculum } from "@/api";
+import { KanaCourses } from "@/kana-courses";
 import { KanaMix } from "@/kana-mix";
 import { LevelSelector, UnitJourney } from "@/curriculum-ui";
 import { Loading, ErrorMessage } from "@/shell";
@@ -58,7 +59,8 @@ export default function CurriculumLevelPage() {
                 <p className="muted text-xs sm:text-sm">
                   첫 연습 {level.completedCards}/{level.totalCards}장 · 레슨{" "}
                   {level.completedLessons}/{level.totalLessons}개
-                  {level.dueCount > 0 && ` · 복습 ${level.dueCount}장`}
+                  {level.dueCount > 0 &&
+                    ` · ${level.key === "starter" ? "다시 연습" : "복습"} ${level.dueCount}장`}
                 </p>
                 <progress
                   aria-label={`${level.title} 첫 연습 진행`}
@@ -69,8 +71,14 @@ export default function CurriculumLevelPage() {
               </div>
             )}
           </header>
-          {level.key === "starter" && level.available && <KanaMix />}
-          {level.available ? (
+          {level.key === "starter" && level.available && (
+            <>
+              <KanaCourses level={level} />
+              <KanaMix />
+            </>
+          )}
+          {level.available &&
+          level.key === "starter" ? null : level.available ? (
             <section
               aria-label={`${level.title} 학습 경로`}
               className="space-y-4"

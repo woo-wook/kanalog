@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight, CalendarDays, Repeat2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api, type Dashboard, type Curriculum } from "@/api";
-import { nextCurriculumLesson } from "@/curriculum";
+import { nextCurriculumLesson, lessonHref } from "@/curriculum";
 import { Loading, ErrorMessage } from "@/shell";
 
 export default function HomePage() {
@@ -91,7 +91,7 @@ export default function HomePage() {
                 </p>
                 <Link
                   className="btn btn-primary mt-5 w-full justify-center sm:w-auto"
-                  href={`/study?lessonId=${next.lesson.id}`}
+                  href={lessonHref(next.lesson)}
                 >
                   {next.lesson.dueCount > 0 && next.lesson.completed
                     ? "복습 이어가기"
@@ -150,7 +150,7 @@ export default function HomePage() {
               <Link
                 className="flex items-center justify-between gap-3 rounded-xl bg-secondary p-4"
                 key={lesson.id}
-                href={`/study?lessonId=${lesson.id}`}
+                href={lessonHref(lesson)}
               >
                 <span className="min-w-0 text-sm">
                   <span className="muted block text-xs">{level.title}</span>

@@ -1,4 +1,4 @@
-import type { Curriculum } from "./api";
+import type { Curriculum, CurriculumLesson } from "./api";
 
 export function nextCurriculumLesson(curriculum?: Curriculum) {
   if (!curriculum?.recommendedLessonId) return null;
@@ -14,4 +14,12 @@ export function nextCurriculumLesson(curriculum?: Curriculum) {
     }
   }
   return null;
+}
+
+export function lessonHref(
+  lesson: Pick<CurriculumLesson, "id" | "kind" | "courseId">,
+) {
+  return ["hiragana", "katakana"].includes(lesson.kind)
+    ? `/courses/${lesson.courseId}`
+    : `/study?lessonId=${lesson.id}`;
 }

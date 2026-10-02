@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api, type Curriculum } from "./api";
-import { nextCurriculumLesson } from "./curriculum";
+import { nextCurriculumLesson, lessonHref } from "./curriculum";
 import { ErrorMessage, Loading } from "./shell";
 
 export function StudyNextStep({ lessonId }: { lessonId: string | null }) {
@@ -38,10 +38,7 @@ export function StudyNextStep({ lessonId }: { lessonId: string | null }) {
           </Link>
         </>
       ) : (
-        <Link
-          className="btn btn-primary mt-4"
-          href={`/study?lessonId=${next.lesson.id}`}
-        >
+        <Link className="btn btn-primary mt-4" href={lessonHref(next.lesson)}>
           다음 레슨 학습 <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       )}

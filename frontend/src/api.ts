@@ -93,6 +93,7 @@ export interface Deck {
   selected: boolean;
 }
 export interface StudyCard {
+  lastRating?: Rating | null;
   id: string;
   version: number;
   kind: string;

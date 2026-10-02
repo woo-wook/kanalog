@@ -45,13 +45,8 @@ test("히라가나 우선과 혼합 자유 연습을 모바일에서 선택하�
     const before = await (await page.request.get("/api/stats")).json();
     const curriculum = await (await page.request.get("/api/curriculum")).json();
     expect(
-      curriculum.levels[0].units.slice(0, 4).map((u: { key: string }) => u.key),
-    ).toEqual([
-      "hiragana-basic-1",
-      "hiragana-basic-2",
-      "katakana-basic-1",
-      "katakana-basic-2",
-    ]);
+      curriculum.levels[0].units.slice(0, 2).map((u: { key: string }) => u.key),
+    ).toEqual(["hiragana-basic", "katakana-basic"]);
     await page.goto("/courses/levels/starter");
     await expect(
       page.getByRole("heading", { name: "가나 섞어 연습" }),

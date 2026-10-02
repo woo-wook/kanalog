@@ -103,3 +103,24 @@ it("가져온 레슨이 없으면 가짜 시작 버튼을 만들지 않는다", 
     screen.getByRole("link", { name: /전체 레벨과 커리큘럼/ }),
   ).toHaveAttribute("href", "/courses");
 });
+
+it("가나 이어서 학습과 재연습은 행별 레슨 대신 단일 코스를 연다", () => {
+  const kana = {
+    ...lesson,
+    kind: "hiragana",
+    title: "히라가나",
+    courseId: "hira",
+  };
+  mount(
+    [{ ...level, key: "starter", units: [{ ...unit, lessons: [kana] }] }],
+    kana.id,
+  );
+  expect(screen.getByRole("link", { name: /이어서 학습/ })).toHaveAttribute(
+    "href",
+    "/courses/hira",
+  );
+  expect(screen.getByRole("link", { name: /1.*복습/ })).toHaveAttribute(
+    "href",
+    "/courses/hira",
+  );
+});

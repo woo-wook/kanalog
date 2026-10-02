@@ -15,6 +15,7 @@ export default function CoursePage() {
   if (query.isPending) return <Loading />;
   if (query.error) return <ErrorMessage error={query.error} />;
   const course = query.data;
+  const kana = course.kind === "hiragana" || course.kind === "katakana";
   const basic = course.lessons.filter((l) => !l.optional),
     optional = course.lessons.filter((l) => l.optional);
   function lessons(items: Course["lessons"]) {
@@ -75,20 +76,24 @@ export default function CoursePage() {
       </h1>
       <p className="muted mt-3 leading-relaxed">{course.description}</p>
       <p className="muted mt-2 text-sm">
-        순서대로 조금씩 연습하거나 필요한 레슨을 골라 시작할 수 있습니다.
+        {kana
+          ? "분류를 선택하면 포함된 문자를 모두 연습합니다. 평가는 다음 연습에도 반영됩니다."
+          : "순서대로 조금씩 연습하거나 필요한 레슨을 골라 시작할 수 있습니다."}
       </p>
-      {["hiragana", "katakana"].includes(course.kind) && (
+      {kana && (
         <div className="mt-7">
-          <KanaMix />
+          <KanaMix script={course.kind as "hiragana" | "katakana"} />
         </div>
       )}
-      <section className="mt-7">
-        <h2 className="text-base font-semibold">
-          {optional.length > 0 ? "기본 문자" : "레슨"}
-        </h2>
-        {lessons(basic)}
-      </section>
-      {optional.length > 0 && (
+      {!kana && (
+        <section className="mt-7">
+          <h2 className="text-base font-semibold">
+            {optional.length > 0 ? "기본 문자" : "레슨"}
+          </h2>
+          {lessons(basic)}
+        </section>
+      )}
+      {!kana && optional.length > 0 && (
         <details className="mt-7">
           <summary className="cursor-pointer font-semibold">
             추가 연습 · 탁음·반탁음·요음

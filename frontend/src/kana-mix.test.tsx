@@ -22,7 +22,7 @@ it("문자 종류와 포함 분류만 선택해서 장수 제한 없이 전체 �
     "/study?kana=both&groups=basic%2Cvoiced%2CsemiVoiced%2Cyoon",
   );
   expect(
-    screen.getByText(/복습 일정과 코스 진도를 바꾸지 않아요/),
+    screen.getByText(/다시·어려움으로 평가한 문자가 다음 연습에서 먼저/),
   ).toBeVisible();
   for (const checkbox of screen.getAllByRole("checkbox"))
     await user.click(checkbox);
@@ -30,4 +30,15 @@ it("문자 종류와 포함 분류만 선택해서 장수 제한 없이 전체 �
     screen.queryByRole("link", { name: "섞어서 시작" }),
   ).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "섞어서 시작" })).toBeDisabled();
+});
+
+it("가타카나 단일 코스에는 문자 종류 선택 없이 전체 범위를 제공한다", async () => {
+  render(<KanaMix script="katakana" />);
+  expect(screen.getByRole("heading", { name: "가타카나 연습" })).toBeVisible();
+  expect(screen.queryByLabelText("문자 종류")).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "연습 시작" })).toHaveAttribute(
+    "href",
+    "/study?kana=katakana&groups=basic",
+  );
+  expect(screen.getByText("총 46개 문자")).toBeVisible();
 });

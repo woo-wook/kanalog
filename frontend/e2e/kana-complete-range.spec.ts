@@ -116,24 +116,25 @@ test("전체 섞기 208장을 끝까지 저장하고 빈 레슨에서도 자유 
       ).ok(),
     ).toBe(true);
     const courses = await (await page.request.get("/api/courses")).json();
-    const lesson = courses
+    const candidates = courses
       .filter((c: { kind: string }) => c.kind === "hiragana")
       .flatMap(
-        (c: {
-          lessons: {
-            id: string;
-            studiedCards: number;
-            totalCards: number;
-            dueCount: number;
-          }[];
-        }) => c.lessons,
-      )
-      .find(
-        (l: { studiedCards: number; totalCards: number; dueCount: number }) =>
-          l.studiedCards < l.totalCards && l.dueCount === 0,
+        (c: { lessons: { id: string; totalCards: number }[] }) => c.lessons,
       );
+    let lesson: { id: string; totalCards: number } | undefined;
+    for (const candidate of candidates) {
+      const probe = await page.request.post("/api/study/sessions", {
+        headers,
+        data: { lessonId: candidate.id },
+      });
+      expect(probe.ok()).toBe(true);
+      if ((await probe.json()).queueInfo.reason === "DAILY_LIMIT") {
+        lesson = candidate;
+        break;
+      }
+    }
     expect(lesson).toBeTruthy();
-    await page.goto(`/study?lessonId=${lesson.id}`);
+    await page.goto(`/study?lessonId=${lesson!.id}`);
     await expect(
       page.getByRole("heading", { name: "지금 예정된 카드가 없습니다" }),
     ).toBeVisible();
@@ -147,8 +148,8 @@ test("전체 섞기 208장을 끝까지 저장하고 빈 레슨에서도 자유 
     await page.getByRole("button", { name: "같은 범위 자유 연습" }).click();
     const scoped = await (await free).json();
     expect(scoped.practice).toBe(true);
-    expect(scoped.cards).toHaveLength(lesson.totalCards);
-    expect(scoped.lessonId).toBe(lesson.id);
+    expect(scoped.cards).toHaveLength(lesson!.totalCards);
+    expect(scoped.lessonId).toBe(lesson!.id);
     await expect(page.getByRole("button", { name: /정답 보기/ })).toBeVisible();
     expect(
       await page.evaluate(
