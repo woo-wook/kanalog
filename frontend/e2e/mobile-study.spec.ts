@@ -58,15 +58,7 @@ for (const [width, height] of [
   }) => {
     await page.setViewportSize({ width: width!, height: height! });
     await login(page);
-    const courses = await (await page.request.get("/api/courses")).json();
-    const lesson = courses
-      .find((c: { kind: string }) => c.kind === "katakana")
-      .lessons.find(
-        (l: { totalCards: number; studiedCards: number; optional: boolean }) =>
-          !l.optional && l.studiedCards < l.totalCards,
-      );
-    expect(lesson).toBeTruthy();
-    await page.goto(`/study?lessonId=${lesson.id}`);
+    await page.goto("/study?kana=katakana&groups=basic");
     await expect(page.getByRole("button", { name: /정답 보기/ })).toBeVisible();
     await assertFits(page);
     await page.getByRole("button", { name: /정답 보기/ }).click();

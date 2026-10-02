@@ -16,6 +16,7 @@ import {
 import { Loading, ErrorMessage } from "@/shell";
 import { canPlayExample, speechText } from "@/speech";
 import { useGeneratedAudio } from "@/use-generated-audio";
+import { GrammarAnswer } from "@/grammar-answer";
 import { StudyNextStep } from "@/study-next-step";
 const ratings: { value: Rating; label: string }[] = [
   { value: "AGAIN", label: "다시" },
@@ -82,6 +83,7 @@ function StudyContent() {
       EASY: 0,
     });
   const audio = useRef<HTMLAudioElement | null>(null);
+  const cardPanel = useRef<HTMLElement | null>(null);
   const playbackAttempt = useRef(0);
   const autoPlayed = useRef<string | null>(null);
   const { generate, cancel, busy: generating } = useGeneratedAudio();
@@ -101,6 +103,9 @@ function StudyContent() {
       .finally(() => setLoading(false));
   }, [deckId, lessonId, kanaScript, startSession]);
   const card = session?.cards[index];
+  useEffect(() => {
+    if (cardPanel.current) cardPanel.current.scrollTop = 0;
+  }, [card?.id, session?.id]);
   const stopAudio = useCallback(() => {
     playbackAttempt.current += 1;
     setPlaybackBlocked(false);
@@ -237,7 +242,13 @@ function StudyContent() {
   );
   const autoPlaybackAllowed =
     settings.data?.autoPlayAudio &&
-    (settings.data.allowAudioBeforeReveal || revealed);
+    (settings.data.allowAudioBeforeReveal || revealed) &&
+    Boolean(
+      card &&
+      (settings.data.audioEngine === "ORIGINAL"
+        ? card.audioId
+        : speechText(card)),
+    );
   const autoPlaybackKey =
     card && settings.data
       ? [
@@ -536,6 +547,11 @@ function StudyContent() {
     (card.kind !== "grammar" && settings.data?.audioEngine !== "ORIGINAL") ||
     (isKana && settings.data?.audioEngine !== "ORIGINAL"),
   );
+  const explanationText = card.explanation?.replace(/\p{Cf}/gu, "").trim();
+  const explanation =
+    explanationText && !/^[-_—–]+$/.test(explanationText)
+      ? explanationText
+      : null;
   const examples = card.examples?.length
     ? card.examples
     : card.example
@@ -563,19 +579,30 @@ function StudyContent() {
           {index + 1} / {session.cards.length}
         </span>
       </div>
-      <article className="study-card surface p-4 sm:p-8" aria-label="학습 카드">
-        <div className="text-center">
-          <p className="muted text-xs sm:text-sm">
-            {revealed
-              ? "정답"
-              : isKana
-                ? "이 문자는 어떻게 읽을까요?"
-                : card.kind === "grammar"
-                  ? "질문을 보고 답을 떠올려 보세요"
+      <article
+        ref={cardPanel}
+        className="study-card surface p-5 sm:p-8"
+        aria-label="학습 카드"
+        tabIndex={0}
+      >
+        <div className={card.kind === "grammar" ? "text-left" : "text-center"}>
+          <p
+            className={
+              card.kind === "grammar"
+                ? "inline-flex rounded-lg bg-primary/8 px-2.5 py-1 text-xs font-semibold text-primary"
+                : "muted text-xs sm:text-sm"
+            }
+          >
+            {card.kind === "grammar"
+              ? "문법 회상"
+              : revealed
+                ? "정답"
+                : isKana
+                  ? "이 문자는 어떻게 읽을까요?"
                   : "일본어를 보고 뜻을 떠올려 보세요"}
           </p>
           <h1
-            className={`study-prompt jp mt-4 font-semibold leading-tight ${isKana ? "study-prompt-kana text-7xl" : "text-4xl sm:text-5xl"}`}
+            className={`study-prompt mt-4 font-semibold ${isKana ? "jp study-prompt-kana text-7xl leading-tight" : card.kind === "grammar" ? "study-prompt-grammar study-prose" : "jp text-4xl sm:text-5xl leading-tight"}`}
           >
             {card.front}
           </h1>
@@ -682,7 +709,7 @@ function StudyContent() {
             </div>
           </div>
         )}
-        {!hasSound && (
+        {!hasSound && card.kind !== "grammar" && (
           <p className="muted mt-5 text-center text-sm">
             이 항목에는 재생할 음성이 없습니다.
           </p>
@@ -719,13 +746,16 @@ function StudyContent() {
         />
         {revealed && (
           <div
-            className={`${isKana ? "mt-3" : "mt-4 border-t border-border pt-4"}`}
+            className={`${isKana ? "mt-3" : card.kind === "grammar" ? "" : "mt-4 border-t border-border pt-4"}`}
           >
-            {!isKana && (
-              <h2 className="text-center text-xl font-semibold leading-snug sm:text-2xl">
-                {card.meaning || "뜻 정보 없음"}
-              </h2>
-            )}
+            {!isKana &&
+              (card.kind === "grammar" ? (
+                <GrammarAnswer answer={card.meaning} />
+              ) : (
+                <h2 className="text-center text-xl font-semibold leading-snug sm:text-2xl">
+                  {card.meaning || "뜻 정보 없음"}
+                </h2>
+              ))}
             {card.partOfSpeech && (
               <p className="muted mt-1 text-center text-xs">
                 {card.partOfSpeech}
@@ -756,7 +786,7 @@ function StudyContent() {
                 )}
               </div>
             ))}
-            {(examples.length > 1 || card.explanation) && (
+            {(examples.length > 1 || explanation) && (
               <details
                 className="study-details mt-3 rounded-xl border border-border p-3"
                 open={card.kind === "grammar"}
@@ -789,9 +819,9 @@ function StudyContent() {
                     )}
                   </div>
                 ))}
-                {card.explanation && (
+                {explanation && (
                   <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">
-                    {card.explanation}
+                    {explanation}
                   </p>
                 )}
               </details>

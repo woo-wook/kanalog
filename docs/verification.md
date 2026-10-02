@@ -1,5 +1,24 @@
 # 검증 기록
 
+## 긴 문법 해설·모바일 배치 개선 (2026-10-02)
+
+- 원본 문법 정답의 줄바꿈을 보존하고 16px 왼쪽 정렬 본문으로 표시한다. 질문은 별도 18~22px 제목이며 가나·어휘의 큰 글자는 유지한다. 내용 없는 설명 패널과 재생할 수 없는 문법의 중복 음성 안내를 제거했다. 카드·세션 전환 시 스크롤을 초기화한다.
+- DB에 저장된 개인·QA 계정의 MAX 문법 1,177개에서 원본 해설의 줄바꿈과 `Kind`의 보이지 않는 U+2063 구분 문자를 확인했다. 초기 브라우저 검사는 이 문자 때문에 빈 설명란이 남아 실패했다. 같은 문자의 synthetic fixture로 실패를 재현한 뒤 표시에서만 걸러내고 재실행했다. 원본 DB나 import 내용은 변경하지 않았다.
+- Vitest **56개**, TypeScript, ESLint 통과. 원본 문단 보존, 음성 없는 문법의 자동재생 호출 없음, 빈 설명란 없음, 다음 카드 스크롤 초기화를 검증했다. Next.js Docker production build와 frontend 재배포, 공개 HTTPS·Secure 쿠키·backend healthy 확인도 통과했다.
+- 실제 N5의 400자 이상 문법 해설로 **모바일 WebKit 360×640·390×740·390×844**, Chromium 태블릿 768×1024·PC 1280×900에서 문단 보존·본문 크기·정렬·가로 넘침 없음·질문 위치를 확인했다. 모바일은 페이지 전체 스크롤 없이 카드 내부에서 마지막 문장을 읽을 수 있고 네 평가 버튼이 하단 탐색 위에 남는다. 스크롤한 답변 제출 뒤 다음 카드의 scrollTop=0도 확인했다. 실제 화면 캡처를 개인 디렉터리에 저장하고 시각적으로 확인했다.
+- 새로고침/다음 카드 음성 자동재생 검증도 통과했다. 처음에는 이미 전체 연습을 마친 QA 계정에서 미학습 가나 행을 찾던 이전 검사 조건이 실패했다. 현재 전체 가나 연습 경로와 연습 기록 저장 계약에 맞춰 수정했고, 46자 범위·실제 Supertonic WAV 재생·다음 카드 자동재생·새로고침 후 DB 연습 기록과 로그인 유지·FSRS 통계 불변을 재검증했다.
+
+문법 모바일·데스크톱 2개, 새로고침/자동재생 1개, 가나 3개 크기와 긴 어휘 예문 4개로 **브라우저 7개 케이스** 최종 통과했다. 개인 MAX 원문·화면 캡처·계정 비밀번호는 Git에 포함하지 않는다. 실제 iPhone Safari와 설치 PWA 실기기 검증은 미실행이다. 이번 변경은 프런트만 재배포하며 기존 DB·복습 기록을 유지했다.
+
+```sh
+pnpm -C frontend test
+pnpm -C frontend exec tsc --noEmit
+pnpm -C frontend lint
+docker compose up -d --no-deps --build frontend
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/grammar-layout.spec.ts e2e/grammar-desktop.spec.ts e2e/refresh-autoplay.spec.ts e2e/mobile-study.spec.ts
+python3 tools/e2e/check_deployment.py
+```
+
 ## 가나 단일 코스·다음 연습 평가 반영 (2026-10-02)
 
 - PostgreSQL 16 Testcontainers/JUnit **31개** 통과. 최근 AGAIN/HARD 우선, AGAIN→EASY 변경 시 뒤로 이동, 혼합·단일 문자 기록 공유, 멱등 재전송 시 횟수 불변, 사용자 분리·범위·제외·FSRS 상태 불변 검증. V8 실제 SQL을 별도 synthetic 스키마에서 실행해 일반/연습 기록 통합 이관과 어휘·타 사용자 기록 제외를 확인했다.

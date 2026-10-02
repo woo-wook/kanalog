@@ -23,7 +23,7 @@ async function waitForPlayback(page: Page) {
   return audio;
 }
 
-test("PWA용 새로고침 후 로그인과 진도를 복원하고 생성 음성과 다음 카드 자동재생을 이어간다", async ({
+test("새로고침 후 로그인과 가나 연습 기록을 유지하고 생성 음성과 다음 카드 자동재생을 이어간다", async ({
   page,
 }) => {
   test.setTimeout(240_000);
@@ -53,28 +53,32 @@ test("PWA용 새로고침 후 로그인과 진도를 복원하고 생성 음성�
     const save = page.getByRole("button", { name: "설정 저장", exact: true });
     if (await save.isEnabled()) await save.click();
     await expect(save).toBeDisabled();
-    const courses = await (await page.request.get("/api/courses")).json();
-    const lesson = courses
-      .find((c: { kind: string }) => c.kind === "katakana")
-      .lessons.find(
-        (l: { totalCards: number; studiedCards: number; optional: boolean }) =>
-          !l.optional && l.totalCards - l.studiedCards >= 2,
-      );
-    expect(lesson).toBeTruthy();
     const before = await (await page.request.get("/api/stats")).json();
-    await page.goto(`/study?lessonId=${lesson.id}`);
+    await page.goto("/study?kana=katakana&groups=basic");
     await expect(
       page.getByRole("button", { name: "새로고침", exact: true }),
     ).toBeVisible();
+    const sessionResponse = page.waitForResponse(
+      (r) =>
+        r.url().endsWith("/api/study/sessions") &&
+        r.request().method() === "POST",
+    );
     const reloaded = page.waitForEvent("domcontentloaded");
     await page.getByRole("button", { name: "새로고침", exact: true }).click();
     await reloaded;
+    const session = await (await sessionResponse).json();
+    expect(session.practice).toBe(true);
+    expect(session.cards).toHaveLength(46);
     await expect(page.getByRole("button", { name: /정답 보기/ })).toBeVisible();
     const audio = await waitForPlayback(page);
     const firstSource = await audio.getAttribute("src");
     await page.getByRole("button", { name: /정답 보기/ }).click();
     await expect(audio).toHaveAttribute("src", firstSource!);
+    const saved = page.waitForResponse((r) =>
+      r.url().endsWith("/api/study/reviews"),
+    );
     await page.getByRole("button", { name: "보통", exact: true }).click();
+    expect((await (await saved).json()).state).toBe("PRACTICED");
     await expect(page.locator(".study-progress")).toContainText("2 /");
     // The next card must play without a second tap on its audio button.
     await expect(audio).not.toHaveAttribute("src", firstSource!, {
@@ -86,11 +90,19 @@ test("PWA용 새로고침 후 로그인과 진도를 복원하고 생성 음성�
       })
       .toBeGreaterThan(0);
     const after = await (await page.request.get("/api/stats")).json();
-    expect(after.answers7Days).toBe(before.answers7Days + 1);
+    expect(after.answers7Days).toBe(before.answers7Days);
+    const progress = await (
+      await page.request.get(`/api/study/sessions/${session.id}`)
+    ).json();
+    expect(progress.answered).toBe(1);
     await page.getByRole("button", { name: "새로고침", exact: true }).click();
     await expect(page.getByRole("button", { name: /정답 보기/ })).toBeVisible();
     const restored = await (await page.request.get("/api/stats")).json();
     expect(restored.answers7Days).toBe(after.answers7Days);
+    const restoredProgress = await (
+      await page.request.get(`/api/study/sessions/${session.id}`)
+    ).json();
+    expect(restoredProgress.answered).toBe(1);
     const persisted = await (await page.request.get("/api/settings")).json();
     expect(persisted.autoPlayAudio).toBe(true);
   } finally {
