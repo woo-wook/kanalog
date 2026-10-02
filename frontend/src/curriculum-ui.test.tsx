@@ -151,6 +151,18 @@ it("keeps optional units in an honest separate disclosure and excludes empty les
   expect(screen.getByText("선택 연습 · 가타카나 첫걸음")).toBeVisible();
   expect(screen.queryByRole("link")).not.toBeInTheDocument();
 });
+it("아직 복습 시각이 아닌 완료 레슨은 빈 큐 대신 바로 자유 연습으로 연다", () => {
+  render(
+    <UnitPath
+      unit={{ ...unit, lessons: [{ ...unit.lessons[0]!, dueCount: 0 }] }}
+      number={1}
+    />,
+  );
+  expect(screen.getByRole("link", { name: /아행.*다시 연습/ })).toHaveAttribute(
+    "href",
+    "/study?lessonId=done&practice=1",
+  );
+});
 it("expands the current unit while keeping later units compact and freely expandable", async () => {
   const later = {
     ...unit,

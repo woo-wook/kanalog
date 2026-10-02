@@ -32,7 +32,7 @@ export function KanaMix() {
   const [script, setScript] = useState("hiragana");
   const [selected, setSelected] = useState(["basic"]);
   const [size, setSize] = useState("10");
-  const [mode, setMode] = useState("study");
+  const [mode, setMode] = useState("practice");
   const total =
     groups
       .filter((g) => selected.includes(g.key))
@@ -112,13 +112,13 @@ export function KanaMix() {
       <label className="mt-5 block text-sm font-medium">
         연습 방식
         <SelectControl value={mode} onChange={(e) => setMode(e.target.value)}>
-          <option value="study">학습·복습</option>
-          <option value="practice">자유 연습</option>
+          <option value="practice">자유 연습 · 선택한 만큼</option>
+          <option value="study">예정된 학습·복습 · 하루 한도 적용</option>
         </SelectControl>
       </label>
       <p className="muted mt-3 text-xs leading-relaxed">
         {mode === "practice"
-          ? "이미 본 문자도 다시 연습합니다. 답변은 따로 저장하며 복습 일정과 코스 진도를 바꾸지 않아요."
+          ? "하루 한도와 복습 시각에 관계없이 선택한 만큼 연습합니다. 이미 본 문자도 포함하며 답변은 따로 저장합니다. 복습 일정과 코스 진도를 바꾸지 않아요."
           : "복습할 문자부터 고르고 새 문자를 섞습니다. 새 문자는 하루 한도 안에서만 추가하므로 선택한 장수보다 적을 수 있어요."}
       </p>
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3">

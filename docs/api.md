@@ -93,6 +93,12 @@
 
 ## 가나 섞어 학습과 자유 연습
 
+UI 기본 모드는 자유 연습이다. ‘선택 범위 전체’는 활성·미제외 문자를 모두 포함하며 하루 한도로 축소하지 않는다. 예정된 학습·복습은 사용자가 따로 선택한다. 기존 API의 `kana.practice` 기본값 false는 호환성을 위해 유지하며 UI는 true를 명시적으로 보낸다.
+
+레슨 또는 덱에서도 `{ "lessonId":"uuid", "practice":true }` / `{ "deckId":"uuid", "practice":true }`로 자유 연습할 수 있다. 레슨은 전체 활성·미제외 범위, 덱은 최대 50장을 고른다. 소유권과 제외 상태를 검사하며 기존 FSRS 상태를 변경하지 않는다.
+
+POST 세션 응답의 `queueInfo`는 선택 범위의 `eligibleCards`, `unseenCards`, 사용자 전체 `newRemaining`, 미래 복습의 최소 `nextDueAt`, 빈 큐의 `reason`을 제공한다. `DAILY_LIMIT`은 새 카드가 남았으나 하루 한도를 소진한 상태, `NOT_DUE`는 복습 시각 미도래, `NO_ELIGIBLE_CARDS`는 활성·미제외 카드가 없는 상태다. 복습일을 변경하거나 상태를 초기화하지 않는다. GET 세션은 이 진입 메타데이터를 반환하지 않는다.
+
 `POST /api/study/sessions`에서 `deckId`·`lessonId`·`kana` 중 정확히 하나만 보낸다.
 
 ```json

@@ -10,7 +10,7 @@ it("히라가나 기본 10장이 기본값이고 문자 종류·탁음·반탁�
   const link = screen.getByRole("link", { name: "섞어서 시작" });
   expect(link).toHaveAttribute(
     "href",
-    "/study?kana=hiragana&groups=basic&size=10&practice=0",
+    "/study?kana=hiragana&groups=basic&size=10&practice=1",
   );
   await user.selectOptions(screen.getByLabelText("문자 종류"), "both");
   await user.click(screen.getByRole("checkbox", { name: /탁음 20/ }));

@@ -136,6 +136,43 @@ class PersistenceFlowTest @Autowired constructor(
         assertEquals(208,all.cards.map { it.id }.toSet().size)
     }
 
+    @Test fun `empty scheduled lesson reports limit and supports scoped repeat without changing progress`() {
+        val owner=user(); val other=user(); courses.synchronize(owner); courses.synchronize(other)
+        jdbc.update("update user_settings set daily_new_limit=1 where user_id=?",owner)
+        val lessons=courses.list(owner).first().lessons
+        val first=study.start(owner,lessonId=lessons.first().id)
+        val card=first.cards.single()
+        study.review(owner,ReviewRequest(first.id,card.id,card.version,"GOOD",UUID.randomUUID().toString()))
+        val empty=study.start(owner,lessonId=lessons.first().id)
+        assertTrue(empty.cards.isEmpty())
+        assertEquals("DAILY_LIMIT",empty.queueInfo!!.reason)
+        assertEquals(4,empty.queueInfo.unseenCards)
+        assertEquals(0,empty.queueInfo.newRemaining)
+        assertTrue(empty.queueInfo.nextDueAt!=null)
+        val repeat=study.start(owner,lessonId=lessons.first().id,practice=true)
+        assertEquals(5,repeat.cards.size);assertTrue(repeat.practice)
+        assertEquals(first.lessonId,repeat.lessonId)
+        for(c in repeat.cards) study.review(owner,ReviewRequest(repeat.id,c.id,c.version,"GOOD",UUID.randomUUID().toString()))
+        assertEquals(5,study.session(owner,repeat.id).answered)
+        assertEquals(card.version+1,study.card(owner,card.id)!!.version)
+        assertEquals(1,jdbc.queryForObject("select count(*) from review_log where user_id=?",Int::class.java,owner))
+        assertEquals("LESSON_NOT_FOUND",assertThrows(ApiFailure::class.java) { study.start(other,lessonId=lessons.first().id,practice=true) }.code)
+    }
+
+    @Test fun `finished and excluded lessons explain empty scope without claiming completion`() {
+        val owner=user();courses.synchronize(owner)
+        val lesson=courses.list(owner).first().lessons.first()
+        val first=study.start(owner,lessonId=lesson.id)
+        for(c in first.cards) study.review(owner,ReviewRequest(first.id,c.id,c.version,"GOOD",UUID.randomUUID().toString()))
+        val future=study.start(owner,lessonId=lesson.id)
+        assertTrue(future.cards.isEmpty());assertEquals("NOT_DUE",future.queueInfo!!.reason)
+        assertEquals(0,future.queueInfo.unseenCards);assertEquals(5,future.queueInfo.eligibleCards)
+        jdbc.update("update user_card_state set suspended=true where user_id=?",owner)
+        val excluded=study.start(owner,lessonId=lesson.id,practice=true)
+        assertTrue(excluded.cards.isEmpty());assertEquals("NO_ELIGIBLE_CARDS",excluded.queueInfo!!.reason)
+        assertEquals(0,excluded.queueInfo.eligibleCards)
+    }
+
     @Test fun `audio engine and Supertonic voice settings persist per user and reject invalid choices`() {
         val owner=user();val other=user()
         assertEquals("SUPERTONIC",overview.settings(owner).audioEngine)

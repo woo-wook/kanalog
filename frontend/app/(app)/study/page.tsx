@@ -32,12 +32,15 @@ function StudyContent() {
     kanaSize = params.get("size") ?? "10",
     kanaPractice = params.get("practice") === "1";
   const startSession = useCallback(
-    () =>
+    (forcePractice = false) =>
       api<StudySession>(
         "/study/sessions",
         json("POST", {
           ...(deckId ? { deckId } : {}),
           ...(lessonId ? { lessonId } : {}),
+          ...(forcePractice || (!kanaScript && kanaPractice)
+            ? { practice: true }
+            : {}),
           ...(kanaScript
             ? {
                 kana: {
@@ -95,7 +98,7 @@ function StudyContent() {
         ? api(`/courses/lessons/${lessonId}/select`, { method: "POST" })
         : Promise.resolve();
     selected
-      .then(startSession)
+      .then(() => startSession())
       .then(setSession)
       .catch(setStartError)
       .finally(() => setLoading(false));
@@ -296,11 +299,13 @@ function StudyContent() {
         setAudioMessage("");
         setRetry(null);
         stopAudio();
-        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-        queryClient.invalidateQueries({ queryKey: ["stats"] });
-        queryClient.invalidateQueries({ queryKey: ["decks"] });
-        queryClient.invalidateQueries({ queryKey: ["courses"] });
-        queryClient.invalidateQueries({ queryKey: ["curriculum"] });
+        if (!session.practice) {
+          queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+          queryClient.invalidateQueries({ queryKey: ["stats"] });
+          queryClient.invalidateQueries({ queryKey: ["decks"] });
+          queryClient.invalidateQueries({ queryKey: ["courses"] });
+          queryClient.invalidateQueries({ queryKey: ["curriculum"] });
+        }
       } catch (e) {
         setError(e);
       } finally {
@@ -310,6 +315,32 @@ function StudyContent() {
     },
     [session, card, stopAudio, queryClient],
   );
+  const restartSession = async (practice = false) => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setLoading(true);
+    setStartError(null);
+    stopAudio();
+    try {
+      setSession(await startSession(practice));
+      setIndex(0);
+      setRevealed(false);
+      setHint(false);
+      setUniqueCards([]);
+      setNextDue(null);
+      setRetry(null);
+      setError(null);
+      setAudioUrl("");
+      setAudioMessage("");
+      autoPlayed.current = null;
+      setCounts({ AGAIN: 0, HARD: 0, GOOD: 0, EASY: 0 });
+    } catch (e) {
+      setStartError(e);
+    } finally {
+      savingRef.current = false;
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const target = e.target as HTMLElement;
@@ -349,11 +380,66 @@ function StudyContent() {
     );
   if (loading || settings.isPending) return <Loading />;
   if (startError || settings.error)
-    return <ErrorMessage error={startError ?? settings.error} />;
+    return (
+      <div>
+        <ErrorMessage error={startError ?? settings.error} />
+        <button
+          className="btn mt-4"
+          onClick={() => {
+            void settings.refetch();
+            void restartSession(session?.practice);
+          }}
+        >
+          다시 불러오기
+        </button>
+      </div>
+    );
   if (!session)
     return <ErrorMessage error={new Error("학습 세션을 만들지 못했습니다.")} />;
   if (!card) {
     const answerCount = Object.values(counts).reduce((a, b) => a + b, 0);
+    if (answerCount === 0 && session.answered === 0) {
+      const info = session.queueInfo;
+      return (
+        <section className="surface mx-auto max-w-2xl p-7 text-center">
+          <h1 className="text-2xl font-bold">지금 예정된 카드가 없습니다</h1>
+          <p className="muted mt-4 leading-relaxed">
+            {info?.reason === "DAILY_LIMIT"
+              ? "오늘 새 카드 한도를 모두 사용했습니다. 이 범위에 지금 복습할 카드도 없습니다."
+              : info?.reason === "NO_ELIGIBLE_CARDS"
+                ? "이 범위에는 연습 가능한 카드가 없습니다. 학습 제외 상태와 가져온 콘텐츠를 확인해 주세요."
+                : "이 범위의 다음 복습 시각이 아직 오지 않았습니다. 지금 다시 보고 싶다면 자유 연습을 시작하세요."}
+          </p>
+          {info?.nextDueAt && (
+            <p className="muted mt-3 text-sm">
+              다음 복습: {new Date(info.nextDueAt).toLocaleString("ko-KR")}
+            </p>
+          )}
+          {(!info || info.eligibleCards > 0) && (
+            <>
+              <button
+                className="btn btn-primary mt-5"
+                onClick={() => void restartSession(true)}
+              >
+                같은 범위 자유 연습
+              </button>
+              <p className="muted mt-3 text-xs">
+                하루 한도와 복습 시각에 관계없이 연습합니다. 답변은 별도로
+                저장하며 복습 일정과 코스 진도는 유지합니다.
+              </p>
+            </>
+          )}
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <Link className="btn" href="/courses">
+              학습 코스 보기
+            </Link>
+            <Link className="btn" href="/settings">
+              학습 설정
+            </Link>
+          </div>
+        </section>
+      );
+    }
     const refreshDue = async () => {
       setRefreshing(true);
       setError(null);
@@ -411,38 +497,20 @@ function StudyContent() {
             복습 카드를 불러오지 못했습니다. 다시 눌러 주세요.
           </p>
         )}
-        {kanaScript && (
+        {(kanaScript || session.practice) && (
           <button
             className="btn btn-primary mt-5"
-            onClick={async () => {
-              if (savingRef.current) return;
-              savingRef.current = true;
-              setLoading(true);
-              setStartError(null);
-              stopAudio();
-              try {
-                const next = await startSession();
-                setSession(next);
-                setIndex(0);
-                setRevealed(false);
-                setHint(false);
-                setUniqueCards([]);
-                setNextDue(null);
-                setRetry(null);
-                setError(null);
-                setAudioUrl("");
-                setAudioMessage("");
-                autoPlayed.current = null;
-                setCounts({ AGAIN: 0, HARD: 0, GOOD: 0, EASY: 0 });
-              } catch (e) {
-                setStartError(e);
-              } finally {
-                savingRef.current = false;
-                setLoading(false);
-              }
-            }}
+            onClick={() => void restartSession(session.practice)}
           >
-            다시 섞어 연습
+            {kanaScript ? "다시 섞어 연습" : "같은 레슨 다시 연습"}
+          </button>
+        )}
+        {!session.practice && (
+          <button
+            className="btn mt-5"
+            onClick={() => void restartSession(true)}
+          >
+            같은 범위 자유 연습
           </button>
         )}
         {!session.practice && <StudyNextStep lessonId={lessonId} />}
@@ -482,6 +550,7 @@ function StudyContent() {
     <div className="study-screen mx-auto max-w-2xl">
       <div className="study-progress mb-3 flex shrink-0 items-center justify-between gap-3 text-xs muted sm:text-sm">
         <span className="min-w-0 truncate">
+          {session.practice && !kanaScript ? "자유 연습 · " : ""}
           {session.lessonTitle ??
             (isKana
               ? "문자 읽기"
@@ -769,12 +838,26 @@ function StudyContent() {
           role="alert"
         >
           <p>
-            {(error as ApiError).status === 409
-              ? "다른 화면에서 이 카드가 변경됐습니다. 새로고침 후 계속해 주세요."
-              : error instanceof Error
-                ? error.message
-                : "저장하지 못했습니다."}
+            {error instanceof Error ? error.message : "저장하지 못했습니다."}
           </p>
+          {(error as ApiError).status === 409 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                className="btn"
+                onClick={() => void restartSession(session.practice)}
+              >
+                현재 상태로 다시 불러오기
+              </button>
+              {(error as ApiError).code === "NEW_LIMIT" && (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => void restartSession(true)}
+                >
+                  같은 범위 자유 연습
+                </button>
+              )}
+            </div>
+          )}
           {retry && (error as ApiError).status !== 409 && (
             <button
               className="btn btn-danger mt-3"

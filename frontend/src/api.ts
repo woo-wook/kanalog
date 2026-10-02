@@ -120,6 +120,13 @@ export interface StudySession {
   lessonId?: string | null;
   lessonTitle?: string | null;
   practice?: boolean;
+  queueInfo?: {
+    eligibleCards: number;
+    unseenCards: number;
+    newRemaining: number;
+    nextDueAt?: string | null;
+    reason?: "DAILY_LIMIT" | "NOT_DUE" | "NO_ELIGIBLE_CARDS" | null;
+  };
 }
 export interface ReviewResult {
   due?: string | null;

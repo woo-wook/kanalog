@@ -174,11 +174,14 @@ export function UnitPath({
           .filter((lesson) => lesson.totalCards > 0)
           .map((lesson, index, lessons) => {
             const current = lesson.id === currentLessonId;
-            const action = current
-              ? "이어서 학습"
-              : lesson.completed
-                ? "복습하기"
-                : "레슨 시작";
+            const repeat = lesson.completed && lesson.dueCount === 0;
+            const action = repeat
+              ? "다시 연습"
+              : current
+                ? "이어서 학습"
+                : lesson.completed
+                  ? "복습하기"
+                  : "레슨 시작";
             return (
               <li
                 key={lesson.id}
@@ -201,7 +204,7 @@ export function UnitPath({
                   )}
                 </span>
                 <Link
-                  href={`/study?lessonId=${lesson.id}`}
+                  href={`/study?lessonId=${lesson.id}${repeat ? "&practice=1" : ""}`}
                   aria-label={`${lesson.title} · ${action}`}
                   aria-current={current ? "step" : undefined}
                   className={`min-w-0 flex-1 rounded-xl border p-4 transition-colors hover:border-primary/40 ${current ? "border-primary/30 bg-primary/5" : "border-transparent bg-secondary/60"}`}
@@ -225,7 +228,7 @@ export function UnitPath({
                           첫 연습 완료
                           {lesson.dueCount > 0
                             ? ` · 복습 ${lesson.dueCount}장`
-                            : " · 복습으로 계속 익혀요"}
+                            : " · 지금 다시 연습할 수 있어요"}
                         </p>
                       ) : (
                         lesson.dueCount > 0 && (
