@@ -4,21 +4,21 @@ export function GrammarAnswer({
   answer,
   front,
   hideExpression = false,
+  heading = "정답과 해설",
 }: {
   answer?: string | null;
   front?: string;
   hideExpression?: boolean;
+  heading?: string;
 }) {
   const content = structureGrammarAnswer(answer, front);
   const paragraphs = grammarLines(answer);
   return (
     <section
       className="grammar-answer mt-6 border-t border-border pt-6"
-      aria-label="정답과 해설"
+      aria-label={heading}
     >
-      <h2 className="mb-4 text-lg font-semibold text-foreground">
-        정답과 해설
-      </h2>
+      <h2 className="mb-4 text-lg font-semibold text-foreground">{heading}</h2>
       {content ? (
         <div className="space-y-5">
           <section aria-label="예문 해석" className="grammar-overview">

@@ -167,6 +167,20 @@ progress::-moz-progress-bar {
 .grammar-body {
   font-size: 1.125rem;
 }
+.note-title,
+.note-preview {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.notes-search .field {
+  padding-left: 2.5rem;
+}
+.note-form .field {
+  font-size: 1rem;
+}
 .grammar-translation {
   font-size: 1.25rem;
 }

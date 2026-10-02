@@ -102,7 +102,7 @@ it("단어장은 출처를 표시하지 않으면서 가져온 단어의 편집 
   const client = new QueryClient({
     defaultOptions: { queries: { staleTime: Infinity } },
   });
-  client.setQueryData(["notes", "", 0], {
+  client.setQueryData(["notes", "", 0, ""], {
     content: [
       {
         id: "imported",

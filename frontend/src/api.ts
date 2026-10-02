@@ -157,6 +157,9 @@ export interface Settings {
 }
 export interface Note {
   id: string;
+  kind?: string;
+  level?: string | null;
+  grammarFocus?: GrammarFocus | null;
   japanese?: string;
   front?: string;
   reading?: string;
