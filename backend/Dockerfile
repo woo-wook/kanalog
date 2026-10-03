@@ -1,6 +1,6 @@
 FROM eclipse-temurin:21.0.12.1_1-jdk-alpine-3.24 AS build
 WORKDIR /workspace
-COPY gradlew settings.gradle.kts build.gradle.kts ./
+COPY gradlew settings.gradle.kts build.gradle.kts .editorconfig gradle.lockfile ./
 COPY gradle ./gradle
 COPY src ./src
 RUN ./gradlew --no-daemon bootJar -x test && \

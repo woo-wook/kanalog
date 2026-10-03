@@ -1,5 +1,19 @@
 # 검증 기록
 
+## ktlint 적용 (2026-10-04)
+
+- ktlint-gradle **14.2.0**/ktlint **1.8.0**을 version catalog에 고정했다. ktlint 구성의 도구 의존성은 `backend/gradle.lockfile`로 잠근다. 공식 tag의 MIT LICENSE와 Gradle 9 지원 이력을 확인했다.
+- `backend/.editorconfig`에 `ktlint_official`, 4칸 공백, UTF-8/LF와 마지막 줄바꿈을 설정했다. Kotlin main/test 전체와 Gradle Kotlin DSL에 `ktlintFormat`을 적용했다. wildcard import는 명시적 import로 바꾸고 긴 조건문/fixture 문자열을 동일한 값으로 나눴다. baseline, 실패 무시, 규칙 비활성화는 없다.
+- `ktlintCheck check bootJar` 성공. **49개 테스트, 실패·오류 0**으로 기존 domain/API/PostgreSQL 회귀를 확인했다. `check --dry-run`으로 check의 ktlint 작업 의존성을 확인한 뒤 `check bootJar` 단독 실행도 성공했다.
+- Docker 빌드 문맥에 편집 규칙과 lockfile을 포함하고 backend production 이미지 빌드도 통과했다. Kotlin 포맷과 개발 도구 설정 변경이며 DB migration/재import/운영 데이터 쓰기는 수행하지 않았다.
+
+```sh
+JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home backend/gradlew -p backend ktlintFormat --no-daemon
+JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home backend/gradlew -p backend ktlintCheck check bootJar --no-daemon
+# ktlint 도구의 고정 버전을 바꿀 때만 lock 갱신
+JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home backend/gradlew -p backend ktlintCheck --write-locks --no-daemon
+```
+
 ## 백엔드 DDD 패키지·책임 분리 (2026-10-03)
 
 - 기존 Kotlin/PostgreSQL 기준선 **32개**를 먼저 통과시킨 뒤 기능별 계층 분리, 저장소·외부 연동 포트 추출, 도메인 정책 분리마다 전체 테스트를 실행했다. 최종 **49개**(기존 32 + 계층 5 + 정책 8 + 실제 HTTP 4), 실패/오류 0. JDK 21의 `test bootJar`와 Docker production `bootJar` 빌드가 통과했다. 새 의존성과 DB migration은 없다.

@@ -44,3 +44,8 @@
 Kanalog의 기존 PostgreSQL 행 잠금·JDBC 조회와 FSRS JSON은 그대로 유지하며 외부 처리를 어댑터로 옮겼다. Spring Data 인터페이스는 JPA 어댑터 내부로 제한했다. 도메인 객체에 JPA 매핑을 허용하는 Dutchlog 관례를 채택한다. `application/port/out`은 기존 `.gitignore`의 `out/` 규칙에 가려지지 않도록 예외를 추가했다.
 
 JWT·응답 envelope·가계부 인프라는 이번 구조 변경에 섞지 않았다. 현재 HttpOnly 쿠키/DB 세션·CSRF·독립 kanalog DB/role·원래 JSON API 계약을 유지한다. 스키마 마이그레이션과 콘텐츠 재import는 필요하지 않다. 의존성 버전이나 자체 코드의 라이선스를 변경하지 않았다.
+
+
+## 2026-10-04 Kotlin 형식 검사
+
+참조 프로젝트의 Gradle 설정·version catalog와 루트/백엔드에서 ktlint·Spotless·`.editorconfig` 설정은 확인되지 않았다. Kanalog에 개발 도구로 ktlint-gradle 14.2.0/ktlint 1.8.0을 고정하고 `backend/.editorconfig`에 ktlint_official·4칸 공백·UTF-8/LF 규칙을 추가했다. `ktlintFormat`으로 모든 main/test Kotlin과 Gradle Kotlin DSL을 정리하며, `check`는 `ktlintCheck`에 의존한다. baseline·규칙 비활성화·실패 무시는 사용하지 않는다.

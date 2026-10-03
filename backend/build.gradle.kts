@@ -1,4 +1,5 @@
 plugins {
+    alias(libs.plugins.ktlint)
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.kotlin.jpa)
@@ -32,3 +33,12 @@ dependencies {
 }
 kotlin { compilerOptions { freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property") } }
 tasks.withType<Test> { useJUnitPlatform() }
+
+ktlint {
+    version.set(libs.versions.ktlint.get())
+    filter {
+        exclude("**/build/**", "**/generated/**")
+    }
+}
+
+configurations.named("ktlint") { resolutionStrategy.activateDependencyLocking() }
