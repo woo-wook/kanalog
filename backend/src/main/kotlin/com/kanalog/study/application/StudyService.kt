@@ -1,223 +1,110 @@
 package com.kanalog.study.application
 
-import com.kanalog.auth.presentation.user
 import com.kanalog.common.crypto.sha256
 import com.kanalog.common.error.fail
-import com.kanalog.content.infrastructure.convertedGrammarFocus
+import com.kanalog.common.time.localDayWindow
 import com.kanalog.course.application.CourseService
-import com.kanalog.study.application.model.CardView
-import com.kanalog.study.application.model.DeckView
-import com.kanalog.study.application.model.ExampleView
-import com.kanalog.study.application.model.QueueInfo
-import com.kanalog.study.application.model.ReviewRequest
-import com.kanalog.study.application.model.ReviewResult
-import com.kanalog.study.application.model.SessionView
+import com.kanalog.study.application.model.*
+import com.kanalog.study.application.port.out.*
 import com.kanalog.study.domain.KanaMixRequest
-import com.kanalog.study.infrastructure.FsrsAdapter
-import io.github.openspacedrepetition.Card
 import java.time.*
-import java.util.*
-import org.springframework.http.HttpStatus
-import org.springframework.jdbc.core.JdbcTemplate
+import java.util.UUID
+import com.kanalog.common.error.FailureStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.bind.annotation.*
-import tools.jackson.databind.ObjectMapper
 
 @Service
-class StudyService(private val jdbc: JdbcTemplate, private val fsrs: FsrsAdapter, private val courses: CourseService, private val kanaMix: KanaMixService, private val mapper:ObjectMapper) {
-    fun decks(userId: UUID): List<DeckView> = jdbc.query("""
-        select d.id,d.title,d.level,d.kind,d.selected,count(c.id)::int total,
-        count(s.first_seen_at)::int studied from deck d
-        left join card c on c.deck_id=d.id and c.active=true
-        left join user_card_state s on s.card_id=c.id and s.user_id=?
-        where d.owner_id=? and d.import_status='READY'
-        group by d.id order by d.level nulls last,d.source_path
-    """, { rs, _ -> val total=rs.getInt("total"); val studied=rs.getInt("studied")
-        DeckView(rs.getObject("id",UUID::class.java),rs.getString("title"),rs.getString("level"),
-            rs.getString("kind"),total,studied,total-studied,rs.getBoolean("selected")) },userId,userId)
+class StudyService(private val store: StudyStore, private val scheduler: ReviewScheduler, private val courses: CourseService, private val kanaMix: KanaMixService) {
+    fun decks(userId: UUID) = store.decks(userId)
+    fun card(userId: UUID, cardId: UUID) = store.card(userId, cardId)
 
     @Transactional
     fun select(userId: UUID, deckId: UUID) {
-        val exists = jdbc.queryForObject("select count(*) from deck where id=? and owner_id=? and import_status='READY'",
-            Int::class.java,deckId,userId) ?: 0
-        if (exists==0) fail("DECK_NOT_FOUND","덱을 찾을 수 없습니다",HttpStatus.NOT_FOUND)
-        jdbc.update("update user_settings set active_lesson_id=null where user_id=?",userId)
-        jdbc.update("update deck set selected=false where owner_id=?",userId)
-        jdbc.update("update deck set selected=true where id=? and owner_id=?",deckId,userId)
+        requireDeck(userId, deckId)
+        store.selectDeck(userId, deckId)
     }
 
     @Transactional
-    fun start(userId: UUID, deckId: UUID? = null, lessonId: UUID? = null, kana:KanaMixRequest? = null, practice:Boolean = false): SessionView {
-        if(listOf(deckId,lessonId,kana).count { it!=null }!=1) fail("BAD_STUDY_SCOPE","코스 단계·덱·가나 연습 중 하나를 선택하세요")
-        val lesson=lessonId?.let { courses.scope(userId,it) }
-        val targetDeck=lesson?.deckId ?: deckId
-        val mixed=kana?.let { kanaMix.cards(userId,it) }
-        val isPractice=practice || kana!=null
-        val scopeSql=when {
-            mixed!=null -> if(mixed.isEmpty()) " and false" else " and c.id in (${mixed.joinToString(",") { "'$it'" }})"
-            lessonId!=null -> " and exists(select 1 from lesson_card lc where lc.card_id=c.id and lc.lesson_id='$lessonId')"
-            else -> ""
+    fun start(userId: UUID, deckId: UUID? = null, lessonId: UUID? = null, kana: KanaMixRequest? = null, practice: Boolean = false): SessionView {
+        if (listOf(deckId, lessonId, kana).count { it != null } != 1) fail("BAD_STUDY_SCOPE", "코스 단계·덱·가나 연습 중 하나를 선택하세요")
+        val lesson = lessonId?.let { courses.scope(userId, it) }
+        val scope = StudyScope(lesson?.deckId ?: deckId, lessonId, kana?.let { kanaMix.cards(userId, it) })
+        val isPractice = practice || kana != null
+        store.lockUser(userId)
+        scope.deckId?.let { requireDeck(userId, it) }
+        val size = if (kana != null || (isPractice && lessonId != null)) Int.MAX_VALUE else 50
+        val (begin, end) = localDayWindow(Instant.now(), zone(userId))
+        val limit = store.dailyNewLimit(userId)
+        val used = store.newCardsUsed(userId, begin, end)
+        val remaining = limit - used
+        val ids = if (isPractice) store.practiceCards(userId, scope, size) else {
+            val due = store.dueCards(userId, scope, size)
+            val unseen = if (remaining > 0) store.unseenCards(userId, scope, remaining) else emptyList()
+            (due + unseen).distinct()
         }
-        val deckSql=targetDeck?.let { " and c.deck_id='$it'" } ?: ""
-        val newOrder=if(lessonId==null) "c.id" else "(select lc.position from lesson_card lc where lc.card_id=c.id and lc.lesson_id='$lessonId')"
-        jdbc.queryForObject("select id from app_user where id=? for update",UUID::class.java,userId)
-        if(targetDeck!=null) {
-            val deck=jdbc.queryForObject("select count(*) from deck where id=? and owner_id=? and import_status='READY'",Int::class.java,targetDeck,userId) ?: 0
-            if(deck==0) fail("DECK_NOT_FOUND","덱을 찾을 수 없습니다",HttpStatus.NOT_FOUND)
-        }
-        // A lesson is a fixed learning scope: free repetition includes its entire range.
-        val size=if(kana!=null || (isPractice && lessonId!=null)) Int.MAX_VALUE else 50
-        val zone=zone(userId);val today=LocalDate.now(zone)
-        val start=today.atStartOfDay(zone).toInstant();val end=today.plusDays(1).atStartOfDay(zone).toInstant()
-        val limit=jdbc.queryForObject("select daily_new_limit from user_settings where user_id=?",Int::class.java,userId) ?: 10
-        val used=jdbc.queryForObject("select count(*) from user_card_state where user_id=? and first_seen_at>=? and first_seen_at<?",
-            Int::class.java,userId,java.sql.Timestamp.from(start),java.sql.Timestamp.from(end)) ?: 0
-        val dueIds=if(isPractice) emptyList() else jdbc.query("""select c.id from card c join user_card_state s on s.card_id=c.id and s.user_id=?
-            where c.owner_id=? $deckSql and c.active=true and s.suspended=false
-            and s.first_seen_at is not null and s.due_at<=now() $scopeSql order by s.due_at limit ?""",
-            {rs,_->rs.getObject(1,UUID::class.java)},userId,userId,size)
-        val remaining=limit-used
-        val newIds=if(!isPractice && remaining>0) jdbc.query("""select c.id from card c left join user_card_state s on s.card_id=c.id and s.user_id=?
-            where c.owner_id=? $deckSql and c.active=true and (s.id is null or (s.first_seen_at is null and s.suspended=false))
-            $scopeSql order by $newOrder limit ?""",{rs,_->rs.getObject(1,UUID::class.java)},userId,userId,remaining) else emptyList()
-        val practiceOrder=if(kana!=null) "case p.last_rating when 'AGAIN' then 0 when 'HARD' then 1 when 'GOOD' then 3 when 'EASY' then 4 else 2 end,random()" else "random()"
-        val ids=if(isPractice) jdbc.query("""select c.id from card c left join user_card_state s on s.card_id=c.id and s.user_id=?
-            left join kana_practice_state p on p.card_id=c.id and p.user_id=?
-            where c.owner_id=? $deckSql and c.active=true and coalesce(s.suspended,false)=false $scopeSql order by $practiceOrder limit ?""",
-            {rs,_->rs.getObject(1,UUID::class.java)},userId,userId,userId,size)
-        else (dueIds+newIds).distinct()
-        val availability=jdbc.query("""select count(*)::int total,
-            count(*) filter(where s.first_seen_at is null)::int unseen,
-            min(s.due_at) filter(where s.first_seen_at is not null and s.due_at>now()) next_due
-            from card c left join user_card_state s on s.card_id=c.id and s.user_id=?
-            where c.owner_id=? $deckSql and c.active=true and coalesce(s.suspended,false)=false $scopeSql""",
-            {rs,_->Triple(rs.getInt("total"),rs.getInt("unseen"),rs.getTimestamp("next_due")?.toInstant())},userId,userId).single()
-        val reason=when {
+        val availability = store.availability(userId, scope)
+        val reason = when {
             ids.isNotEmpty() -> null
-            availability.first==0 -> "NO_ELIGIBLE_CARDS"
-            !isPractice && availability.second>0 && used>=limit -> "DAILY_LIMIT"
+            availability.total == 0 -> "NO_ELIGIBLE_CARDS"
+            !isPractice && availability.unseen > 0 && used >= limit -> "DAILY_LIMIT"
             else -> "NOT_DUE"
         }
-        val queueInfo=QueueInfo(availability.first,availability.second,maxOf(0,limit-used),availability.third,reason)
-        val sessionId=UUID.randomUUID()
-        jdbc.update("insert into study_session(id,user_id,deck_id,lesson_id,session_title,practice,started_at) values(?,?,?,?,?,?,now())",sessionId,userId,targetDeck,lessonId,kana?.copy(practice=isPractice)?.title(),isPractice)
-        ids.forEachIndexed { index,id ->
-            jdbc.update("insert into session_card(session_id,card_id,position) values(?,?,?)",sessionId,id,index)
-            if(!isPractice) jdbc.update("insert into user_card_state(id,user_id,card_id,version) values(?,?,?,0) on conflict(user_id,card_id) do nothing",UUID.randomUUID(),userId,id)
-        }
-        return SessionView(sessionId,ids.mapNotNull { card(userId,it) },0,lessonId,kana?.copy(practice=isPractice)?.title() ?: lesson?.title,isPractice,queueInfo)
+        val info = QueueInfo(availability.total, availability.unseen, maxOf(0, remaining), availability.nextDue, reason)
+        val id = UUID.randomUUID()
+        val title = kana?.copy(practice = isPractice)?.title()
+        store.createSession(id, userId, scope, title, isPractice)
+        ids.forEachIndexed { position, card -> store.reserveCard(id, userId, card, position, isPractice) }
+        return SessionView(id, ids.mapNotNull { card(userId, it) }, 0, lessonId, title ?: lesson?.title, isPractice, info)
     }
 
     fun session(userId: UUID, sessionId: UUID): SessionView {
-        val metadata=jdbc.query("""select ss.lesson_id,coalesce(ss.session_title,l.title),ss.practice from study_session ss
-            left join course_lesson l on l.id=ss.lesson_id where ss.id=? and ss.user_id=?""",
-            {rs,_->Triple(rs.getObject(1,UUID::class.java),rs.getString(2),rs.getBoolean(3))},sessionId,userId).firstOrNull()
-            ?: fail("SESSION_NOT_FOUND","학습 세션을 찾을 수 없습니다",HttpStatus.NOT_FOUND)
-        val remaining=if(metadata.third) "not exists(select 1 from practice_answer p where p.session_id=sc.session_id and p.card_id=sc.card_id)"
-            else "(s.first_seen_at is null or s.due_at<=now())"
-        val ids=jdbc.query("""select sc.card_id from session_card sc join card c on c.id=sc.card_id
-            left join user_card_state s on s.card_id=sc.card_id and s.user_id=?
-            where sc.session_id=? and c.owner_id=? and c.active=true and coalesce(s.suspended,false)=false and $remaining
-            order by sc.position""",{rs,_->rs.getObject(1,UUID::class.java)},userId,sessionId,userId)
-        val table=if(metadata.third) "practice_answer" else "review_log"
-        val answered=jdbc.queryForObject("select count(*) from $table where session_id=? and user_id=?",Int::class.java,sessionId,userId) ?: 0
-        return SessionView(sessionId,ids.mapNotNull{card(userId,it)},answered,metadata.first,metadata.second,metadata.third)
-    }
-
-    fun card(userId: UUID, cardId: UUID): CardView? {
-        val base = jdbc.query("""select c.id,n.kind,n.front,n.reading,n.meaning,n.example,n.example_meaning,
-          n.explanation,n.part_of_speech,n.hangul_hint,n.raw_fields,c.word_audio_id,c.example_audio_id,s.version,s.due_at,p.last_rating
-          from card c join study_note n on n.id=c.note_id
-          left join user_card_state s on s.card_id=c.id and s.user_id=?
-          left join kana_practice_state p on p.card_id=c.id and p.user_id=?
-          where c.id=? and c.owner_id=?""",{rs,_ -> CardView(rs.getObject("id",UUID::class.java),rs.getLong("version"),
-            rs.getString("kind"),rs.getString("front"),rs.getString("reading"),rs.getString("meaning"),
-            rs.getString("example"),rs.getString("example_meaning"),rs.getString("explanation"),rs.getString("part_of_speech"),
-            rs.getString("hangul_hint"),rs.getObject("word_audio_id",UUID::class.java),
-            rs.getObject("example_audio_id",UUID::class.java),rs.getTimestamp("due_at")?.toInstant(),lastRating=rs.getString("last_rating"),
-            grammarFocus=if(rs.getString("kind")=="grammar") rs.getString("raw_fields")?.let {convertedGrammarFocus(mapper.readTree(it),rs.getString("front"))} else null)},
-            userId,userId,cardId,userId).firstOrNull() ?: return null
-        val examples = jdbc.query("""select e.japanese,e.reading,e.korean,e.audio_id from note_example e
-            join card c on c.note_id=e.note_id where c.id=? and c.owner_id=? and e.owner_id=?
-            order by e.ordinal""", {rs,_ -> ExampleView(rs.getString(1),rs.getString(2),rs.getString(3),
-            rs.getObject(4,UUID::class.java))},cardId,userId,userId)
-        return base.copy(examples=examples)
+        val metadata = store.metadata(userId, sessionId) ?: fail("SESSION_NOT_FOUND", "학습 세션을 찾을 수 없습니다", FailureStatus.NOT_FOUND)
+        val ids = store.sessionCards(userId, sessionId, metadata.practice)
+        return SessionView(sessionId, ids.mapNotNull { card(userId, it) }, store.answerCount(userId, sessionId, metadata.practice), metadata.lessonId, metadata.title, metadata.practice)
     }
 
     @Transactional
     fun review(userId: UUID, req: ReviewRequest): ReviewResult {
-        if(req.idempotencyKey.length !in 8..100) fail("BAD_KEY","요청 키를 확인하세요")
-        val digest=sha256("${req.sessionId}|${req.cardId}|${req.version}|${req.rating}")
-        // Serialize all of this user's first reviews. Locking only the card allows
-        // two tabs to review different new cards past the daily limit.
-        jdbc.queryForObject("select id from app_user where id=? for update",UUID::class.java,userId)
-        val priorPractice=jdbc.query("select request_hash from practice_answer where user_id=? and idempotency_key=?",{rs,_->rs.getString(1)},userId,req.idempotencyKey).firstOrNull()
-        if(priorPractice!=null) {
-            if(priorPractice!=digest) fail("IDEMPOTENCY_CONFLICT","이미 다른 답변에 사용된 요청 키입니다",HttpStatus.CONFLICT)
-            return ReviewResult(null,req.version,"PRACTICED")
+        if (req.idempotencyKey.length !in 8..100) fail("BAD_KEY", "요청 키를 확인하세요")
+        val digest = sha256("${req.sessionId}|${req.cardId}|${req.version}|${req.rating}")
+        // Preserve user -> card locking order and the user's shared daily allowance.
+        store.lockUser(userId)
+        store.practiceRequestHash(userId, req.idempotencyKey)?.let {
+            requireSameRequest(it, digest)
+            return ReviewResult(null, req.version, "PRACTICED")
         }
-        val prior=jdbc.query("select request_hash,next_state,next_version from review_log where user_id=? and idempotency_key=?",
-            {rs,_->Triple(rs.getString(1),rs.getString(2),rs.getLong(3))},userId,req.idempotencyKey).firstOrNull()
-        if(prior!=null) {
-            if(prior.first!=digest) fail("IDEMPOTENCY_CONFLICT","이미 다른 답변에 사용된 요청 키입니다",HttpStatus.CONFLICT)
-            val due=Card.fromJson(prior.second).due
-            return ReviewResult(due,prior.third,"SAVED")
+        store.savedReview(userId, req.idempotencyKey)?.let {
+            requireSameRequest(it.requestHash, digest)
+            return ReviewResult(scheduler.due(it.nextState), it.nextVersion, "SAVED")
         }
-        val inSession=jdbc.queryForObject("""select count(*) from session_card sc join study_session ss on ss.id=sc.session_id
-            where ss.id=? and ss.user_id=? and sc.card_id=?""",Int::class.java,req.sessionId,userId,req.cardId) ?: 0
-        if(inSession==0) fail("CARD_NOT_IN_SESSION","세션 카드를 찾을 수 없습니다",HttpStatus.NOT_FOUND)
-        if(jdbc.queryForObject("select practice from study_session where id=? and user_id=?",Boolean::class.java,req.sessionId,userId)==true)
-            return practiceAnswer(userId,req,digest)
-        val state=jdbc.query("""select id,fsrs_json,version,first_seen_at,due_at from user_card_state
-            where user_id=? and card_id=? for update""",{rs,_->StateRow(rs.getObject(1,UUID::class.java),rs.getString(2),
-                rs.getLong(3),rs.getTimestamp(4)?.toInstant(),rs.getTimestamp(5)?.toInstant())},userId,req.cardId).firstOrNull()
-            ?: fail("CARD_STATE_MISSING","카드 상태를 다시 불러오세요",HttpStatus.CONFLICT)
-        if(state.version!=req.version) fail("STALE_CARD","다른 기기에서 변경된 카드입니다. 새로 불러오세요",HttpStatus.CONFLICT)
-        if(state.firstSeen!=null && (state.dueAt==null || state.dueAt.isAfter(Instant.now())))
-            fail("CARD_NOT_DUE","아직 복습 시각이 되지 않았습니다",HttpStatus.CONFLICT)
-        if(state.firstSeen==null) {
-            val zone=zone(userId);val day=LocalDate.now(zone)
-            val begin=day.atStartOfDay(zone).toInstant();val end=day.plusDays(1).atStartOfDay(zone).toInstant()
-            val limit=jdbc.queryForObject("select daily_new_limit from user_settings where user_id=?",Int::class.java,userId)?:10
-            val used=jdbc.queryForObject("select count(*) from user_card_state where user_id=? and first_seen_at>=? and first_seen_at<?",
-                Int::class.java,userId,java.sql.Timestamp.from(begin),java.sql.Timestamp.from(end))?:0
-            if(used>=limit) fail("NEW_LIMIT","오늘 새 카드 한도에 도달했습니다",HttpStatus.CONFLICT)
+        if (!store.sessionContains(userId, req.sessionId, req.cardId)) fail("CARD_NOT_IN_SESSION", "세션 카드를 찾을 수 없습니다", FailureStatus.NOT_FOUND)
+        if (store.isPractice(userId, req.sessionId)) return practiceAnswer(userId, req, digest)
+        val state = store.lockState(userId, req.cardId) ?: fail("CARD_STATE_MISSING", "카드 상태를 다시 불러오세요", FailureStatus.CONFLICT)
+        state.requireReviewable(req.version, Instant.now())
+        if (state.firstSeen == null) {
+            val (begin, end) = localDayWindow(Instant.now(), zone(userId))
+            if (store.newCardsUsed(userId, begin, end) >= store.dailyNewLimit(userId)) fail("NEW_LIMIT", "오늘 새 카드 한도에 도달했습니다", FailureStatus.CONFLICT)
         }
-        val now=Instant.now()
-        val (nextJson,due)=fsrs.review(state.json,req.rating,now)
-        jdbc.update("""update user_card_state set fsrs_json=?,due_at=?,last_reviewed_at=?,
-             first_seen_at=coalesce(first_seen_at,?),version=version+1 where id=?""",
-            nextJson,java.sql.Timestamp.from(due),java.sql.Timestamp.from(now),java.sql.Timestamp.from(now),state.id)
-        jdbc.update("""insert into review_log(id,user_id,card_id,session_id,rating,reviewed_at,previous_state,next_state,
-             previous_version,next_version,idempotency_key,request_hash,scheduler_version,scheduler_settings)
-             values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-            UUID.randomUUID(),userId,req.cardId,req.sessionId,req.rating,java.sql.Timestamp.from(now),
-            state.json,nextJson,state.version,state.version+1,req.idempotencyKey,digest,fsrs.version,fsrs.settingsJson)
-        saveKanaRating(userId,req)
-        return ReviewResult(due,state.version+1,"SAVED")
+        val now = Instant.now()
+        val (nextJson, due) = scheduler.review(state.json, req.rating, now)
+        store.saveReview(userId, req, state, nextJson, due, now, digest, scheduler.version, scheduler.settingsJson)
+        store.saveKanaRating(userId, req)
+        return ReviewResult(due, state.version + 1, "SAVED")
     }
-    private fun practiceAnswer(userId:UUID,req:ReviewRequest,digest:String):ReviewResult {
-        if(req.rating !in setOf("AGAIN","HARD","GOOD","EASY")) fail("BAD_RATING","평가를 확인하세요")
-        val eligible=jdbc.queryForObject("""select count(*) from card c left join user_card_state s on s.card_id=c.id and s.user_id=?
-            where c.id=? and c.owner_id=? and c.active=true and coalesce(s.suspended,false)=false""",Int::class.java,userId,req.cardId,userId) ?: 0
-        if(eligible==0) fail("CARD_NOT_AVAILABLE","연습할 수 없는 카드입니다",HttpStatus.CONFLICT)
-        if((jdbc.queryForObject("select count(*) from practice_answer where session_id=? and card_id=?",Int::class.java,req.sessionId,req.cardId) ?: 0)>0)
-            fail("PRACTICE_ALREADY_ANSWERED","이미 이 연습에서 답변한 카드입니다",HttpStatus.CONFLICT)
-        jdbc.update("insert into practice_answer(id,user_id,session_id,card_id,rating,idempotency_key,request_hash) values(?,?,?,?,?,?,?)",
-            UUID.randomUUID(),userId,req.sessionId,req.cardId,req.rating,req.idempotencyKey,digest)
-        saveKanaRating(userId,req)
-        return ReviewResult(null,req.version,"PRACTICED")
+
+    private fun practiceAnswer(userId: UUID, req: ReviewRequest, digest: String): ReviewResult {
+        if (req.rating !in setOf("AGAIN", "HARD", "GOOD", "EASY")) fail("BAD_RATING", "평가를 확인하세요")
+        if (!store.practiceCardAvailable(userId, req.cardId)) fail("CARD_NOT_AVAILABLE", "연습할 수 없는 카드입니다", FailureStatus.CONFLICT)
+        if (store.practiceAnswered(req.sessionId, req.cardId)) fail("PRACTICE_ALREADY_ANSWERED", "이미 이 연습에서 답변한 카드입니다", FailureStatus.CONFLICT)
+        store.savePractice(userId, req, digest)
+        store.saveKanaRating(userId, req)
+        return ReviewResult(null, req.version, "PRACTICED")
     }
-    private fun saveKanaRating(userId:UUID,req:ReviewRequest) {
-        jdbc.update("""insert into kana_practice_state(user_id,card_id,last_rating,answered_at,attempts)
-            select ?,c.id,?,clock_timestamp(),1 from card c join study_note n on n.id=c.note_id
-            where c.id=? and c.owner_id=? and n.kind in ('hiragana','katakana')
-            on conflict(user_id,card_id) do update set last_rating=excluded.last_rating,
-                answered_at=excluded.answered_at,attempts=kana_practice_state.attempts+1""",userId,req.rating,req.cardId,userId)
+    private fun requireSameRequest(saved: String, digest: String) {
+        if (saved != digest) fail("IDEMPOTENCY_CONFLICT", "이미 다른 답변에 사용된 요청 키입니다", FailureStatus.CONFLICT)
     }
-    data class StateRow(val id: UUID,val json: String?,val version: Long,val firstSeen: Instant?,val dueAt: Instant?)
-    fun zone(userId:UUID): ZoneId = try {
-        ZoneId.of(jdbc.queryForObject("select timezone from app_user where id=?",String::class.java,userId) ?: "Asia/Seoul")
-    } catch (_:Exception){ ZoneId.of("Asia/Seoul") }
+    private fun requireDeck(owner: UUID, deck: UUID) {
+        if (!store.deckExists(owner, deck)) fail("DECK_NOT_FOUND", "덱을 찾을 수 없습니다", FailureStatus.NOT_FOUND)
+    }
+    fun zone(userId: UUID): ZoneId = try { ZoneId.of(store.timezone(userId) ?: "Asia/Seoul") } catch (_: Exception) { ZoneId.of("Asia/Seoul") }
 }

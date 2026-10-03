@@ -1,5 +1,7 @@
 package com.kanalog.common.presentation
 
+import com.kanalog.common.web.requestId
+
 import com.kanalog.common.error.ApiFailure
 import jakarta.servlet.http.HttpServletRequest
 import java.util.*
@@ -13,7 +15,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 class Errors {
     @ExceptionHandler(ApiFailure::class)
     fun api(e: ApiFailure, request: HttpServletRequest) =
-        ResponseEntity.status(e.status).body(mapOf("code" to e.code,"message" to e.message,"requestId" to request.requestId()))
+        ResponseEntity.status(e.status.value).body(mapOf("code" to e.code,"message" to e.message,"requestId" to request.requestId()))
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun validation(e: MethodArgumentNotValidException, request: HttpServletRequest) =
         ResponseEntity.badRequest().body(mapOf("code" to "INVALID_INPUT", "message" to "입력값을 확인하세요",

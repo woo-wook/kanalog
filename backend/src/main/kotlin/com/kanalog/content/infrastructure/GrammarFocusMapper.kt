@@ -17,7 +17,5 @@ fun convertedGrammarFocus(row:JsonNode,front:String):GrammarFocus? {
         check(text.isNotEmpty() && part.path("highlighted").isBoolean) { "Invalid converted grammar segment" }
         HighlightSegment(text,part.path("highlighted").asBoolean())
     }
-    check(segments.joinToString("") {it.text}==front) { "Grammar highlight text differs from front" }
-    check(segments.filter {it.highlighted}.map {it.text.trim()}.filter {it.isNotEmpty()}.joinToString(" … ")==title) { "Grammar title differs from highlighted text" }
-    return GrammarFocus(title,segments)
+    return GrammarFocus(title,segments).requireMatches(front)
 }

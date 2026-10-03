@@ -1,6 +1,5 @@
 package com.kanalog.settings.application.model
 
-import org.springframework.web.bind.annotation.*
 
 data class SettingsView(
     val dailyNewLimit: Int, val showReadingHint: Boolean, val showHangulHint: Boolean,

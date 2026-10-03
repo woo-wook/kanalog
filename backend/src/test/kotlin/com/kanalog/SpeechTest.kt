@@ -3,6 +3,7 @@ package com.kanalog
 import com.kanalog.common.error.ApiFailure
 import com.kanalog.speech.application.model.SpeechRequest
 import com.kanalog.speech.application.SpeechService
+import com.kanalog.speech.infrastructure.HttpSpeechSynthesizer
 
 import com.sun.net.httpserver.HttpServer
 import org.junit.jupiter.api.Assertions.*
@@ -24,7 +25,7 @@ class SpeechTest {
         }
         server.start()
         try {
-            val speech=SpeechService("http://127.0.0.1:${server.address.port}",JsonMapper.builder().build())
+            val speech=SpeechService(HttpSpeechSynthesizer("http://127.0.0.1:${server.address.port}",JsonMapper.builder().build()))
             assertEquals(44,speech.generate(SpeechRequest("ア","F1")).size)
             status=503
             assertEquals("SPEECH_UNAVAILABLE",assertThrows(ApiFailure::class.java) { speech.generate(SpeechRequest("ア","F1")) }.code)

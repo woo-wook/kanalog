@@ -4,6 +4,7 @@
 *.iml
 *.ipr
 out/
+!backend/src/main/kotlin/**/port/out/
 
 ### Eclipse / STS ###
 .apt_generated

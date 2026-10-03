@@ -3,7 +3,6 @@ package com.kanalog.speech.application.model
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
-import org.springframework.web.bind.annotation.*
 
 data class SpeechRequest(
     @field:NotBlank @field:Size(max=500) val text:String,

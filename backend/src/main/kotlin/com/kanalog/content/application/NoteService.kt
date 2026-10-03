@@ -1,98 +1,42 @@
 package com.kanalog.content.application
-
-import com.kanalog.auth.presentation.user
 import com.kanalog.common.error.fail
-import com.kanalog.content.application.model.NoteCreate
-import com.kanalog.content.application.model.NotePage
-import com.kanalog.content.application.model.NotePatch
-import com.kanalog.content.application.model.NoteView
-import com.kanalog.content.infrastructure.convertedGrammarFocus
+import com.kanalog.content.application.model.*
+import com.kanalog.content.application.port.out.NoteStore
+import com.kanalog.content.domain.PersonalNote
 import java.util.UUID
-import org.springframework.http.HttpStatus
-import org.springframework.jdbc.core.JdbcTemplate
+import com.kanalog.common.error.FailureStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.bind.annotation.*
-import tools.jackson.databind.ObjectMapper
 
 @Service
-class NoteService(private val jdbc: JdbcTemplate,private val mapper:ObjectMapper) {
-    private val columns = """n.id,n.front,n.reading,n.meaning,n.example,n.example_meaning,n.explanation,
-        n.personal_memo,n.hangul_hint,n.source_id,(b.note_id is not null) bookmarked,
-        coalesce(s.suspended,false) excluded,c.word_audio_id,n.kind,n.raw_fields,d.level"""
-    private val joins = """from study_note n left join bookmark b on b.note_id=n.id and b.user_id=?
-        left join card c on c.id=(select c2.id from card c2 where c2.note_id=n.id and c2.owner_id=? order by c2.id limit 1)
-        left join user_card_state s on s.card_id=c.id and s.user_id=?
-        left join deck d on d.id=c.deck_id and d.owner_id=n.owner_id"""
-    fun get(user: UUID, id: UUID): NoteView = jdbc.query("select $columns $joins where n.owner_id=? and n.id=?",
-        ::map, user,user,user,user,id).firstOrNull()
-        ?: fail("NOTE_NOT_FOUND", "단어를 찾을 수 없습니다", HttpStatus.NOT_FOUND)
-
-    fun list(user: UUID, query: String, page: Int, size: Int, kind:String=""): NotePage {
-        if (page < 0 || size !in 1..100) fail("BAD_PAGE", "페이지 범위를 확인하세요")
-        val pattern = "%" + query.trim().take(100).replace("\\","\\\\").replace("%","\\%").replace("_","\\_") + "%"
-        val kindClause=when(kind) {
-            "" -> ""
-            "vocabulary" -> " and n.kind='vocabulary'"
-            "grammar" -> " and n.kind='grammar'"
-            "kana" -> " and n.kind in ('hiragana','katakana')"
-            else -> fail("BAD_NOTE_KIND","단어장 분류를 확인하세요")
-        }
-        val where = "n.owner_id=? and (n.front ilike ? escape '\\' or n.reading ilike ? escape '\\' or n.meaning ilike ? escape '\\')" + kindClause
-        val total = jdbc.queryForObject("select count(*) from study_note n where $where",Int::class.java,user,pattern,pattern,pattern) ?: 0
-        val rows = jdbc.query("select $columns $joins where $where order by n.updated_at desc,n.id limit ? offset ?",
-            ::map,user,user,user,user,pattern,pattern,pattern,size,page*size)
-        return NotePage(rows,total,(total+size-1)/size,page)
+class NoteService(private val store: NoteStore) {
+    fun get(user: UUID, id: UUID) = store.find(user, id) ?: fail("NOTE_NOT_FOUND", "단어를 찾을 수 없습니다", FailureStatus.NOT_FOUND)
+    fun list(user: UUID, query: String, page: Int, size: Int, kind: String = ""): NotePage {
+        if(page < 0 || size !in 1..100) fail("BAD_PAGE", "페이지 범위를 확인하세요")
+        if(kind !in setOf("", "vocabulary", "grammar", "kana")) fail("BAD_NOTE_KIND", "단어장 분류를 확인하세요")
+        return store.search(user, query, page, size, kind)
     }
-
     @Transactional
     fun create(user: UUID, body: NoteCreate): NoteView {
-        jdbc.queryForObject("select id from app_user where id=? for update",UUID::class.java,user)
-        val front=body.japanese.trim(); val reading=body.reading.trim(); val meaning=body.meaning.trim()
-        if(front.isEmpty() || reading.isEmpty() || meaning.isEmpty()) fail("BAD_NOTE","표기·읽기·뜻을 입력하세요")
-        val deck = jdbc.query("select id from deck where owner_id=? and source_id is null and source_path='PERSONAL'",
-            {rs,_ -> rs.getObject(1,UUID::class.java)},user).firstOrNull() ?: UUID.randomUUID().also {
-            jdbc.update("""insert into deck(id,owner_id,source_path,title,kind,selected)
-                values(?,?,'PERSONAL','내 단어','vocabulary',false)""",it,user)
-        }
-        val id=UUID.randomUUID(); val card=UUID.randomUUID()
-        jdbc.update("""insert into study_note(id,owner_id,kind,front,reading,meaning,example,example_meaning,
-            personal_memo,hangul_hint) values(?,?,'vocabulary',?,?,?,?,?,?,?)""",
-            id,user,front,reading,meaning,body.example,body.exampleMeaning,body.memo,body.hangulHint)
-        jdbc.update("""insert into card(id,owner_id,deck_id,note_id,direction)
-            values(?,?,?,?,'recognition')""",card,user,deck,id)
-        return get(user,id)
+        store.lockUser(user)
+        val content = PersonalNote.of(body.japanese, body.reading, body.meaning)
+        val deck = store.personalDeck(user)
+        val id = UUID.randomUUID()
+        store.create(user, id, deck, body.copy(japanese = content.japanese, reading = content.reading, meaning = content.meaning))
+        return get(user, id)
     }
-
     @Transactional
-    fun patch(user: UUID,id: UUID, body: NotePatch): NoteView {
-        val old=get(user,id)
+    fun patch(user: UUID, id: UUID, body: NotePatch): NoteView {
+        val old = get(user, id)
         val editingSource = listOf(body.japanese,body.reading,body.meaning,body.example,body.exampleMeaning).any { it != null }
-        if(old.source!="PERSONAL" && editingSource) fail("READ_ONLY_SOURCE","가져온 원본은 수정할 수 없습니다",HttpStatus.FORBIDDEN)
-        val front=(body.japanese ?: old.front).trim(); val reading=(body.reading ?: old.reading)?.trim()
-        val meaning=(body.meaning ?: old.meaning)?.trim()
-        if(old.source=="PERSONAL" && (front.isEmpty() || reading.isNullOrEmpty() || meaning.isNullOrEmpty()))
-            fail("BAD_NOTE","표기·읽기·뜻을 입력하세요")
-        jdbc.update("""update study_note set front=?,reading=?,meaning=?,example=?,example_meaning=?,
-            personal_memo=?,hangul_hint=?,updated_at=now() where id=? and owner_id=?""",
-            front,reading,meaning,body.example ?: old.example,body.exampleMeaning ?: old.exampleMeaning,
-            body.memo ?: old.memo,body.hangulHint ?: old.hangulHint,id,user)
-        body.bookmarked?.let { marked -> if(marked) jdbc.update("insert into bookmark(user_id,note_id) values(?,?) on conflict do nothing",user,id)
-            else jdbc.update("delete from bookmark where user_id=? and note_id=?",user,id) }
-        body.excluded?.let { excluded ->
-            jdbc.update("""insert into user_card_state(id,user_id,card_id,suspended)
-                select gen_random_uuid(),?,c.id,? from card c where c.note_id=? and c.owner_id=?
-                on conflict(user_id,card_id) do update set suspended=excluded.suspended""",user,excluded,id,user)
-        }
-        return get(user,id)
-    }
-
-    private fun map(rs: java.sql.ResultSet, ignored: Int): NoteView {
-        val front=rs.getString("front")
-        return NoteView(rs.getObject("id",UUID::class.java),front,front,rs.getString("reading"),rs.getString("meaning"),
-            rs.getString("example"),rs.getString("example_meaning"),rs.getString("explanation"),
-            rs.getString("personal_memo"),rs.getString("hangul_hint"),if(rs.getObject("source_id")==null) "PERSONAL" else "JLPT MAX",
-            rs.getBoolean("bookmarked"),rs.getBoolean("excluded"),rs.getObject("word_audio_id",UUID::class.java),rs.getString("kind"),rs.getString("level"),
-            if(rs.getString("kind")=="grammar") rs.getString("raw_fields")?.let {convertedGrammarFocus(mapper.readTree(it),front)} else null)
+        if(old.source != "PERSONAL" && editingSource) fail("READ_ONLY_SOURCE", "가져온 원본은 수정할 수 없습니다", FailureStatus.FORBIDDEN)
+        val front = (body.japanese ?: old.front).trim()
+        val reading = (body.reading ?: old.reading)?.trim()
+        val meaning = (body.meaning ?: old.meaning)?.trim()
+        if(old.source == "PERSONAL") PersonalNote.of(front, reading, meaning)
+        store.update(user, id, NotePatch(front,reading,meaning,body.example ?: old.example,body.exampleMeaning ?: old.exampleMeaning,body.memo ?: old.memo,body.hangulHint ?: old.hangulHint))
+        body.bookmarked?.let { store.bookmark(user, id, it) }
+        body.excluded?.let { store.exclude(user, id, it) }
+        return get(user, id)
     }
 }

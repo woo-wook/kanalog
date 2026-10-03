@@ -14,7 +14,8 @@ import com.kanalog.study.domain.KanaMixRequest
 import com.kanalog.course.application.CourseService
 import com.kanalog.curriculum.application.CurriculumService
 import com.kanalog.settings.application.model.SettingsPatch
-import com.kanalog.progress.application.OverviewService
+import com.kanalog.progress.application.ProgressService
+import com.kanalog.settings.application.SettingsService
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -35,7 +36,7 @@ import java.util.UUID
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.NONE)
 class PersistenceFlowTest @Autowired constructor(
     private val jdbc:JdbcTemplate,private val notes:NoteService,private val study:StudyService,
-    private val importer:MaxImportService,private val auth:AuthService,private val courses:CourseService,private val overview:OverviewService,private val curriculum:CurriculumService
+    private val importer:MaxImportService,private val auth:AuthService,private val courses:CourseService,private val overview:ProgressService,private val settings:SettingsService,private val curriculum:CurriculumService
 ) {
     companion object {
         @Container @JvmField val postgres=PostgreSQLContainer("postgres:16-alpine")
@@ -268,24 +269,24 @@ class PersistenceFlowTest @Autowired constructor(
 
     @Test fun `audio engine and Supertonic voice settings persist per user and reject invalid choices`() {
         val owner=user();val other=user()
-        assertEquals("SUPERTONIC",overview.settings(owner).audioEngine)
-        assertEquals("F1",overview.settings(owner).supertonicVoice)
-        overview.patch(owner,SettingsPatch(audioEngine="ORIGINAL",supertonicVoice="M5",preferredVoice="device-ja-JP"))
-        assertEquals("ORIGINAL",overview.settings(owner).audioEngine)
-        assertEquals("M5",overview.settings(owner).supertonicVoice)
-        assertEquals("device-ja-JP",overview.settings(owner).preferredVoice)
-        assertEquals("SUPERTONIC",overview.settings(other).audioEngine)
+        assertEquals("SUPERTONIC",settings.settings(owner).audioEngine)
+        assertEquals("F1",settings.settings(owner).supertonicVoice)
+        settings.patch(owner,SettingsPatch(audioEngine="ORIGINAL",supertonicVoice="M5",preferredVoice="device-ja-JP"))
+        assertEquals("ORIGINAL",settings.settings(owner).audioEngine)
+        assertEquals("M5",settings.settings(owner).supertonicVoice)
+        assertEquals("device-ja-JP",settings.settings(owner).preferredVoice)
+        assertEquals("SUPERTONIC",settings.settings(other).audioEngine)
         assertEquals("BAD_AUDIO_ENGINE",assertThrows(ApiFailure::class.java) {
-            overview.patch(owner,SettingsPatch(audioEngine="UNKNOWN"))
+            settings.patch(owner,SettingsPatch(audioEngine="UNKNOWN"))
         }.code)
         assertEquals("BAD_SUPERTONIC_VOICE",assertThrows(ApiFailure::class.java) {
-            overview.patch(owner,SettingsPatch(supertonicVoice="F6"))
+            settings.patch(owner,SettingsPatch(supertonicVoice="F6"))
         }.code)
-        assertEquals("ORIGINAL",overview.settings(owner).audioEngine)
-        assertEquals("M5",overview.settings(owner).supertonicVoice)
-        overview.patch(owner,SettingsPatch(audioEngine="DEVICE"))
-        assertEquals("DEVICE",overview.settings(owner).audioEngine)
-        assertEquals("device-ja-JP",overview.settings(owner).preferredVoice)
+        assertEquals("ORIGINAL",settings.settings(owner).audioEngine)
+        assertEquals("M5",settings.settings(owner).supertonicVoice)
+        settings.patch(owner,SettingsPatch(audioEngine="DEVICE"))
+        assertEquals("DEVICE",settings.settings(owner).audioEngine)
+        assertEquals("device-ja-JP",settings.settings(owner).preferredVoice)
     }
 
     @Test fun `kana courses start with ordered hiragana and preserve practice on synchronization`() {
