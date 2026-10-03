@@ -114,6 +114,8 @@ HTTPS로 운영할 때 기존 nginx·Caddy·Cloudflare에서 프런트엔드의 
 
 ## 개발 확인
 
+백엔드는 기능별 `domain/application/infrastructure/presentation` 구조다. 도메인 정책은 순수 Kotlin, 트랜잭션은 application 서비스, JDBC/JPA·FSRS·파일·HTTP 구현은 infrastructure에 둔다. 변경할 때 [구조와 의존 규칙](docs/architecture.md#백엔드-패키지와-의존-방향), [Dutchlog 참고 규칙](docs/dutchlog-reference.md), `CODERULE.md`를 따른다. Gradle 테스트에 계층 의존성 검사와 PostgreSQL/실제 HTTP 회귀 테스트가 포함된다.
+
 ```sh
 cd backend && ./gradlew test bootJar
 cd ../frontend && pnpm install --frozen-lockfile && pnpm exec tsc --noEmit && pnpm lint && pnpm test && pnpm build

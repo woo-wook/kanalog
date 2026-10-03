@@ -31,3 +31,16 @@
 `.claude/skills/`의 원본 75개 SKILL.md와 인덱스가 현재 복사본과 같음을 다시 확인했다. `frontend/CLAUDE.md`의 `@AGENTS.md` 연결도 복사했다. 로컬 설정·환경 파일은 복사하지 않았다.
 
 실제 참고 파일은 `../dutchlog/frontend/app/globals.css`, `src/widgets/app-shell/ui/{Sidebar,TabBar,MobileAppBar,AppShell}.tsx`, `src/widgets/app-shell/model/nav-items.ts`, `src/views/home/ui/HomeView.tsx`, `src/shared/ui/{card,button}.tsx`다. 밝은 슬레이트 배경과 파란 primary, 16px 카드 반경과 그림자, 아이콘 사이드바·모바일 탭, 사용자 표시와 버튼 규칙을 적용했다. 가계부 메뉴와 개인 데이터는 가져오지 않았다. 학습 화면은 가타카나 → 히라가나 → MAX N5 어휘·문법의 코스 구조에 맞췄다.
+
+
+## 2026-10-03 백엔드 구조 재정리
+
+이번 변경에서는 다음 실제 파일과 복사된 규칙을 다시 확인했다.
+
+- `../dutchlog/CODERULE.md`: 기존 테스트가 통과한 상태에서 구조를 변경하고 단계마다 전체 짧은 테스트를 실행한다. 동작 변경과 구조 변경을 별도 커밋으로 구분한다.
+- `../dutchlog/.claude/skills/ddd-layered-architecture/SKILL.md`, `out-port-adapter/SKILL.md`, `domain-repository-interface/SKILL.md`: 기능별 domain/application/infrastructure/presentation, 애플리케이션 트랜잭션, 도메인 저장소 계약, 외부 의존 포트와 인프라 어댑터를 따른다.
+- `../dutchlog/backend/src/main/kotlin/com/dutchlog/backend/goal/application/GoalService.kt`와 goal의 domain/infrastructure/presentation 디렉터리: 기능별 묶음과 저장소 계약을 참고했다.
+
+Kanalog의 기존 PostgreSQL 행 잠금·JDBC 조회와 FSRS JSON은 그대로 유지하며 외부 처리를 어댑터로 옮겼다. Spring Data 인터페이스는 JPA 어댑터 내부로 제한했다. 도메인 객체에 JPA 매핑을 허용하는 Dutchlog 관례를 채택한다. `application/port/out`은 기존 `.gitignore`의 `out/` 규칙에 가려지지 않도록 예외를 추가했다.
+
+JWT·응답 envelope·가계부 인프라는 이번 구조 변경에 섞지 않았다. 현재 HttpOnly 쿠키/DB 세션·CSRF·독립 kanalog DB/role·원래 JSON API 계약을 유지한다. 스키마 마이그레이션과 콘텐츠 재import는 필요하지 않다. 의존성 버전이나 자체 코드의 라이선스를 변경하지 않았다.

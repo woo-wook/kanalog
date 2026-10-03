@@ -1,5 +1,23 @@
 # 검증 기록
 
+## 백엔드 DDD 패키지·책임 분리 (2026-10-03)
+
+- 기존 Kotlin/PostgreSQL 기준선 **32개**를 먼저 통과시킨 뒤 기능별 계층 분리, 저장소·외부 연동 포트 추출, 도메인 정책 분리마다 전체 테스트를 실행했다. 최종 **49개**(기존 32 + 계층 5 + 정책 8 + 실제 HTTP 4), 실패/오류 0. JDK 21의 `test bootJar`와 Docker production `bootJar` 빌드가 통과했다. 새 의존성과 DB migration은 없다.
+- `LayerDependencyTest`는 domain의 application/infra/presentation·기술 의존, application의 SQL/파일/HTTP/FSRS SDK 의존, presentation의 저장소·외부 구현 의존, infra의 presentation 의존과 트랜잭션 배치를 검사한다. JPA 도메인 매핑은 허용하고 루트 실행 진입점도 검사한다.
+- 정책 테스트는 version/due 경계, 개인 단어의 필수 내용, 문법 강조와 제목/앞면 일치, 가나 순서와 104자씩의 목록, 원본 순서·단계 key·어휘 20/문법 5의 코스 편성, 연속 학습일, Byte Range, 음성 옵션, 고정 MAX 버전을 검증한다.
+- HTTP 테스트는 독립 PostgreSQL 16 Testcontainers와 실제 랜덤 포트 서버를 사용한다. 로그인/HttpOnly 쿠키/CSRF/Origin/로그아웃, settings와 validation 오류 계약, 다른 계정의 note/session/import/media 접근 거부, 복습 재전송·payload 충돌·stale 409, Range 206/416과 경로 이탈 거부를 확인했다. 복습 로그 insert를 테스트 DB trigger로 실패시켜 먼저 수행한 카드 갱신과 최초 학습 시각이 롤백되고, 같은 idempotency key로 다시 성공함을 확인했다. 운영 DB에는 trigger를 만들지 않았다.
+- 운영 Kanalog DB dump를 개인 디렉터리에 권한 0600으로 저장했다. backend만 교체한 직후, 브라우저 테스트가 쓰기 작업을 하기 전 **22개 public 테이블의 행 개수·전체 행 해시가 모두 일치**했다. 카드·노트·미디어·코스·레슨·FSRS 상태·복습 로그·설정·인증 기록과 Flyway 이력을 포함한다. 콘텐츠 재import 없이 기존 media volume과 공유 infra-postgres를 유지했다. frontend와 voice는 재시작하지 않았다.
+- `https://kanalog.hanwook.me`의 HTTPS/Secure 쿠키 설정과 backend healthy·readiness UP을 확인했다. 공개 서버 QA 브라우저 회귀 **13종**을 확인했다. 첫 실행은 12개 통과, 로그아웃 케이스는 로그인 후 홈 제목 대기에서 60초 시간 초과로 실패했다. 코드 변경 없이 해당 케이스를 단독 재실행해 7.5초에 통과했다. 원본 MAX 음성 디코딩·재생/200·206/로그아웃 후 401, N5 평가·통계, 가타카나와 섞기 평가·재로그인, 설정 유지, 360/390px 화면, 문법 강조·긴 해설·카드 스크롤, 단어장 검색·북마크·제외, 실제 문법/어휘/개인 단어 합성과 자동재생을 검증했다. 응답이나 오디오를 mock하지 않았고 쓰기 작업은 QA 계정으로만 수행했다. 실제 iPhone/설치 PWA 및 다른 CPU 플랫폼 검증은 이번 구조 변경에서 수행하지 않았다.
+
+```sh
+JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home backend/gradlew -p backend test bootJar --no-daemon
+docker compose build backend
+docker compose up -d --no-deps --wait --wait-timeout 60 backend
+python3 tools/e2e/check_deployment.py
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/learning.spec.ts e2e/audio.spec.ts e2e/notes-speech.spec.ts e2e/notes-layout.spec.ts e2e/grammar-layout.spec.ts e2e/courses.spec.ts e2e/kana-rating-priority.spec.ts
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/learning.spec.ts -g '로그아웃하면'
+```
+
 ## 문법·단어장 TTS 확장 (2026-10-02)
 
 - 문법 학습의 일본어 앞면/예문을 음성 대상으로 추가했다. 단어장 상세에서는 단어 읽기·가나 글자·문법 예문·단어 예문을 각각 듣는다. 한국어 질문·해설·메모는 합성하지 않으며 선택한 엔진·목소리·속도를 유지한다. 기존 원본 단어 음성도 별도 버튼으로 재생한다. 전체 변환본의 어휘 9,159개·문법 1,078개를 조사했으며 단어 읽기는 최대 12자, 문법 예문은 최대 49자로 서버 500자 제한 안에 있다. 모든 항목을 개별 청취했다는 뜻은 아니다.

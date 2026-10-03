@@ -14,6 +14,37 @@
 
 원본 APKG와 변환 JSONL은 `private-data`에 두고 Git 및 이미지 빌드에서 제외한다. 변환된 음성은 import 중 개인 미디어 볼륨으로 복사한다. `/api/media/{id}`는 DB 소유권을 확인한 후 제공하며, 미디어 볼륨을 웹 서버 정적 경로로 공개하지 않는다.
 
+## 백엔드 패키지와 의존 방향
+
+Dutchlog의 pragmatic DDD와 `CODERULE.md`를 따른다. `com.kanalog` 루트에는 Spring Boot 실행 진입점 `App.kt`만 둔다. 기능은 `account`, `auth`, `content`, `study`, `course`, `curriculum`, `settings`, `progress`, `imports`, `media`, `speech`, `health`로 분리한다. 오류·시간·해시·웹 요청 식별자만 `common`에 둔다.
+
+```text
+com.kanalog.<feature>/
+├── domain/                  # 모델, 불변식, 순수 정책, 애그리거트 저장소 계약
+├── application/             # 유스케이스 조율과 트랜잭션
+│   ├── model/               # 요청·응답 DTO (Bean Validation 포함)
+│   └── port/out/            # 저장·조회·외부 계산 계약
+├── infrastructure/          # JDBC/JPA, FSRS SDK, 파일, HTTP 어댑터
+└── presentation/            # Controller 및 관리자 CLI 진입점
+```
+
+```mermaid
+flowchart LR
+    P[Controller · CLI] --> A[Application service]
+    A --> D[Domain policy · model]
+    A --> O[Outbound port]
+    I[JDBC · JPA · HTTP · File adapter] -. implements .-> O
+    I --> X[(DB · media · voice)]
+```
+
+- `domain`에는 Spring MVC·JDBC·Jackson·HTTP·파일 접근을 두지 않는다. `AppUserEntity`의 JPA 매핑은 Dutchlog와 같은 예외로 허용한다. `AppUserRepository` 계약은 도메인에, Spring Data `JpaAppUserRepository`와 `AccountRepositoryAdapter`는 인프라에 둔다.
+- 카드 version/due 검사는 `ReviewState`, 개인 단어 내용은 `PersonalNote`, 문법 제목과 강조 정합성은 `GrammarFocus`, 코스 편성은 `CoursePlan`/`KanaInventory`, 연속 학습일은 `LearningStreak`, 음성 설정·입력은 각각 `AudioPreferences`/`SpeechInput`이 맡는다.
+- `StudyService` 등 애플리케이션 서비스는 포트를 통해 조회·저장을 요청한다. 예외적인 가져오기 `Path`는 CLI 입력 경로 값이며, 실제 `Files` 호출과 JSONL 해석은 `NormalizedMaxImportAdapter`에만 둔다. 업무 API는 기존 Kotlin 서버에 유지한다.
+- `@Transactional`은 애플리케이션에만 둔다. 평가의 사용자 행 → 카드 상태 행 잠금 순서, 상태 갱신·ReviewLog·가나 평가 저장의 원자성, 소유권 조건, idempotency key와 version 검사는 보존한다. CLI의 RUNNING/FAILED 작업 기록은 콘텐츠 가져오기 트랜잭션 밖에서 저장해 실패 상태가 남는다. 미디어 복사는 DB 트랜잭션으로 되돌아가지 않는 기존 한계가 있으며 재시도는 내용 해시 기반이다.
+- 목록·통계·큐·코스는 작은 typed 조회 포트를 사용한다. 잠금과 기존 쿼리의 의미를 유지하기 위해 전체 SQL을 JPA로 바꾸지 않는다. 조회 DTO를 새 애그리거트로 감싸거나 모든 서비스에 입력 포트 인터페이스를 만들지 않는다.
+- Controller는 인증 사용자와 HTTP 계약을 처리한다. 오류의 HTTP 분류는 순수 `FailureStatus`를 `Errors`에서 상태 코드로 변환한다. `MediaController`는 Range/헤더만 처리하고 파일 검증·스트리밍은 `FileMediaStore`가, 내부 TTS 통신·동시 요청 제한·WAV 검증은 `HttpSpeechSynthesizer`가 맡는다.
+- `LayerDependencyTest`가 계층 의존성과 트랜잭션 배치를 검사한다. 테스트는 기능별 패키지에 두고 여러 기능을 연결하는 PostgreSQL/HTTP 테스트는 `integration`에 둔다. 외부 API·테이블·migration·FSRS 버전 변경 없이 구조를 정리했다.
+
 ## 인증과 진도
 
 로그인은 BCrypt 해시를 검증하고 무작위 세션 토큰을 HttpOnly SameSite=Lax 쿠키에 설정한다. DB에는 토큰 원문 대신 SHA-256 해시, 만료 시각, CSRF 토큰을 저장한다. 쓰기 요청은 `X-CSRF-Token`과 브라우저 Origin을 검증한다. 운영 HTTPS에서는 `COOKIE_SECURE=true`로 설정한다. Dutchlog의 계정, 키, DB와 공유하지 않는다.
