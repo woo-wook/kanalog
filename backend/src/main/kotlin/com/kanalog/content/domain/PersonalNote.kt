@@ -1,4 +1,5 @@
 package com.kanalog.content.domain
+
 import com.kanalog.common.error.fail
 
 /** Required content of an owner-authored vocabulary note. */

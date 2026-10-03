@@ -1,7 +1,7 @@
 package com.kanalog.account.application
 
-import com.kanalog.account.domain.AppUserEntity
 import com.kanalog.account.application.port.out.AccountStore
+import com.kanalog.account.domain.AppUserEntity
 import com.kanalog.course.application.CourseService
 import java.util.UUID
 import org.springframework.stereotype.Service

@@ -1,9 +1,9 @@
 package com.kanalog.course.infrastructure
 
 import com.kanalog.course.application.CourseService
+import com.kanalog.course.application.port.out.CourseStore
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
-import com.kanalog.course.application.port.out.CourseStore
 import org.springframework.stereotype.Component
 
 @Component

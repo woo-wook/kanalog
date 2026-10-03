@@ -1,6 +1,5 @@
 package com.kanalog.common.error
 
-import java.util.*
 import com.kanalog.common.error.FailureStatus
 
 fun fail(code: String, message: String, status: FailureStatus = FailureStatus.BAD_REQUEST): Nothing =

@@ -1,11 +1,15 @@
 package com.kanalog.settings.application
-import com.kanalog.common.error.*
-import com.kanalog.settings.application.model.*
+
+import com.kanalog.common.error.FailureStatus
+import com.kanalog.common.error.fail
+import com.kanalog.settings.application.model.SettingsPatch
+import com.kanalog.settings.application.model.SettingsView
 import com.kanalog.settings.application.port.out.SettingsStore
 import com.kanalog.settings.domain.AudioPreferences
 import java.util.UUID
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+
 @Service
 class SettingsService(private val store: SettingsStore) {
     fun settings(user: UUID) = store.find(user) ?: fail("SETTINGS_MISSING", "설정을 찾을 수 없습니다", FailureStatus.NOT_FOUND)

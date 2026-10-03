@@ -1,8 +1,8 @@
 package com.kanalog.health.presentation
 
+import com.kanalog.health.application.HealthService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import com.kanalog.health.application.HealthService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 

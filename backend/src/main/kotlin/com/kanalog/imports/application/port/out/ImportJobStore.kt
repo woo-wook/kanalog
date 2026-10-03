@@ -1,7 +1,7 @@
 package com.kanalog.imports.application.port.out
 
-import com.kanalog.imports.application.model.ImportView
 import com.kanalog.imports.application.model.ImportResult
+import com.kanalog.imports.application.model.ImportView
 import java.util.UUID
 
 interface ImportJobStore {

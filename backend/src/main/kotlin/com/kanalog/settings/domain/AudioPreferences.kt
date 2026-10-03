@@ -1,4 +1,5 @@
 package com.kanalog.settings.domain
+
 import com.kanalog.common.error.fail
 import java.time.ZoneId
 

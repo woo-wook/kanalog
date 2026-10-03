@@ -1,12 +1,11 @@
 package com.kanalog.study.infrastructure
 
-import com.kanalog.study.application.port.out.ReviewScheduler
 import com.kanalog.common.error.fail
+import com.kanalog.study.application.port.out.ReviewScheduler
 import io.github.openspacedrepetition.Card
 import io.github.openspacedrepetition.Rating
 import io.github.openspacedrepetition.Scheduler
-import java.time.*
-import java.util.*
+import java.time.Instant
 import org.springframework.stereotype.Service
 
 @Service

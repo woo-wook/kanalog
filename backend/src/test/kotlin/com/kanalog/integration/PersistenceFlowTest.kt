@@ -1,4 +1,4 @@
-package com.kanalog
+package com.kanalog.integration
 
 import com.kanalog.common.error.ApiFailure
 import com.kanalog.common.crypto.sha256

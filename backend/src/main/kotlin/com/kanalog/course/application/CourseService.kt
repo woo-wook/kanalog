@@ -1,10 +1,13 @@
 package com.kanalog.course.application
-import com.kanalog.common.error.*
+
+import com.kanalog.common.error.FailureStatus
+import com.kanalog.common.error.fail
 import com.kanalog.course.application.port.out.CourseStore
-import com.kanalog.course.domain.*
+import com.kanalog.course.domain.CoursePlan
 import java.util.UUID
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+
 @Service
 class CourseService(private val store: CourseStore) {
     fun list(owner: UUID) = store.list(owner)
@@ -19,6 +22,6 @@ class CourseService(private val store: CourseStore) {
     @Transactional
     fun synchronize(owner: UUID) {
         store.lockUser(owner)
-        store.synchronize(owner)
+        store.synchronize(owner, CoursePlan.build(store.importedDecks(owner)))
     }
 }

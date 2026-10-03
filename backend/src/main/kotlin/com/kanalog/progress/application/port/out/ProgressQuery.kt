@@ -1,6 +1,8 @@
 package com.kanalog.progress.application.port.out
+
 import java.time.Instant
 import java.util.UUID
+
 data class ActiveLesson(val id: UUID?, val title: String?)
 interface ProgressQuery {
     fun activeLesson(owner: UUID): ActiveLesson?

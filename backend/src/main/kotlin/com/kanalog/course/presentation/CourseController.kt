@@ -4,7 +4,10 @@ import com.kanalog.auth.presentation.user
 import com.kanalog.course.application.CourseService
 import jakarta.servlet.http.HttpServletRequest
 import java.util.UUID
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class CourseController(private val courses:CourseService) {

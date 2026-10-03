@@ -1,10 +1,14 @@
 package com.kanalog.content.application
+
+import com.kanalog.common.error.FailureStatus
 import com.kanalog.common.error.fail
-import com.kanalog.content.application.model.*
+import com.kanalog.content.application.model.NoteCreate
+import com.kanalog.content.application.model.NotePage
+import com.kanalog.content.application.model.NotePatch
+import com.kanalog.content.application.model.NoteView
 import com.kanalog.content.application.port.out.NoteStore
 import com.kanalog.content.domain.PersonalNote
 import java.util.UUID
-import com.kanalog.common.error.FailureStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

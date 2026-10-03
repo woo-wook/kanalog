@@ -1,4 +1,4 @@
-package com.kanalog
+package com.kanalog.curriculum.domain
 
 import com.kanalog.course.domain.LessonView
 import com.kanalog.course.domain.CourseView

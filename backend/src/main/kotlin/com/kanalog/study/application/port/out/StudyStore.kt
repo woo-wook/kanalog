@@ -1,6 +1,8 @@
 package com.kanalog.study.application.port.out
 
-import com.kanalog.study.application.model.*
+import com.kanalog.study.application.model.CardView
+import com.kanalog.study.application.model.DeckView
+import com.kanalog.study.application.model.ReviewRequest
 import com.kanalog.study.domain.ReviewState
 import java.time.Instant
 import java.util.UUID

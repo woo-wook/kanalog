@@ -1,9 +1,9 @@
 package com.kanalog.study.domain
 
+import com.kanalog.common.error.FailureStatus
 import com.kanalog.common.error.fail
 import java.time.Instant
 import java.util.UUID
-import com.kanalog.common.error.FailureStatus
 
 data class ReviewState(val id: UUID, val json: String?, val version: Long, val firstSeen: Instant?, val dueAt: Instant?) {
     fun requireReviewable(expectedVersion: Long, now: Instant) {

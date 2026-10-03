@@ -1,9 +1,9 @@
 package com.kanalog.account.application.port.out
-import com.kanalog.account.domain.AppUserEntity
+
+import com.kanalog.account.domain.AppUserRepository
 import java.util.UUID
-interface AccountStore {
-    fun findByEmail(email: String): AppUserEntity?
-    fun save(account: AppUserEntity): AppUserEntity
+
+interface AccountStore: AppUserRepository {
     fun ensureSettings(owner: UUID)
     fun revokeSessions(owner: UUID)
 }

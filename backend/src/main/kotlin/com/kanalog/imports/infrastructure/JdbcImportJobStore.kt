@@ -1,7 +1,7 @@
 package com.kanalog.imports.infrastructure
 
-import com.kanalog.imports.application.model.ImportView
 import com.kanalog.imports.application.model.ImportResult
+import com.kanalog.imports.application.model.ImportView
 import com.kanalog.imports.application.port.out.ImportJobStore
 import java.util.UUID
 import org.springframework.jdbc.core.JdbcTemplate

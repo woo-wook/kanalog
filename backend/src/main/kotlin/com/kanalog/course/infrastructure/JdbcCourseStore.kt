@@ -1,13 +1,15 @@
 package com.kanalog.course.infrastructure
 
-import com.kanalog.App
+import com.kanalog.course.application.port.out.CourseStore
+import com.kanalog.course.domain.CoursePlan
 import com.kanalog.course.domain.CourseView
+import com.kanalog.course.domain.ImportedDeck
+import com.kanalog.course.domain.KanaCourse
 import com.kanalog.course.domain.LessonScope
 import com.kanalog.course.domain.LessonView
 import java.util.UUID
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
-import com.kanalog.course.application.port.out.CourseStore
 
 @Repository
 class JdbcCourseStore(private val jdbc:JdbcTemplate) : CourseStore {
@@ -36,23 +38,24 @@ class JdbcCourseStore(private val jdbc:JdbcTemplate) : CourseStore {
     override fun scope(owner:UUID,id:UUID):LessonScope? = jdbc.query("""select l.id,l.deck_id,l.title from course_lesson l
         join learning_course c on c.id=l.course_id where l.id=? and c.owner_id=?""",{rs,_->
         LessonScope(rs.getObject(1,UUID::class.java),rs.getObject(2,UUID::class.java),rs.getString(3))},id,owner).firstOrNull()
-    override fun synchronize(owner:UUID) {
-        for((kind,position) in listOf("hiragana" to 0,"katakana" to 1)) seedKana(owner,kind,position)
-        val decks=jdbc.query("""select d.id,d.title,d.kind,d.level from deck d join content_source s on s.id=d.source_id
-            where d.owner_id=? and d.import_status='READY' and s.source_key='jlpt-max' and d.kind in ('vocabulary','grammar')
-            order by d.level desc,d.kind desc,d.source_path""",{rs,_->
-            arrayOf(rs.getObject(1,UUID::class.java),rs.getString(2),rs.getString(3),rs.getString(4))},owner)
-        decks.forEach { row ->
-            val deck=row[0] as UUID;val kind=row[2] as String;val level=row[3] as String
-            val rank=level.removePrefix("N").toIntOrNull() ?: 5
-            val course=course(owner,"max:$deck","$level ${if(kind=="vocabulary") "단어" else "문법"}",
-                "JLPT MAX 개인 데이터로 연습합니다. 완료 표시는 첫 연습을 마쳤다는 뜻이며 암기 완료를 뜻하지 않습니다.",kind,level,2+(5-rank)*2+if(kind=="grammar") 1 else 0)
-            val cards=jdbc.query("""select c.id from card c join study_note n on n.id=c.note_id where c.deck_id=? and c.owner_id=? and c.active=true
-                order by case when n.source_note_id ~ '^[0-9]+$' then n.source_note_id::numeric end nulls last,n.source_note_id,c.source_card_id,c.id""",
-                {rs,_->rs.getObject(1,UUID::class.java)},deck,owner)
-            cards.chunked(if(kind=="grammar") 5 else 20).forEachIndexed { index,chunk ->
-                val id=lesson(course,"chunk:$index","${index+1}단계 · ${if(kind=="grammar") "문법" else "단어"} ${index*(if(kind=="grammar") 5 else 20)+1}–${index*(if(kind=="grammar") 5 else 20)+chunk.size}",index,false,deck)
-                mapCards(id,chunk)
+    override fun importedDecks(owner: UUID): List<ImportedDeck> = jdbc.query("""select d.id,d.kind,d.level from deck d join content_source s on s.id=d.source_id
+        where d.owner_id=? and d.import_status='READY' and s.source_key='jlpt-max' and d.kind in ('vocabulary','grammar')
+        order by d.level desc,d.kind desc,d.source_path""", {rs,_->
+        val deck = rs.getObject(1,UUID::class.java)
+        val cards = jdbc.query("""select c.id from card c join study_note n on n.id=c.note_id where c.deck_id=? and c.owner_id=? and c.active=true
+            order by case when n.source_note_id ~ '^[0-9]+$' then n.source_note_id::numeric end nulls last,n.source_note_id,c.source_card_id,c.id""",
+            {row,_->row.getObject(1,UUID::class.java)},deck,owner)
+        ImportedDeck(deck, rs.getString(2), rs.getString(3), cards)
+    }, owner)
+
+    override fun synchronize(owner: UUID, plan: CoursePlan) {
+        plan.kana.forEach { seedKana(owner, it) }
+        plan.imported.forEach { item ->
+            val course = course(owner, item.key, item.title,
+                "JLPT MAX 개인 데이터로 연습합니다. 완료 표시는 첫 연습을 마쳤다는 뜻이며 암기 완료를 뜻하지 않습니다.",
+                item.kind, item.level, item.position)
+            item.lessons.forEach { unit ->
+                mapCards(lesson(course, unit.key, unit.title, unit.position, false, item.deckId), unit.cards)
             }
         }
         jdbc.update("""update user_settings set active_lesson_id=(select l.id from course_lesson l join learning_course c on c.id=l.course_id
@@ -77,8 +80,10 @@ class JdbcCourseStore(private val jdbc:JdbcTemplate) : CourseStore {
         jdbc.batchUpdate("insert into lesson_card(lesson_id,card_id,position) values(?,?,?)",
             cards.mapIndexed { position,card -> arrayOf<Any>(lesson,card,position) })
     }
-    private fun seedKana(owner:UUID,kind:String,position:Int) {
-        val title=if(kind=="katakana") "가타카나" else "히라가나"
+    private fun seedKana(owner:UUID, definition: KanaCourse) {
+        val kind = definition.kind
+        val title = definition.title
+        val position = definition.position
         val course=course(owner,"kana:$kind",title,"행 구분 없이 선택한 문자 전체를 연습합니다. 다시·어려움으로 평가한 문자가 다음 연습에서 먼저 나옵니다.",kind,null,position)
         val source=UUID.randomUUID()
         jdbc.update("""insert into content_source(id,owner_id,source_key,source_version,notice) values(?,?,'kanalog-kana','1','App-authored canonical kana character inventory; not JLPT MAX content') on conflict do nothing""",source,owner)
@@ -86,14 +91,13 @@ class JdbcCourseStore(private val jdbc:JdbcTemplate) : CourseStore {
         jdbc.update("""insert into deck(id,owner_id,source_id,source_path,title,kind) values(?,?,?,?,?,?) on conflict(owner_id,source_id,source_path) do nothing""",
             UUID.randomUUID(),owner,sourceId,"kana:$kind",title,kind)
         val deck=jdbc.queryForObject("select id from deck where owner_id=? and source_id=? and source_path=?",UUID::class.java,owner,sourceId,"kana:$kind")!!
-        kanaRows.forEachIndexed { rowIndex,row ->
-            val parts=row.split('|');val symbols=parts[1].split(' ');val romaji=parts[2].split(' ');val hangul=parts[3].split(' ')
-            val lesson=lesson(course,"row:$rowIndex","${parts[0]} · ${if(rowIndex<10) "기본" else "확장"}",rowIndex,rowIndex>=10,deck)
-            val ids=symbols.mapIndexed { index,hira ->
-                val glyph=if(kind=="katakana") hira.map{if(it in 'ぁ'..'ゖ') (it.code+0x60).toChar() else it}.joinToString("") else hira
-                val guid="$kind:$hira"
+        definition.lessons.forEach { unit ->
+            val lesson=lesson(course,unit.key,unit.title,unit.position,unit.optional,deck)
+            val ids=unit.characters.map { character ->
+                val glyph=character.glyph
+                val guid=character.sourceGuid
                 jdbc.update("""insert into study_note(id,owner_id,source_id,source_guid,kind,front,reading,meaning,hangul_hint,explanation)
-                    values(?,?,?,?,?,?,?,?,?,?) on conflict(owner_id,source_id,source_guid) do nothing""",UUID.randomUUID(),owner,sourceId,guid,kind,glyph,romaji[index],hangul[index],hangul[index],
+                    values(?,?,?,?,?,?,?,?,?,?) on conflict(owner_id,source_id,source_guid) do nothing""",UUID.randomUUID(),owner,sourceId,guid,kind,glyph,character.romaji,character.hangul,character.hangul,
                     "한글 표기는 일본어 소리를 익히기 위한 근사 보조 표기입니다. 실제 음성을 함께 들어 주세요. 로마자는 읽기 안내입니다.")
                 val note=jdbc.queryForObject("select id from study_note where owner_id=? and source_id=? and source_guid=?",UUID::class.java,owner,sourceId,guid)!!
                 jdbc.update("""insert into card(id,owner_id,deck_id,note_id,direction) values(?,?,?,?,'kana-recognition') on conflict do nothing""",UUID.randomUUID(),owner,deck,note)
@@ -114,23 +118,4 @@ class JdbcCourseStore(private val jdbc:JdbcTemplate) : CourseStore {
         jdbc.update("update deck set selected=(id=?) where owner_id=?",deck,owner)
     }
     override fun owners() = jdbc.query("select id from app_user", {rs,_->rs.getObject(1,UUID::class.java)})
-    companion object {
-        val kanaRows=listOf(
-            "모음|あ い う え お|a i u e o|아 이 우 에 오",
-            "카 행|か き く け こ|ka ki ku ke ko|카 키 쿠 케 코",
-            "사 행|さ し す せ そ|sa shi su se so|사 시 스 세 소",
-            "타 행|た ち つ て と|ta chi tsu te to|타 치 츠 테 토",
-            "나 행|な に ぬ ね の|na ni nu ne no|나 니 누 네 노",
-            "하 행|は ひ ふ へ ほ|ha hi fu he ho|하 히 후 헤 호",
-            "마 행|ま み む め も|ma mi mu me mo|마 미 무 메 모",
-            "야 행|や ゆ よ|ya yu yo|야 유 요",
-            "라 행|ら り る れ ろ|ra ri ru re ro|라 리 루 레 로",
-            "와 행·응|わ を ん|wa wo n|와 오 응",
-            "탁음 가 행|が ぎ ぐ げ ご|ga gi gu ge go|가 기 구 게 고",
-            "탁음 자 행|ざ じ ず ぜ ぞ|za ji zu ze zo|자 지 즈 제 조",
-            "탁음 다 행|だ ぢ づ で ど|da ji zu de do|다 지 즈 데 도",
-            "탁음 바 행|ば び ぶ べ ぼ|ba bi bu be bo|바 비 부 베 보",
-            "반탁음 파 행|ぱ ぴ ぷ ぺ ぽ|pa pi pu pe po|파 피 푸 페 포",
-            "요음|きゃ きゅ きょ しゃ しゅ しょ ちゃ ちゅ ちょ にゃ にゅ にょ ひゃ ひゅ ひょ みゃ みゅ みょ りゃ りゅ りょ ぎゃ ぎゅ ぎょ じゃ じゅ じょ びゃ びゅ びょ ぴゃ ぴゅ ぴょ|kya kyu kyo sha shu sho cha chu cho nya nyu nyo hya hyu hyo mya myu myo rya ryu ryo gya gyu gyo ja ju jo bya byu byo pya pyu pyo|캬 큐 쿄 샤 슈 쇼 차 추 초 냐 뉴 뇨 햐 휴 효 먀 뮤 묘 랴 류 료 갸 규 교 자 쥬 죠 뱌 뷰 뵤 퍄 퓨 표")
-    }
 }

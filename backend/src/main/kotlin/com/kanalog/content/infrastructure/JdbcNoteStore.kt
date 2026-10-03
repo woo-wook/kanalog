@@ -1,10 +1,15 @@
 package com.kanalog.content.infrastructure
-import com.kanalog.content.application.model.*
+
+import com.kanalog.content.application.model.NoteCreate
+import com.kanalog.content.application.model.NotePage
+import com.kanalog.content.application.model.NotePatch
+import com.kanalog.content.application.model.NoteView
 import com.kanalog.content.application.port.out.NoteStore
 import java.util.UUID
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 import tools.jackson.databind.ObjectMapper
+
 @Repository
 class JdbcNoteStore(private val jdbc: JdbcTemplate, private val mapper: ObjectMapper) : NoteStore {
     private val columns = """n.id,n.front,n.reading,n.meaning,n.example,n.example_meaning,n.explanation,

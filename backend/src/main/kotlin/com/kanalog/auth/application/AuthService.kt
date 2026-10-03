@@ -1,11 +1,16 @@
 package com.kanalog.auth.application
-import com.kanalog.auth.application.port.out.*
+
+import com.kanalog.auth.application.port.out.AuthStore
+import com.kanalog.auth.application.port.out.PasswordHasher
 import com.kanalog.auth.domain.UserView
-import com.kanalog.common.crypto.*
-import com.kanalog.common.error.*
+import com.kanalog.common.crypto.randomToken
+import com.kanalog.common.crypto.sha256
+import com.kanalog.common.error.FailureStatus
+import com.kanalog.common.error.fail
 import java.time.Instant
 import java.util.Locale
 import org.springframework.stereotype.Service
+
 @Service
 class AuthService(private val store: AuthStore, private val passwords: PasswordHasher) {
     fun userByToken(token: String): UserView? = store.userByTokenHash(sha256(token))

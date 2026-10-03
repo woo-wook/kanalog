@@ -1,13 +1,11 @@
 package com.kanalog.auth.infrastructure.security
 
 import com.kanalog.auth.application.AuthService
-import com.kanalog.auth.presentation.user
 import com.kanalog.common.web.requestId
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import java.net.URI
-import java.util.*
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter

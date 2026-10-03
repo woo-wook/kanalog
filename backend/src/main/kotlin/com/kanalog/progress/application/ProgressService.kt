@@ -1,13 +1,19 @@
 package com.kanalog.progress.application
+
 import com.kanalog.common.time.localDayWindow
-import com.kanalog.progress.application.model.*
+import com.kanalog.progress.application.model.DashboardView
+import com.kanalog.progress.application.model.DeckProgress
+import com.kanalog.progress.application.model.StatsView
 import com.kanalog.progress.application.port.out.ProgressQuery
 import com.kanalog.progress.domain.LearningStreak
 import com.kanalog.settings.application.SettingsService
 import com.kanalog.study.application.StudyService
-import java.time.*
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.UUID
 import org.springframework.stereotype.Service
+
 @Service
 class ProgressService(private val query: ProgressQuery, private val study: StudyService, private val settings: SettingsService) {
     fun dashboard(user: UUID): DashboardView {

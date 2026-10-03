@@ -1,4 +1,4 @@
-package com.kanalog
+package com.kanalog.common.time
 
 import com.kanalog.common.time.localDayWindow
 

@@ -1,9 +1,12 @@
 package com.kanalog.auth.infrastructure
+
 import com.kanalog.auth.application.port.out.AuthStore
-import com.kanalog.auth.domain.*
+import com.kanalog.auth.domain.Credentials
+import com.kanalog.auth.domain.UserView
 import java.util.UUID
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
+
 @Repository
 class JdbcAuthStore(private val jdbc: JdbcTemplate) : AuthStore {
     override fun userByTokenHash(hash: String) = jdbc.query("""select u.id,u.email,s.csrf_token from auth_session s join app_user u on u.id=s.user_id

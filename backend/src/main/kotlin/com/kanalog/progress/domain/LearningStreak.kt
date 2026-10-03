@@ -1,5 +1,7 @@
 package com.kanalog.progress.domain
+
 import java.time.LocalDate
+
 object LearningStreak {
     fun count(days: Set<LocalDate>, today: LocalDate): Int {
         var day = if(today in days) today else today.minusDays(1)

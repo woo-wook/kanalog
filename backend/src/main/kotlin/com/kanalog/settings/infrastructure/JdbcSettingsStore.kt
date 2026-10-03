@@ -1,9 +1,11 @@
 package com.kanalog.settings.infrastructure
+
 import com.kanalog.settings.application.model.SettingsView
 import com.kanalog.settings.application.port.out.SettingsStore
 import java.util.UUID
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
+
 @Repository
 class JdbcSettingsStore(private val jdbc: JdbcTemplate) : SettingsStore {
     override fun find(owner: UUID) = jdbc.query("""select s.*,u.timezone from user_settings s join app_user u on u.id=s.user_id where s.user_id=?""", {rs,_->SettingsView(

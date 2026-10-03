@@ -1,9 +1,11 @@
 package com.kanalog.study.infrastructure
+
 import com.kanalog.study.application.port.out.KanaCardQuery
 import com.kanalog.study.domain.KanaMixRequest
 import java.util.UUID
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
+
 @Repository
 class JdbcKanaCardQuery(private val jdbc: JdbcTemplate) : KanaCardQuery {
     override fun cards(owner: UUID, input: KanaMixRequest): List<UUID> {

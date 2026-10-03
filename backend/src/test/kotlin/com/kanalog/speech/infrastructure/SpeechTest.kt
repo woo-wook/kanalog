@@ -1,4 +1,4 @@
-package com.kanalog
+package com.kanalog.speech.infrastructure
 
 import com.kanalog.common.error.ApiFailure
 import com.kanalog.speech.application.model.SpeechRequest

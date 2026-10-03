@@ -1,10 +1,13 @@
 package com.kanalog.progress.infrastructure
-import com.kanalog.progress.application.port.out.*
+
+import com.kanalog.progress.application.port.out.ActiveLesson
+import com.kanalog.progress.application.port.out.ProgressQuery
 import java.sql.Timestamp
 import java.time.Instant
 import java.util.UUID
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
+
 @Repository
 class JdbcProgressQuery(private val jdbc: JdbcTemplate) : ProgressQuery {
     override fun activeLesson(owner: UUID) = jdbc.query("select us.active_lesson_id,l.title from user_settings us left join course_lesson l on l.id=us.active_lesson_id where us.user_id=?",{rs,_->ActiveLesson(rs.getObject(1,UUID::class.java),rs.getString(2))},owner).firstOrNull()

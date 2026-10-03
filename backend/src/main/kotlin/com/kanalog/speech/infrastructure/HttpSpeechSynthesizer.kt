@@ -1,5 +1,6 @@
 package com.kanalog.speech.infrastructure
 
+import com.kanalog.common.error.FailureStatus
 import com.kanalog.common.error.fail
 import com.kanalog.speech.application.port.out.SpeechSynthesizer
 import com.kanalog.speech.domain.SpeechInput
@@ -10,7 +11,6 @@ import java.net.http.HttpResponse
 import java.time.Duration
 import java.util.concurrent.Semaphore
 import org.springframework.beans.factory.annotation.Value
-import com.kanalog.common.error.FailureStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
 

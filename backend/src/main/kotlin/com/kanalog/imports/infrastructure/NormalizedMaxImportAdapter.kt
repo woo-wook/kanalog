@@ -2,9 +2,9 @@ package com.kanalog.imports.infrastructure
 
 import com.kanalog.common.crypto.sha256
 import com.kanalog.content.infrastructure.convertedGrammarFocus
+import com.kanalog.imports.application.model.ImportResult
 import com.kanalog.imports.application.port.out.MaxImportPort
 import com.kanalog.imports.domain.MaxImportPolicy
-import com.kanalog.imports.application.model.ImportResult
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Path

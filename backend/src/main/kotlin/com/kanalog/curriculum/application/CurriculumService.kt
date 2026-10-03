@@ -1,12 +1,12 @@
 package com.kanalog.curriculum.application
 
+import com.kanalog.common.error.FailureStatus
 import com.kanalog.common.error.fail
 import com.kanalog.course.application.CourseService
 import com.kanalog.curriculum.domain.CurriculumBuilder
 import com.kanalog.curriculum.domain.CurriculumLevelView
 import com.kanalog.curriculum.domain.CurriculumView
 import java.util.UUID
-import com.kanalog.common.error.FailureStatus
 import org.springframework.stereotype.Service
 
 @Service

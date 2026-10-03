@@ -1,4 +1,4 @@
-package com.kanalog
+package com.kanalog.study.infrastructure
 
 import com.kanalog.common.error.ApiFailure
 import com.kanalog.study.infrastructure.FsrsAdapter
