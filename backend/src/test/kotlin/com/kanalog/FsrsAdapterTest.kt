@@ -1,5 +1,8 @@
 package com.kanalog
 
+import com.kanalog.common.error.ApiFailure
+import com.kanalog.study.infrastructure.FsrsAdapter
+
 import io.github.openspacedrepetition.Card
 import io.github.openspacedrepetition.Rating
 import io.github.openspacedrepetition.Scheduler

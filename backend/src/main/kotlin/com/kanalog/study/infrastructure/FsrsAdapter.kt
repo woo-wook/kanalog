@@ -1,0 +1,24 @@
+package com.kanalog.study.infrastructure
+
+import com.kanalog.common.error.fail
+import io.github.openspacedrepetition.Card
+import io.github.openspacedrepetition.Rating
+import io.github.openspacedrepetition.Scheduler
+import java.time.*
+import java.util.*
+import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.*
+
+@Service
+class FsrsAdapter {
+    // Pinned java-fsrs 1.0.0, deterministic scheduling for repeatable previews and tests.
+    private val scheduler = Scheduler.builder().enableFuzzing(false).build()
+    val version = "java-fsrs/1.0.0"
+    val settingsJson: String = scheduler.toJson()
+    fun review(json: String?, rating: String, now: Instant): Pair<String, Instant> {
+        val enumRating = try { Rating.valueOf(rating) } catch (_: Exception) { fail("BAD_RATING","평가를 확인하세요") }
+        val card = json?.let(Card::fromJson) ?: Card.builder().build()
+        val next = scheduler.reviewCard(card, enumRating, now).card()
+        return next.toJson() to next.due
+    }
+}

@@ -1,5 +1,9 @@
 package com.kanalog
 
+import com.kanalog.common.error.ApiFailure
+import com.kanalog.speech.application.model.SpeechRequest
+import com.kanalog.speech.application.SpeechService
+
 import com.sun.net.httpserver.HttpServer
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test

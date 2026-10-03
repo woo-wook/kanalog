@@ -1,5 +1,9 @@
 package com.kanalog
 
+import com.kanalog.course.domain.LessonView
+import com.kanalog.course.domain.CourseView
+import com.kanalog.curriculum.domain.CurriculumBuilder
+
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue

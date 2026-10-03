@@ -1,5 +1,7 @@
 package com.kanalog
 
+import com.kanalog.common.time.localDayWindow
+
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.Instant
