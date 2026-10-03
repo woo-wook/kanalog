@@ -7,6 +7,11 @@ import org.springframework.stereotype.Component
 @Component
 class BCryptPasswordHasher : PasswordHasher {
     private val encoder = BCryptPasswordEncoder()
-    override fun matches(password: String, hash: String) = encoder.matches(password, hash)
+
+    override fun matches(
+        password: String,
+        hash: String,
+    ) = encoder.matches(password, hash)
+
     override fun encode(password: String) = requireNotNull(encoder.encode(password))
 }

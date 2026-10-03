@@ -7,8 +7,11 @@ import org.springframework.boot.ApplicationRunner
 import org.springframework.stereotype.Component
 
 @Component
-class CourseBootstrap(private val store:CourseStore,private val courses:CourseService):ApplicationRunner {
-    override fun run(args:ApplicationArguments) {
+class CourseBootstrap(
+    private val store: CourseStore,
+    private val courses: CourseService,
+) : ApplicationRunner {
+    override fun run(args: ApplicationArguments) {
         store.owners().forEach(courses::synchronize)
     }
 }

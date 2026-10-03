@@ -12,11 +12,19 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class SpeechController(private val speech:SpeechService) {
+class SpeechController(
+    private val speech: SpeechService,
+) {
     @PostMapping("/api/speech")
-    fun generate(@Valid @RequestBody input:SpeechRequest, request:HttpServletRequest):ResponseEntity<ByteArray> {
+    fun generate(
+        @Valid @RequestBody input: SpeechRequest,
+        request: HttpServletRequest,
+    ): ResponseEntity<ByteArray> {
         request.user()
-        return ResponseEntity.ok().contentType(MediaType.parseMediaType("audio/wav"))
-            .header("Cache-Control","private, no-store").body(speech.generate(input))
+        return ResponseEntity
+            .ok()
+            .contentType(MediaType.parseMediaType("audio/wav"))
+            .header("Cache-Control", "private, no-store")
+            .body(speech.generate(input))
     }
 }

@@ -6,9 +6,17 @@ import java.util.UUID
 interface MediaContent {
     val mime: String
     val length: Long
-    fun writeTo(output: OutputStream, start: Long, end: Long)
+
+    fun writeTo(
+        output: OutputStream,
+        start: Long,
+        end: Long,
+    )
 }
 
 interface MediaStore {
-    fun find(owner: UUID, id: UUID): MediaContent?
+    fun find(
+        owner: UUID,
+        id: UUID,
+    ): MediaContent?
 }

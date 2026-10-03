@@ -2,7 +2,6 @@ package com.kanalog.study.infrastructure
 
 import com.kanalog.common.error.ApiFailure
 import com.kanalog.study.infrastructure.FsrsAdapter
-
 import io.github.openspacedrepetition.Card
 import io.github.openspacedrepetition.Rating
 import io.github.openspacedrepetition.Scheduler
@@ -24,9 +23,13 @@ class FsrsAdapterTest {
         val dueByRating = mutableMapOf<String, Instant>()
 
         for (ratingName in listOf("AGAIN", "HARD", "GOOD", "EASY")) {
-            val expected = reference.reviewCard(
-                Card.fromJson(initial), Rating.valueOf(ratingName), reviewTime,
-            ).card()
+            val expected =
+                reference
+                    .reviewCard(
+                        Card.fromJson(initial),
+                        Rating.valueOf(ratingName),
+                        reviewTime,
+                    ).card()
             val (storedJson, due) = adapter.review(initial, ratingName, reviewTime)
 
             assertEquals(expected.toJson(), storedJson, "$ratingName must keep every FSRS card field")
@@ -50,9 +53,13 @@ class FsrsAdapterTest {
         assertEquals(savedJson, restored.toJson())
 
         val nextReviewTime = firstDue.plusSeconds(1)
-        val expected = reference.reviewCard(
-            Card.fromJson(savedJson), Rating.HARD, nextReviewTime,
-        ).card()
+        val expected =
+            reference
+                .reviewCard(
+                    Card.fromJson(savedJson),
+                    Rating.HARD,
+                    nextReviewTime,
+                ).card()
         val (nextJson, nextDue) = adapter.review(savedJson, "HARD", nextReviewTime)
 
         assertEquals(expected.toJson(), nextJson)
@@ -68,18 +75,23 @@ class FsrsAdapterTest {
         assertEquals(first, second)
 
         val restoredSettings = Scheduler.fromJson(adapter.settingsJson)
-        val expected = restoredSettings.reviewCard(
-            Card.fromJson(initial), Rating.EASY, reviewTime,
-        ).card()
+        val expected =
+            restoredSettings
+                .reviewCard(
+                    Card.fromJson(initial),
+                    Rating.EASY,
+                    reviewTime,
+                ).card()
         assertEquals(expected.toJson(), first.first)
         assertEquals("java-fsrs/1.0.0", adapter.version)
     }
 
     @Test
     fun `unknown rating is rejected before scheduling`() {
-        val failure = assertFailsWith<ApiFailure> {
-            adapter.review(null, "알 수 없음", reviewTime)
-        }
+        val failure =
+            assertFailsWith<ApiFailure> {
+                adapter.review(null, "알 수 없음", reviewTime)
+            }
         assertEquals("BAD_RATING", failure.code)
     }
 }

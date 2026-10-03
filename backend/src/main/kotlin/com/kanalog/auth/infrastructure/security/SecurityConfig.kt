@@ -10,8 +10,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 class SecurityConfig {
-    @Bean fun filterChain(http: HttpSecurity, authFilter: AuthFilter): SecurityFilterChain {
-        http.csrf { it.disable() }
+    @Bean fun filterChain(
+        http: HttpSecurity,
+        authFilter: AuthFilter,
+    ): SecurityFilterChain {
+        http
+            .csrf { it.disable() }
             .authorizeHttpRequests { it.anyRequest().permitAll() }
             .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter::class.java)
         return http.build()
