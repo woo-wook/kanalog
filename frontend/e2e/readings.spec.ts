@@ -63,7 +63,24 @@ test("후리가나·한글 보조 설정은 저장되고 실제 문법·단어·
       );
       await page.goto(`/study?lessonId=${course.lessons[0].id}&practice=1`);
       const session = await (await started).json();
-      const card = session.cards[0];
+      const target = session.cards.findIndex(
+        (c: { readingGuide?: ReadingGuide }) =>
+          Boolean(c.readingGuide?.hangul) &&
+          c.readingGuide?.segments.some((s) => s.reading),
+      );
+      expect(target).toBeGreaterThanOrEqual(0);
+      for (let i = 0; i < target; i++) {
+        await page.getByRole("button", { name: /정답 보기/ }).click();
+        const saved = page.waitForResponse((r) =>
+          r.url().endsWith("/api/study/reviews"),
+        );
+        await page.getByRole("button", { name: /^보통/ }).click();
+        expect((await saved).status()).toBe(200);
+        await expect(page.locator(".study-progress")).toContainText(
+          `${i + 2} /`,
+        );
+      }
+      const card = session.cards[target];
       expect(
         card.readingGuide.segments
           .map((s: { text: string }) => s.text)
@@ -104,9 +121,24 @@ test("후리가나·한글 보조 설정은 저장되고 실제 문법·단어·
             () => document.documentElement.scrollWidth <= innerWidth + 1,
           ),
         ).toBe(true);
-        await expect(
-          page.getByRole("button", { name: /^보통/ }),
-        ).toBeInViewport();
+        if (width < 768) {
+          await page.screenshot({
+            path: resolve(
+              `../private-data/e2e/readings-${kind}-${width}x${height}.png`,
+            ),
+          });
+          await expect(
+            page.getByRole("button", { name: /^보통/ }),
+            `${kind}/${width} 모바일 평가 버튼`,
+          ).toBeInViewport();
+        } else {
+          await page
+            .getByRole("button", { name: /^보통/ })
+            .scrollIntoViewIfNeeded();
+          await expect(
+            page.getByRole("button", { name: /^보통/ }),
+          ).toBeVisible();
+        }
       }
       await page.setViewportSize({ width: 390, height: 844 });
       await page.screenshot({

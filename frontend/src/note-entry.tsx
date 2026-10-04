@@ -1,6 +1,10 @@
 import { ChevronDown, Eye, EyeOff, Pencil, Star } from "lucide-react";
 import type { Note, Settings } from "./api";
-import { JapaneseText, PronunciationHint } from "./japanese-text";
+import {
+  JapaneseText,
+  PronunciationHint,
+  grammarTitleGuide,
+} from "./japanese-text";
 import { GrammarAnswer } from "./grammar-answer";
 import { structureGrammarAnswer } from "./grammar-content";
 import { HighlightedExample } from "./grammar-prompt";
@@ -76,7 +80,11 @@ export function NoteEntry({
             className={`note-title jp mt-3 pr-8 text-[1.375rem] font-semibold leading-snug ${grammar ? "text-primary" : "text-foreground"}`}
           >
             {grammar ? (
-              title
+              <JapaneseText
+                text={title}
+                guide={grammarTitleGuide(note.grammarFocus, note.readingGuide)}
+                furigana={settings?.showFurigana !== false}
+              />
             ) : (
               <JapaneseText
                 text={title}

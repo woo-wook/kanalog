@@ -42,7 +42,7 @@ export async function checkNotebook(
       .evaluate((el) => parseFloat(getComputedStyle(el).paddingLeft)),
   ).toBeGreaterThanOrEqual(40);
   expect(
-    (await entry.locator(".note-title").textContent()) ===
+    (await baseJapanese(entry.locator(".note-title"))) ===
       note.grammarFocus.title,
   ).toBe(true);
   await expect(entry.locator("details")).not.toHaveAttribute("open", "");

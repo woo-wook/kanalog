@@ -1,5 +1,9 @@
 import type { GrammarFocus, StudyCard, Settings } from "./api";
-import { JapaneseText, PronunciationHint } from "./japanese-text";
+import {
+  JapaneseText,
+  PronunciationHint,
+  grammarTitleGuide,
+} from "./japanese-text";
 import { structureGrammarAnswer } from "./grammar-content";
 
 export function HighlightedExample({
@@ -46,7 +50,11 @@ export function GrammarPrompt({
         오늘의 문법
       </p>
       <h1 className="study-prompt study-prompt-grammar jp mt-3 font-semibold text-primary">
-        {focus.title}
+        <JapaneseText
+          text={focus.title}
+          guide={grammarTitleGuide(focus, card.readingGuide)}
+          furigana={settings?.showFurigana !== false}
+        />
       </h1>
       {content && (
         <p className="grammar-point-meaning study-prose mt-1 text-xl font-medium">

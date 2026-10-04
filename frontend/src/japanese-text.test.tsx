@@ -1,7 +1,11 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
 import type { ReadingGuide } from "./api";
-import { JapaneseText, PronunciationHint } from "./japanese-text";
+import {
+  JapaneseText,
+  PronunciationHint,
+  grammarTitleGuide,
+} from "./japanese-text";
 afterEach(cleanup);
 const guide: ReadingGuide = {
   segments: [
@@ -53,4 +57,35 @@ it("한글 보조 설정과 수동 값 우선순위를 지킨다", () => {
   rerender(<PronunciationHint guide={guide} enabled manual="직접 확인한 값" />);
   expect(screen.getByText("직접 확인한 값")).toBeVisible();
   expect(screen.queryByText("근사 발음 · 자동")).toBeNull();
+});
+
+it("문형 제목에는 온전하게 포함된 원본 한자 묶음의 읽기만 붙인다", () => {
+  const guide: ReadingGuide = {
+    segments: [{ text: "日本語", reading: "にほんご" }, { text: "を話す" }],
+    source: "ORIGINAL",
+  };
+  expect(
+    grammarTitleGuide(
+      {
+        title: "日本語",
+        segments: [
+          { text: "日本語", highlighted: true },
+          { text: "を話す", highlighted: false },
+        ],
+      },
+      guide,
+    )?.segments[0]?.reading,
+  ).toBe("にほんご");
+  expect(
+    grammarTitleGuide(
+      {
+        title: "日本",
+        segments: [
+          { text: "日本", highlighted: true },
+          { text: "語を話す", highlighted: false },
+        ],
+      },
+      guide,
+    )?.segments[0]?.reading,
+  ).toBeNull();
 });

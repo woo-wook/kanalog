@@ -159,3 +159,7 @@ voice는 manifest 누락·크기/해시 불일치 시 준비 완료로 표시하
 ## 가나 혼합 세션 업데이트
 
 V7은 혼합 세션의 표시 이름·자유 연습 모드·`practice_answer` 표를 추가한다. 기존 카드와 ReviewLog/UserCardState를 초기화하지 않는다. 적용 전 DB dump를 보관하고 `docker compose up -d --build` 후 backend healthy와 왕초보 화면의 히라가나 우선 순서, 섞어 연습을 확인한다. 표는 기존 PostgreSQL DB 안에 있으며 기존 `pg_dump` 백업에 자동 포함된다. 자유 연습은 ReviewLog와 분리되어 기존 복습 통계에 포함되지 않는다.
+
+### 후리가나·한글 발음 보조 갱신
+
+V11은 사용자별 `show_furigana` 열 하나를 기본 true로 추가한다. 기존 설정과 진도는 보존한다. 기존 MAX 개인 데이터는 [후리가나 메타데이터 갱신](furigana.md)의 `enrich_readings.py` → `refresh-readings` 순서로 복원한다. 갱신 전 DB dump와 JSONL 백업을 보관하고 계정의 기존 import 범위(all/n5)를 일치시킨다. 새 변환은 원본 ruby를 처음부터 포함한다. 읽기만 변경할 때 전체 reimport와 미디어 재추출은 필요하지 않다.

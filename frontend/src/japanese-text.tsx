@@ -103,3 +103,46 @@ export function PronunciationHint({
     </div>
   );
 }
+
+/** Project complete source ruby blocks onto the grammar title; never split a block's reading. */
+export function grammarTitleGuide(
+  focus: GrammarFocus | null | undefined,
+  guide?: ReadingGuide | null,
+): ReadingGuide | undefined {
+  if (
+    !focus ||
+    !guide ||
+    focus.segments.map((s) => s.text).join("") !==
+      guide.segments.map((s) => s.text).join("")
+  )
+    return undefined;
+  const segments: ReadingGuide["segments"] = [];
+  let focusOffset = 0;
+  for (const part of focus.segments) {
+    const start = focusOffset,
+      end = start + part.text.length;
+    focusOffset = end;
+    if (!part.highlighted || !part.text.trim()) continue;
+    const trimmedStart =
+      start + part.text.length - part.text.trimStart().length;
+    const trimmedEnd = end - part.text.length + part.text.trimEnd().length;
+    if (segments.length) segments.push({ text: " … " });
+    let offset = 0;
+    for (const original of guide.segments) {
+      const blockStart = offset,
+        blockEnd = offset + original.text.length;
+      offset = blockEnd;
+      const from = Math.max(trimmedStart, blockStart),
+        to = Math.min(trimmedEnd, blockEnd);
+      if (from >= to) continue;
+      segments.push({
+        text: original.text.slice(from - blockStart, to - blockStart),
+        reading:
+          from === blockStart && to === blockEnd ? original.reading : null,
+      });
+    }
+  }
+  return segments.map((s) => s.text).join("") === focus.title
+    ? { segments, source: guide.source }
+    : undefined;
+}

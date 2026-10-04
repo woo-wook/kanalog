@@ -83,7 +83,7 @@ export async function checkGrammar(
     const example = page.locator(".grammar-example");
     const focus = session.cards[target].grammarFocus;
     expect(Boolean(focus)).toBe(true);
-    expect((await prompt.textContent()) === focus.title).toBe(true);
+    expect((await baseJapanese(prompt)) === focus.title).toBe(true);
     await expect(
       page.getByRole("region", { name: "문형의 쓰임" }),
     ).toBeVisible();
