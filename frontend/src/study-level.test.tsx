@@ -101,4 +101,9 @@ it("레벨 범위로 학습하고 다시 카드를 서버의 재연습 상태로
     version: 1,
   });
   await waitFor(() => expect(screen.getByText(/내일도 복습/)).toBeVisible());
+  await user.click(screen.getByRole("button", { name: "이 범위 다음 학습" }));
+  await screen.findByRole("button", { name: /정답 보기/ });
+  expect(
+    vi.mocked(api).mock.calls.filter(([path]) => path === "/study/sessions"),
+  ).toHaveLength(2);
 });

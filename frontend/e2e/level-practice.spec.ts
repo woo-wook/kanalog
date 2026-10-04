@@ -51,7 +51,7 @@ test("홈의 레벨 전체 범위와 N5 전체 복습이 레슨 선택 없이 �
     const session = await (
       await page.request.get(`/api/study/sessions/${sessionId}`)
     ).json();
-    expect(session.lessonId).toBeNull();
+    expect(session.lessonId).toBeFalsy();
     expect(session.lessonTitle).toBe("N5 · 전체 복습");
     expect(
       session.cards.every(

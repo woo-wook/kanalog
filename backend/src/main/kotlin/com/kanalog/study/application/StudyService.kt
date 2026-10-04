@@ -91,7 +91,7 @@ class StudyService(
         val info = QueueInfo(availability.total, availability.unseen, maxOf(0, remaining), availability.nextDue, reason)
         val id = UUID.randomUUID()
         val title = levelScope?.title() ?: kana?.copy(practice = isPractice)?.title()
-        store.createSession(id, userId, scope, title, isPractice)
+        store.createSession(id, userId, scope, title, isPractice, info)
         ids.forEachIndexed { position, card -> store.reserveCard(id, userId, card, position, isPractice) }
         return SessionView(id, ids.mapNotNull { card(userId, it) }, 0, lessonId, title ?: lesson?.title, isPractice, info)
     }
@@ -112,6 +112,7 @@ class StudyService(
             metadata.lessonId,
             metadata.title,
             metadata.practice,
+            queueInfo = metadata.queueInfo,
             answeredCards = summary.cards,
             ratingCounts = summary.ratings,
         )

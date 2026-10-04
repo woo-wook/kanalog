@@ -240,6 +240,7 @@ class PersistenceFlowTest
             val empty = study.start(owner, levelScope = scope.copy(reviewOnly = true))
             assertTrue(empty.cards.isEmpty())
             assertEquals("NOT_DUE", empty.queueInfo!!.reason)
+            assertEquals(empty.queueInfo, study.session(owner, empty.id).queueInfo)
             val tomorrow =
                 jdbc
                     .queryForObject(

@@ -517,6 +517,10 @@ function StudyContent() {
       );
     }
     const refreshDue = async () => {
+      if (level) {
+        await restartSession(false);
+        return;
+      }
       setRefreshing(true);
       setError(null);
       try {
@@ -575,7 +579,11 @@ function StudyContent() {
             onClick={refreshDue}
             disabled={refreshing}
           >
-            {refreshing ? "확인 중…" : "복습할 카드 다시 확인"}
+            {refreshing
+              ? "확인 중…"
+              : level
+                ? "이 범위 다음 학습"
+                : "복습할 카드 다시 확인"}
           </button>
         )}
         {error !== null && (

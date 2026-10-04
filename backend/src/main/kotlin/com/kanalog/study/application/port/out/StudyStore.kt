@@ -2,6 +2,7 @@ package com.kanalog.study.application.port.out
 
 import com.kanalog.study.application.model.CardView
 import com.kanalog.study.application.model.DeckView
+import com.kanalog.study.application.model.QueueInfo
 import com.kanalog.study.application.model.ReviewRequest
 import com.kanalog.study.domain.LevelStudyRequest
 import com.kanalog.study.domain.ReviewState
@@ -26,6 +27,7 @@ data class SessionMetadata(
     val title: String?,
     val practice: Boolean,
     val reinforcementEnabled: Boolean = false,
+    val queueInfo: QueueInfo? = null,
 )
 
 data class SavedReview(
@@ -156,6 +158,7 @@ interface StudyStore {
         scope: StudyScope,
         title: String?,
         practice: Boolean,
+        queueInfo: QueueInfo,
     )
 
     fun reserveCard(

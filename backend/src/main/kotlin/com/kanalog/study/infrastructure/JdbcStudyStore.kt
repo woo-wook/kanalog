@@ -4,6 +4,7 @@ import com.kanalog.content.infrastructure.convertedGrammarFocus
 import com.kanalog.study.application.model.CardView
 import com.kanalog.study.application.model.DeckView
 import com.kanalog.study.application.model.ExampleView
+import com.kanalog.study.application.model.QueueInfo
 import com.kanalog.study.application.model.ReviewRequest
 import com.kanalog.study.application.port.out.QueueAvailability
 import com.kanalog.study.application.port.out.RetryStatus
@@ -281,9 +282,10 @@ class JdbcStudyStore(
         scope: StudyScope,
         title: String?,
         practice: Boolean,
+        queueInfo: QueueInfo,
     ) {
         jdbc.update(
-            "insert into study_session(id,user_id,deck_id,lesson_id,session_title,practice,reinforcement_enabled,started_at) values(?,?,?,?,?,?,?,now())",
+            "insert into study_session(id,user_id,deck_id,lesson_id,session_title,practice,reinforcement_enabled,queue_info_json,started_at) values(?,?,?,?,?,?,?,?,now())",
             id,
             owner,
             scope.deckId,
@@ -291,6 +293,7 @@ class JdbcStudyStore(
             title,
             practice,
             !practice,
+            mapper.writeValueAsString(queueInfo),
         )
     }
 
@@ -317,9 +320,25 @@ class JdbcStudyStore(
         session: UUID,
     ) = jdbc
         .query(
-            """select ss.lesson_id,coalesce(ss.session_title,l.title),ss.practice,ss.reinforcement_enabled from study_session ss
+            """select ss.lesson_id,coalesce(ss.session_title,l.title),ss.practice,ss.reinforcement_enabled,ss.queue_info_json from study_session ss
         left join course_lesson l on l.id=ss.lesson_id where ss.id=? and ss.user_id=?""",
-            { rs, _ -> SessionMetadata(rs.getObject(1, UUID::class.java), rs.getString(2), rs.getBoolean(3), rs.getBoolean(4)) },
+            {
+                rs,
+                _,
+                ->
+                SessionMetadata(
+                    rs.getObject(
+                        1,
+                        UUID::class.java,
+                    ),
+                    rs.getString(2),
+                    rs.getBoolean(3),
+                    rs.getBoolean(4),
+                    rs.getString(5)?.let {
+                        mapper.readValue(it, QueueInfo::class.java)
+                    },
+                )
+            },
             session,
             owner,
         ).firstOrNull()
