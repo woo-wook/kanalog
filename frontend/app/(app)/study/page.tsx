@@ -28,6 +28,10 @@ const ratings: { value: Rating; label: string }[] = [
 function StudyContent() {
   const params = useSearchParams(),
     deckId = params.get("deckId"),
+    level = params.get("level"),
+    kind = params.get("kind"),
+    reviewOnly = params.get("mode") === "review",
+    savedSessionId = params.get("sessionId"),
     lessonId = params.get("lessonId"),
     kanaScript = params.get("kana"),
     kanaGroups = params.get("groups") ?? "basic",
@@ -37,6 +41,15 @@ function StudyContent() {
       api<StudySession>(
         "/study/sessions",
         json("POST", {
+          ...(level
+            ? {
+                levelScope: {
+                  level: level === "all" ? null : level,
+                  ...(kind ? { kind } : {}),
+                  reviewOnly,
+                },
+              }
+            : {}),
           ...(deckId ? { deckId } : {}),
           ...(lessonId ? { lessonId } : {}),
           ...(forcePractice || (!kanaScript && kanaPractice)
@@ -55,7 +68,16 @@ function StudyContent() {
             : {}),
         }),
       ),
-    [deckId, lessonId, kanaScript, kanaGroups, kanaPractice],
+    [
+      deckId,
+      lessonId,
+      kanaScript,
+      kanaGroups,
+      kanaPractice,
+      level,
+      kind,
+      reviewOnly,
+    ],
   );
   const queryClient = useQueryClient();
   const settings = useQuery({
@@ -91,22 +113,45 @@ function StudyContent() {
   const savingRef = useRef(false);
   const started = useRef(false);
   useEffect(() => {
-    if (started.current || (!deckId && !lessonId && !kanaScript)) return;
+    if (
+      started.current ||
+      (!deckId && !lessonId && !kanaScript && !level && !savedSessionId)
+    )
+      return;
     started.current = true;
     const selected =
       lessonId && !kanaScript
         ? api(`/courses/lessons/${lessonId}/select`, { method: "POST" })
         : Promise.resolve();
     selected
-      .then(() => startSession())
-      .then(setSession)
+      .then(() =>
+        savedSessionId
+          ? api<StudySession>(`/study/sessions/${savedSessionId}`)
+          : startSession(),
+      )
+      .then((current) => {
+        setSession(current);
+        setUniqueCards(current.answeredCards ?? []);
+        setCounts({
+          AGAIN: 0,
+          HARD: 0,
+          GOOD: 0,
+          EASY: 0,
+          ...current.ratingCounts,
+        });
+        if (!savedSessionId) {
+          const url = new URL(window.location.href);
+          url.searchParams.set("sessionId", current.id);
+          window.history.replaceState(null, "", url);
+        }
+      })
       .catch(setStartError)
       .finally(() => setLoading(false));
-  }, [deckId, lessonId, kanaScript, startSession]);
+  }, [deckId, lessonId, kanaScript, level, savedSessionId, startSession]);
   const card = session?.cards[index];
   useEffect(() => {
     if (cardPanel.current) cardPanel.current.scrollTop = 0;
-  }, [card?.id, session?.id]);
+  }, [card?.id, card?.version, card?.reinforcement, session?.id]);
   const stopAudio = useCallback(() => {
     playbackAttempt.current += 1;
     setPlaybackBlocked(false);
@@ -256,6 +301,8 @@ function StudyContent() {
       ? [
           card.id,
           card.version,
+          card.reinforcement,
+          card.retryVersion,
           settings.data.audioEngine,
           settings.data.supertonicVoice,
           settings.data.preferredVoice,
@@ -292,6 +339,9 @@ function StudyContent() {
             version: card.version,
             rating,
             idempotencyKey: key,
+            ...(card.reinforcement
+              ? { reinforcement: true, retryVersion: card.retryVersion }
+              : {}),
           }),
         );
         setCounts((previous) => ({
@@ -301,7 +351,14 @@ function StudyContent() {
         setUniqueCards((previous) =>
           previous.includes(card.id) ? previous : [...previous, card.id],
         );
-        setNextDue(result.due ?? null);
+        if (result.due) setNextDue(result.due);
+        if (result.retryCard) {
+          setSession((previous) =>
+            previous
+              ? { ...previous, cards: [...previous.cards, result.retryCard!] }
+              : previous,
+          );
+        }
         setIndex((previous) => previous + 1);
         setRevealed(false);
         setHint(false);
@@ -313,6 +370,7 @@ function StudyContent() {
           queryClient.invalidateQueries({ queryKey: ["dashboard"] });
           queryClient.invalidateQueries({ queryKey: ["stats"] });
           queryClient.invalidateQueries({ queryKey: ["decks"] });
+          queryClient.invalidateQueries({ queryKey: ["study-options"] });
         }
         if (!session.practice || ["hiragana", "katakana"].includes(card.kind)) {
           queryClient.invalidateQueries({ queryKey: ["courses"] });
@@ -334,7 +392,11 @@ function StudyContent() {
     setStartError(null);
     stopAudio();
     try {
-      setSession(await startSession(practice));
+      const current = await startSession(practice);
+      setSession(current);
+      const url = new URL(window.location.href);
+      url.searchParams.set("sessionId", current.id);
+      window.history.replaceState(null, "", url);
       setIndex(0);
       setRevealed(false);
       setHint(false);
@@ -381,7 +443,7 @@ function StudyContent() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [revealed, card, saving, retry, submit]);
-  if (!deckId && !lessonId && !kanaScript)
+  if (!deckId && !lessonId && !kanaScript && !level && !savedSessionId)
     return (
       <div>
         <ErrorMessage error={new Error("학습할 레슨을 골라 주세요.")} />
@@ -420,7 +482,9 @@ function StudyContent() {
               ? "오늘 새 카드 한도를 모두 사용했습니다. 이 범위에 지금 복습할 카드도 없습니다."
               : info?.reason === "NO_ELIGIBLE_CARDS"
                 ? "이 범위에는 연습 가능한 카드가 없습니다. 학습 제외 상태와 가져온 콘텐츠를 확인해 주세요."
-                : "이 범위의 다음 복습 시각이 아직 오지 않았습니다. 지금 다시 보고 싶다면 자유 연습을 시작하세요."}
+                : reviewOnly
+                  ? "배운 카드 중 지금 복습할 카드가 없습니다. 다른 레벨 전체 복습을 확인하거나 새 학습을 시작하세요."
+                  : "이 범위의 다음 복습 시각이 아직 오지 않았습니다. 지금 다시 보고 싶다면 자유 연습을 시작하세요."}
           </p>
           {info?.nextDueAt && (
             <p className="muted mt-3 text-sm">
@@ -460,6 +524,14 @@ function StudyContent() {
           `/study/sessions/${session.id}`,
         );
         setSession(current);
+        setUniqueCards(current.answeredCards ?? []);
+        setCounts({
+          AGAIN: 0,
+          HARD: 0,
+          GOOD: 0,
+          EASY: 0,
+          ...current.ratingCounts,
+        });
         setIndex(0);
       } catch (e) {
         setError(e);
@@ -490,7 +562,7 @@ function StudyContent() {
             ? kanaScript
               ? "평가를 저장했습니다. 다시·어려움으로 평가한 문자가 다음 연습에서 먼저 나옵니다. 보통·쉬움 기록은 첫 연습 진도에도 반영됩니다."
               : "자유 연습 답변을 따로 저장했습니다. 복습 일정은 그대로 유지됩니다."
-            : "다시 평가한 카드는 복습 시각이 되면 같은 세션에서 이어서 학습할 수 있습니다."}
+            : "다시 카드는 즉시 재연습을 마쳤어도 내일도 복습 대상으로 남습니다. 그 이후에는 복습 일정에 따라 다시 만나요."}
         </p>
         {nextDue && (
           <p className="muted mt-2 text-sm">
@@ -580,6 +652,17 @@ function StudyContent() {
           {index + 1} / {session.cards.length}
         </span>
       </div>
+      {card.reinforcement && (
+        <p
+          className="mb-3 rounded-xl bg-primary/8 px-4 py-3 text-sm font-semibold text-primary"
+          role="status"
+        >
+          한 번 더 기억해 보기
+          <span className="muted mt-1 block text-xs font-normal">
+            방금 다시로 평가한 카드예요. 이번 연습 뒤에도 내일 다시 만나요.
+          </span>
+        </p>
+      )}
       <article
         ref={cardPanel}
         className={`study-card surface p-5 sm:p-8 ${card.kind === "grammar" && !revealed && !card.grammarFocus ? "study-card-grammar-question" : ""}`}

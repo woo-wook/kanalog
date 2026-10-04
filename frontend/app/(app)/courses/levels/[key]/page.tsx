@@ -71,6 +71,31 @@ export default function CurriculumLevelPage() {
               </div>
             )}
           </header>
+          {level.jlptLevel && level.available && (
+            <section className="surface p-5" aria-label="레벨 전체 학습">
+              <h2 className="font-semibold">레슨 밖에서도 골고루</h2>
+              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                <Link
+                  className="btn"
+                  href={`/study?level=${level.jlptLevel}&kind=vocabulary`}
+                >
+                  단어 전체 연습
+                </Link>
+                <Link
+                  className="btn"
+                  href={`/study?level=${level.jlptLevel}&kind=grammar`}
+                >
+                  문법 전체 연습
+                </Link>
+                <Link
+                  className="btn btn-primary"
+                  href={`/study?level=${level.jlptLevel}&mode=review`}
+                >
+                  {level.jlptLevel} 전체 복습
+                </Link>
+              </div>
+            </section>
+          )}
           {level.key === "starter" && level.available && (
             <>
               <KanaCourses level={level} />

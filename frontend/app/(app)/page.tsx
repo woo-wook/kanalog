@@ -4,6 +4,7 @@ import { ArrowRight, CalendarDays, Repeat2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api, type Dashboard, type Curriculum } from "@/api";
 import { nextCurriculumLesson, lessonHref } from "@/curriculum";
+import { PracticeLauncher } from "@/practice-launcher";
 import { Loading, ErrorMessage } from "@/shell";
 
 export default function HomePage() {
@@ -27,7 +28,7 @@ export default function HomePage() {
         .map((lesson) => ({ level, unit, lesson })),
     ),
   );
-  const dueCount = due.reduce((sum, item) => sum + item.lesson.dueCount, 0);
+  const dueCount = d.dueCount;
   return (
     <div className="space-y-6">
       <header>
@@ -36,9 +37,10 @@ export default function HomePage() {
           오늘도 한 레슨씩
         </h1>
         <p className="muted mt-2 text-sm">
-          왕초보부터 고급까지, 지금 단계에서 차근차근 이어가세요.
+          내 레벨 전체 연습과 단계별 코스를 함께 이어가세요.
         </p>
       </header>
+      <PracticeLauncher dueCount={d.dueCount} />
       <section
         className="surface overflow-hidden"
         aria-label="이어서 학습할 단계"

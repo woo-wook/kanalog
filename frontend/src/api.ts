@@ -101,6 +101,8 @@ export interface GrammarFocus {
   segments: HighlightSegment[];
 }
 export interface StudyCard {
+  reinforcement?: boolean;
+  retryVersion?: number;
   lastRating?: Rating | null;
   id: string;
   version: number;
@@ -127,6 +129,8 @@ export interface StudySession {
   id: string;
   cards: StudyCard[];
   answered: number;
+  answeredCards?: string[];
+  ratingCounts?: Partial<Record<Rating, number>>;
   lessonId?: string | null;
   lessonTitle?: string | null;
   practice?: boolean;
@@ -138,11 +142,20 @@ export interface StudySession {
     reason?: "DAILY_LIMIT" | "NOT_DUE" | "NO_ELIGIBLE_CARDS" | null;
   };
 }
+export interface StudyOption {
+  level: string;
+  kind: "vocabulary" | "grammar";
+  total: number;
+  studied: number;
+  due: number;
+}
 export interface ReviewResult {
+  retryCard?: StudyCard | null;
   due?: string | null;
   version: number;
 }
 export interface Settings {
+  practiceLevel?: string;
   audioEngine: "SUPERTONIC" | "ORIGINAL" | "DEVICE";
   supertonicVoice: string;
   dailyNewLimit: number;
