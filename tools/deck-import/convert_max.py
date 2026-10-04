@@ -135,6 +135,92 @@ def grammar_focus(raw: str) -> dict | None:
     return {"title": title, "segments": segments}
 
 
+class RubyText(TextOnly):
+    """Capture typed ruby data while retaining the same plain-text sanitizer."""
+    def __init__(self) -> None:
+        super().__init__()
+        self.characters: list[tuple[str, int | None]] = []
+        self.ruby: int | None = None
+        self.rt = False
+        self.readings: dict[int, str] = {}
+        self.invalid = False
+
+    def capture(self, previous: int) -> None:
+        for part in self.parts[previous:]:
+            self.characters.extend((char, self.ruby) for char in html.unescape(part))
+
+    def handle_starttag(self, tag, attrs) -> None:
+        if tag == "ruby":
+            if self.ruby is not None or self.suppressed:
+                self.invalid = True
+            self.ruby = len(self.readings)
+            self.readings[self.ruby] = ""
+        if tag == "rt":
+            self.rt = True
+        previous = len(self.parts)
+        super().handle_starttag(tag, attrs)
+        self.capture(previous)
+
+    def handle_endtag(self, tag) -> None:
+        previous = len(self.parts)
+        super().handle_endtag(tag)
+        self.capture(previous)
+        if tag == "rt":
+            self.rt = False
+        if tag == "ruby":
+            self.ruby = None
+
+    def handle_data(self, data) -> None:
+        if self.rt and self.suppressed == 1 and self.ruby is not None:
+            self.readings[self.ruby] += data
+        previous = len(self.parts)
+        super().handle_data(data)
+        self.capture(previous)
+
+
+def ruby_segments(raw: str) -> list[dict] | None:
+    parser = RubyText()
+    parser.feed(SOUND.sub("", raw))
+    parser.close()
+    if parser.invalid or parser.ruby is not None or parser.rt:
+        return None
+    if not parser.readings or any(not re.fullmatch(r"[ぁ-ゖァ-ヶー]+", reading.strip()) for reading in parser.readings.values()):
+        return None
+    lines: list[list[tuple[str, int | None]]] = [[]]
+    for char, group in parser.characters:
+        if char == "\n":
+            lines.append([])
+        else:
+            lines[-1].append((char, group))
+    normalized = []
+    for line in lines:
+        while line and line[0][0].isspace(): line.pop(0)
+        while line and line[-1][0].isspace(): line.pop()
+        if not line: continue
+        if normalized: normalized.append(("\n", None))
+        normalized.extend(line)
+    segments = []
+    last_group = object()
+    for char, group in normalized:
+        if segments and group == last_group:
+            segments[-1]["text"] += char
+        else:
+            part = {"text": char}
+            if group is not None: part["reading"] = parser.readings[group].strip()
+            segments.append(part)
+        last_group = group
+    return segments if "".join(p["text"] for p in segments) == clean(raw) else None
+
+
+def grammar_ruby(fields: dict, front: str) -> list[dict] | None:
+    raw = fields.get("FrontHTML", "")
+    if ruby_segments(raw): return ruby_segments(raw)
+    example = re.search(r'<div[^>]*class="[^"]*\b_j4u\b[^"]*"[^>]*>(.*?)</div>', fields.get("BackHTML", ""), re.DOTALL)
+    if example and clean(example.group(1)) == front:
+        return ruby_segments(example.group(1))
+    return None
+
+
 def safe_name(value: str) -> str:
     if not value or value in (".", "..") or "\x00" in value or "\\" in value:
         raise ValueError("unsafe media filename")
@@ -211,7 +297,7 @@ def rendered_examples(value: str) -> list[dict[str, str | None]]:
         if japanese and clean(japanese.group(1)):
             examples.append({"japanese": clean(japanese.group(1)), "reading": "",
                              "korean": clean(korean.group(1)) if korean else "",
-                             "audio": first_sound(section)})
+                             "audio": first_sound(section), "furigana": ruby_segments(japanese.group(1))})
     return examples
 
 
@@ -332,7 +418,7 @@ def main() -> int:
                                   "deckPath": deck, "kind": "grammar", "level": level,
                                   "front": front, "answer": back, "grammarKind": clean(fields.get("Kind", "")),
                                   "unitId": clean(fields.get("UnitID", "")), "tags": raw_tags.strip().split(),
-                                  "grammarFocus": focus}
+                                  "grammarFocus": focus, "furigana": grammar_ruby(fields, front)}
                     write_jsonl(out, record)
                     by_deck[deck] += 1
                 except (KeyError, ValueError) as error:

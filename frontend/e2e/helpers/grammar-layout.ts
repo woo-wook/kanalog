@@ -1,3 +1,4 @@
+import { baseJapanese, highlightSegments } from "./japanese-text";
 import { expect, type Page } from "@playwright/test";
 import { resolve } from "node:path";
 
@@ -89,12 +90,7 @@ export async function checkGrammar(
     await expect(page.getByRole("region", { name: "정답과 해설" })).toHaveCount(
       0,
     );
-    const highlighted = await example.evaluate((el) =>
-      Array.from(el.children).map((part) => ({
-        text: part.textContent,
-        highlighted: part.tagName === "MARK",
-      })),
-    );
+    const highlighted = await highlightSegments(example);
     expect(JSON.stringify(highlighted) === JSON.stringify(focus.segments)).toBe(
       true,
     );
@@ -122,7 +118,7 @@ export async function checkGrammar(
       .map((s: string) => s.trim())
       .filter(Boolean);
     const restored = [
-      await example.textContent(),
+      await baseJapanese(example),
       await answer.locator(".grammar-translation").textContent(),
       await page.locator(".grammar-point-meaning").textContent(),
     ];

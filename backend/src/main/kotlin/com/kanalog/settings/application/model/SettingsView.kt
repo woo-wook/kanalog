@@ -13,4 +13,5 @@ data class SettingsView(
     val audioEngine: String,
     val supertonicVoice: String,
     val practiceLevel: String = "N5",
+    val showFurigana: Boolean = true,
 )

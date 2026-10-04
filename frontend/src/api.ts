@@ -100,7 +100,15 @@ export interface GrammarFocus {
   title: string;
   segments: HighlightSegment[];
 }
+export interface ReadingGuide {
+  segments: { text: string; reading?: string | null }[];
+  source: "ORIGINAL" | "READING" | "DICTIONARY" | "NONE";
+  hangul?: string | null;
+  hangulSource?: "MANUAL" | "APPROXIMATE" | null;
+}
 export interface StudyCard {
+  readingGuide?: ReadingGuide | null;
+  exampleReadingGuide?: ReadingGuide | null;
   reinforcement?: boolean;
   retryVersion?: number;
   lastRating?: Rating | null;
@@ -120,6 +128,7 @@ export interface StudyCard {
   hangulHint?: string | null;
   examples?: {
     japanese: string;
+    readingGuide?: ReadingGuide | null;
     reading?: string | null;
     korean?: string | null;
     audioId?: string | null;
@@ -155,6 +164,7 @@ export interface ReviewResult {
   version: number;
 }
 export interface Settings {
+  showFurigana?: boolean;
   practiceLevel?: string;
   audioEngine: "SUPERTONIC" | "ORIGINAL" | "DEVICE";
   supertonicVoice: string;
@@ -169,6 +179,8 @@ export interface Settings {
   timezone: string;
 }
 export interface Note {
+  readingGuide?: ReadingGuide | null;
+  exampleReadingGuide?: ReadingGuide | null;
   id: string;
   kind?: string;
   level?: string | null;

@@ -16,6 +16,7 @@ import {
 import { Loading, ErrorMessage } from "@/shell";
 import { canPlayExample, speechText } from "@/speech";
 import { useGeneratedAudio } from "@/use-generated-audio";
+import { JapaneseText, PronunciationHint } from "@/japanese-text";
 import { GrammarPrompt } from "@/grammar-prompt";
 import { GrammarAnswer } from "@/grammar-answer";
 import { StudyNextStep } from "@/study-next-step";
@@ -641,6 +642,7 @@ function StudyContent() {
             japanese: card.example,
             korean: card.exampleMeaning,
             audioId: card.exampleAudioId,
+            readingGuide: card.exampleReadingGuide,
           },
         ]
       : [];
@@ -683,7 +685,11 @@ function StudyContent() {
           }
         >
           {card.kind === "grammar" && card.grammarFocus ? (
-            <GrammarPrompt card={card} revealed={revealed} />
+            <GrammarPrompt
+              card={card}
+              revealed={revealed}
+              settings={settings.data}
+            />
           ) : (
             <>
               <p
@@ -704,7 +710,17 @@ function StudyContent() {
               <h1
                 className={`study-prompt mt-4 font-semibold ${isKana ? "jp study-prompt-kana text-7xl leading-tight" : card.kind === "grammar" ? "study-prompt-grammar study-prose" : "jp text-4xl sm:text-5xl leading-tight"}`}
               >
-                {card.front}
+                <JapaneseText
+                  text={card.front}
+                  guide={card.readingGuide}
+                  furigana={
+                    settings.data?.showFurigana !== false &&
+                    (revealed ||
+                      Boolean(settings.data?.showReadingHint) ||
+                      hint ||
+                      card.kind === "grammar")
+                  }
+                />
               </h1>
               {card.kind === "grammar" && !revealed && (
                 <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
@@ -713,36 +729,31 @@ function StudyContent() {
               )}
             </>
           )}
-          {((card.reading &&
-            (revealed || settings.data?.showReadingHint || hint)) ||
-            (revealed &&
-              (isKana ||
-                (settings.data?.showHangulHint && card.hangulHint)))) && (
-            <div className="study-reading mx-auto mt-4 flex w-fit max-w-full items-center justify-center gap-6 rounded-2xl bg-primary/5 px-5 py-3">
-              {card.reading &&
-                (revealed || settings.data?.showReadingHint || hint) && (
-                  <div className="min-w-0">
-                    <span className="block text-[11px] font-medium text-muted-foreground">
-                      {isKana ? "로마자" : "가나 읽기"}
-                    </span>
-                    <p className="jp mt-1 text-xl font-medium text-foreground">
-                      {card.reading}
-                    </p>
-                  </div>
-                )}
-              {revealed &&
-                (isKana ||
-                  (settings.data?.showHangulHint && card.hangulHint)) && (
-                  <div className="min-w-0 border-l border-primary/15 pl-6">
-                    <span className="block text-[11px] font-medium text-muted-foreground">
-                      근사 발음
-                    </span>
-                    <p className="mt-1 text-2xl font-semibold text-primary">
-                      {card.hangulHint ?? (isKana ? card.meaning : "")}
-                    </p>
-                  </div>
-                )}
-            </div>
+          {card.reading &&
+            (revealed || settings.data?.showReadingHint || hint) &&
+            (isKana ||
+              settings.data?.showFurigana === false ||
+              !card.readingGuide?.segments.some(
+                (s) => s.reading && s.text.length <= 8,
+              )) && (
+              <div className="study-reading mx-auto mt-4 w-fit max-w-full rounded-2xl bg-primary/5 px-5 py-3">
+                <span className="block text-[11px] font-medium text-muted-foreground">
+                  {isKana ? "로마자" : "가나 읽기"}
+                </span>
+                <p className="jp mt-1 text-xl font-medium text-foreground">
+                  {card.reading}
+                </p>
+              </div>
+            )}
+          {(card.kind !== "grammar" || !card.grammarFocus) && (
+            <PronunciationHint
+              guide={card.readingGuide}
+              manual={card.hangulHint ?? (isKana ? card.meaning : null)}
+              enabled={
+                settings.data?.showHangulHint &&
+                (revealed || Boolean(settings.data?.showReadingHint) || hint)
+              }
+            />
           )}
           {!revealed &&
             card.reading &&
@@ -881,8 +892,16 @@ function StudyContent() {
                 className="mt-3 rounded-xl bg-secondary/70 p-3"
               >
                 <p className="jp text-base leading-relaxed">
-                  {example.japanese}
+                  <JapaneseText
+                    text={example.japanese}
+                    guide={example.readingGuide}
+                    furigana={settings.data?.showFurigana !== false}
+                  />
                 </p>
+                <PronunciationHint
+                  guide={example.readingGuide}
+                  enabled={settings.data?.showHangulHint}
+                />
                 {"reading" in example && example.reading && (
                   <p className="jp muted mt-2">{example.reading}</p>
                 )}
@@ -914,8 +933,16 @@ function StudyContent() {
                     className="mt-3 border-t border-border pt-3"
                   >
                     <p className="jp text-base leading-relaxed">
-                      {example.japanese}
+                      <JapaneseText
+                        text={example.japanese}
+                        guide={example.readingGuide}
+                        furigana={settings.data?.showFurigana !== false}
+                      />
                     </p>
+                    <PronunciationHint
+                      guide={example.readingGuide}
+                      enabled={settings.data?.showHangulHint}
+                    />
                     {"reading" in example && example.reading && (
                       <p className="jp muted mt-1 text-sm">{example.reading}</p>
                     )}

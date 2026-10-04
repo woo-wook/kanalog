@@ -1,4 +1,5 @@
-import type { GrammarFocus, StudyCard } from "./api";
+import type { GrammarFocus, StudyCard, Settings } from "./api";
+import { JapaneseText, PronunciationHint } from "./japanese-text";
 import { structureGrammarAnswer } from "./grammar-content";
 
 export function HighlightedExample({
@@ -27,8 +28,13 @@ export function HighlightedExample({
 export function GrammarPrompt({
   card,
   revealed,
+  settings,
 }: {
-  card: Pick<StudyCard, "front" | "meaning" | "grammarFocus">;
+  settings?: Pick<Settings, "showFurigana" | "showHangulHint">;
+  card: Pick<
+    StudyCard,
+    "front" | "meaning" | "grammarFocus" | "readingGuide" | "hangulHint"
+  >;
   revealed: boolean;
 }) {
   const focus = card.grammarFocus;
@@ -77,8 +83,22 @@ export function GrammarPrompt({
           예문 · 강조된 부분을 확인해 보세요
         </p>
         <h2 className="grammar-example jp study-prose text-2xl font-medium leading-relaxed">
-          <HighlightedExample text={card.front} focus={focus} />
+          {card.readingGuide ? (
+            <JapaneseText
+              text={card.front}
+              guide={card.readingGuide}
+              focus={focus}
+              furigana={settings?.showFurigana !== false}
+            />
+          ) : (
+            <HighlightedExample text={card.front} focus={focus} />
+          )}
         </h2>
+        <PronunciationHint
+          guide={card.readingGuide}
+          manual={card.hangulHint}
+          enabled={settings?.showHangulHint}
+        />
       </div>
     </>
   );

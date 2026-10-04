@@ -252,3 +252,32 @@ progress::-moz-progress-bar {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Ruby is inline text: base highlights never include the pronunciation annotation. */
+.japanese-text {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.japanese-text.has-furigana {
+  line-height: 2.15;
+}
+.japanese-text ruby {
+  ruby-align: center;
+  ruby-position: over;
+}
+.japanese-text rt {
+  font-size: 0.43em;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--muted-foreground);
+  letter-spacing: 0.015em;
+}
+.japanese-text rp {
+  display: none;
+}
+.study-prompt .japanese-text.has-furigana {
+  line-height: 1.95;
+}
+.pronunciation-hint {
+  overflow-wrap: anywhere;
+}

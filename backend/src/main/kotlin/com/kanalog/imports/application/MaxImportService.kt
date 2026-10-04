@@ -28,4 +28,10 @@ class MaxImportService(
         owner: UUID,
         directory: Path,
     ): Int = importer.refreshGrammarFocus(owner, directory)
+
+    @Transactional
+    fun refreshReadings(
+        owner: UUID,
+        directory: Path,
+    ): Int = importer.refreshReadings(owner, directory)
 }

@@ -16,4 +16,5 @@ data class SettingsPatch(
     val audioEngine: String? = null,
     val supertonicVoice: String? = null,
     val practiceLevel: String? = null,
+    val showFurigana: Boolean? = null,
 )

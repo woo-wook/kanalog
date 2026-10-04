@@ -18,11 +18,20 @@ const supertonicVoices = [
   "M5",
 ];
 const toggles: { key: keyof Settings; label: string; help?: string }[] = [
-  { key: "showReadingHint", label: "가나 읽기를 처음부터 표시" },
+  {
+    key: "showFurigana",
+    label: "한자 위에 후리가나 표시",
+    help: "단어와 예문의 한자 위에 가나 읽기를 표시합니다.",
+  },
+  {
+    key: "showReadingHint",
+    label: "정답 전에도 읽기 힌트 표시",
+    help: "끄면 단어 카드의 읽기는 힌트를 누르거나 정답을 확인한 뒤 표시됩니다.",
+  },
   {
     key: "showHangulHint",
     label: "한글 발음 보조 표시",
-    help: "일본어 발음의 근사 표기입니다.",
+    help: "카드와 예문 아래에 표시합니다. 자동 표기는 근사값이며 일본어 읽기·음성과 함께 확인해 주세요.",
   },
   {
     key: "autoPlayAudio",

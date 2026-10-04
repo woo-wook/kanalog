@@ -148,3 +148,15 @@ POST 세션 응답의 `queueInfo`는 선택 범위의 `eligibleCards`, `unseenCa
 V10부터 queueInfo는 생성 당시 서버의 빈 큐 이유·다음 시각을 보존하므로 새로고침에도 안내가 유지된다. 세션 GET에는 answeredCards(고유 카드 ID 목록), ratingCounts(평가별 답변 횟수)가 추가된다. 남은 주 카드 뒤에 미완료 재연습 카드가 온다. 다른 기기의 오래된 재연습은 STALE_RETRY 또는 STALE_CARD(409), 같은 세션에서 이미 평가한 주 카드는 SESSION_ALREADY_ANSWERED(409)이다. 같은 키·다른 payload는 IDEMPOTENCY_CONFLICT(409)이다.
 
 [범위·일정·집계 정책](level-practice.md)을 참고한다.
+
+### 읽기 보조
+
+`Settings` GET/PATCH는 `showFurigana`(기본 true)를 지원한다. 기존 `showReadingHint`는 정답 전 읽기 노출, `showHangulHint`는 한글 보조 표시를 각각 제어한다.
+
+`CardView`, `NoteView`, `ExampleView`에 nullable `readingGuide`가 추가된다. Card/Note의 첫 예문은 `exampleReadingGuide`에도 제공된다. 예시(직접 작성한 문장):
+
+```json
+{"segments":[{"text":"本","reading":"ほん"},{"text":"です。"}],"source":"ORIGINAL","hangul":"혼데스。","hangulSource":"APPROXIMATE"}
+```
+
+base segment 합계가 원문과 다르면 클라이언트는 ruby를 사용하지 않는다. `source`는 ORIGINAL/READING/DICTIONARY/NONE, `hangulSource`는 MANUAL/APPROXIMATE이다. 표시 설정에 따라 FE가 보조를 숨겨도 원본 본문/읽기는 유지된다. 자동 가나/한글의 정확성을 보장하지 않으며 외부 TTS 음성 생성 방식과 별도 기능이다.

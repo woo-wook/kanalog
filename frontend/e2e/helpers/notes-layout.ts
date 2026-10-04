@@ -1,3 +1,4 @@
+import { baseJapanese, highlightSegments } from "./japanese-text";
 import { expect, type Page } from "@playwright/test";
 import { resolve } from "node:path";
 
@@ -74,12 +75,7 @@ export async function checkNotebook(
   });
   await entry.locator("summary").click();
   await expect(entry.getByRole("region", { name: "문법 설명" })).toBeVisible();
-  const parts = await entry.locator(".grammar-example").evaluate((el) =>
-    Array.from(el.children).map((part) => ({
-      text: part.textContent,
-      highlighted: part.tagName === "MARK",
-    })),
-  );
+  const parts = await highlightSegments(entry.locator(".grammar-example"));
   expect(
     JSON.stringify(parts) === JSON.stringify(note.grammarFocus.segments),
   ).toBe(true);
@@ -88,7 +84,7 @@ export async function checkNotebook(
     .map((line: string) => line.trim())
     .filter(Boolean);
   const restored = [
-    await entry.locator(".grammar-example").textContent(),
+    await baseJapanese(entry.locator(".grammar-example")),
     await entry.locator(".grammar-translation").textContent(),
     await entry.locator(".note-preview").textContent(),
   ];

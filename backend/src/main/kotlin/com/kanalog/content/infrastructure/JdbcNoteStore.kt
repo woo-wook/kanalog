@@ -14,6 +14,7 @@ import java.util.UUID
 class JdbcNoteStore(
     private val jdbc: JdbcTemplate,
     private val mapper: ObjectMapper,
+    private val guides: ReadingGuideFactory,
 ) : NoteStore {
     private val columns = """n.id,n.front,n.reading,n.meaning,n.example,n.example_meaning,n.explanation,
         n.personal_memo,n.hangul_hint,n.source_id,(b.note_id is not null) bookmarked,
@@ -177,6 +178,7 @@ class JdbcNoteStore(
         ignored: Int,
     ): NoteView {
         val front = rs.getString("front")
+        val raw = rs.getString("raw_fields")?.let(mapper::readTree)
         return NoteView(
             rs.getObject("id", UUID::class.java),
             front,
@@ -201,6 +203,20 @@ class JdbcNoteStore(
             } else {
                 null
             },
+            readingGuide =
+                guides.create(
+                    front,
+                    rs.getString("reading"),
+                    rs.getString("hangul_hint"),
+                    raw?.path("furigana"),
+                    rs.getString("kind") == "grammar",
+                ),
+            exampleReadingGuide =
+                guides.create(
+                    rs.getString("example"),
+                    original = raw?.path("examples")?.get(0)?.path("furigana"),
+                    sentence = true,
+                ),
         )
     }
 }

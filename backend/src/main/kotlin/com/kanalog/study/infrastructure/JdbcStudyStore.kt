@@ -1,5 +1,6 @@
 package com.kanalog.study.infrastructure
 
+import com.kanalog.content.infrastructure.ReadingGuideFactory
 import com.kanalog.content.infrastructure.convertedGrammarFocus
 import com.kanalog.study.application.model.CardView
 import com.kanalog.study.application.model.DeckView
@@ -26,6 +27,7 @@ import java.util.UUID
 class JdbcStudyStore(
     private val jdbc: JdbcTemplate,
     private val mapper: ObjectMapper,
+    private val guides: ReadingGuideFactory,
 ) : StudyStore {
     override fun decks(owner: UUID): List<DeckView> =
         jdbc.query(
@@ -69,6 +71,7 @@ class JdbcStudyStore(
           left join kana_practice_state p on p.card_id=c.id and p.user_id=?
           where c.id=? and c.owner_id=?""",
                     { rs, _ ->
+                        val raw = rs.getString("raw_fields")?.let(mapper::readTree)
                         CardView(
                             rs.getObject("id", UUID::class.java),
                             rs.getLong("version"),
@@ -84,6 +87,20 @@ class JdbcStudyStore(
                             rs.getObject("word_audio_id", UUID::class.java),
                             rs.getObject("example_audio_id", UUID::class.java),
                             rs.getTimestamp("due_at")?.toInstant(),
+                            readingGuide =
+                                guides.create(
+                                    rs.getString("front"),
+                                    rs.getString("reading"),
+                                    rs.getString("hangul_hint"),
+                                    raw?.path("furigana"),
+                                    rs.getString("kind") == "grammar",
+                                ),
+                            exampleReadingGuide =
+                                guides.create(
+                                    rs.getString("example"),
+                                    original = raw?.path("examples")?.get(0)?.path("furigana"),
+                                    sentence = true,
+                                ),
                             lastRating = rs.getString("last_rating"),
                             grammarFocus =
                                 if (rs.getString("kind") ==
@@ -102,8 +119,8 @@ class JdbcStudyStore(
                 ).firstOrNull() ?: return null
         val examples =
             jdbc.query(
-                """select e.japanese,e.reading,e.korean,e.audio_id from note_example e
-            join card c on c.note_id=e.note_id where c.id=? and c.owner_id=? and e.owner_id=?
+                """select e.japanese,e.reading,e.korean,e.audio_id,e.ordinal,n.raw_fields from note_example e
+            join study_note n on n.id=e.note_id join card c on c.note_id=e.note_id where c.id=? and c.owner_id=? and e.owner_id=?
             order by e.ordinal""",
                 { rs, _ ->
                     ExampleView(
@@ -111,6 +128,20 @@ class JdbcStudyStore(
                         rs.getString(2),
                         rs.getString(3),
                         rs.getObject(4, UUID::class.java),
+                        readingGuide =
+                            guides.create(
+                                rs.getString(1),
+                                rs.getString(2),
+                                original =
+                                    rs
+                                        .getString(
+                                            "raw_fields",
+                                        )?.let(mapper::readTree)
+                                        ?.path("examples")
+                                        ?.get(rs.getInt("ordinal"))
+                                        ?.path("furigana"),
+                                sentence = true,
+                            ),
                     )
                 },
                 cardId,

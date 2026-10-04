@@ -14,4 +14,9 @@ interface MaxImportPort {
         owner: UUID,
         dir: Path,
     ): Int
+
+    fun refreshReadings(
+        owner: UUID,
+        dir: Path,
+    ): Int
 }

@@ -1190,6 +1190,68 @@ class PersistenceFlowTest
                 jdbc.queryForObject("select count(*) from card where owner_id=? and direction='recognition'", Int::class.java, owner),
             )
             assertEquals(2, study.card(owner, card)?.examples?.size)
+            val oldDate =
+                jdbc.queryForObject(
+                    "select updated_at from study_note where id=(select note_id from card where id=?)",
+                    java.sql.Timestamp::class.java,
+                    card,
+                )
+            val original = Files.readString(dir.resolve("notes.jsonl"))
+            val enriched =
+                original.replace(
+                    "\"japanese\":\"犬がいます\"",
+                    "\"furigana\":[{\"text\":\"犬\",\"reading\":\"いぬ\"},{\"text\":\"がいます\"}],\"japanese\":\"犬がいます\"",
+                )
+            Files.writeString(dir.resolve("notes.jsonl"), enriched)
+            assertEquals(1, importer.refreshReadings(owner, dir))
+            assertEquals(1, importer.refreshReadings(owner, dir))
+            assertEquals(
+                "ORIGINAL",
+                study
+                    .card(owner, card)
+                    ?.examples
+                    ?.first()
+                    ?.readingGuide
+                    ?.source,
+            )
+            assertEquals(
+                "いぬ",
+                study
+                    .card(owner, card)
+                    ?.examples
+                    ?.first()
+                    ?.readingGuide
+                    ?.segments
+                    ?.first()
+                    ?.reading,
+            )
+            assertEquals(3L, study.card(owner, card)?.version)
+            assertEquals(
+                oldDate,
+                jdbc.queryForObject(
+                    "select updated_at from study_note where id=(select note_id from card where id=?)",
+                    java.sql.Timestamp::class.java,
+                    card,
+                ),
+            )
+            assertThrows(IllegalStateException::class.java) { importer.refreshReadings(user(), dir) }
+            Files.writeString(dir.resolve("notes.jsonl"), enriched.replace("犬がいます", "猫がいます"))
+            assertThrows(IllegalStateException::class.java) { importer.refreshReadings(owner, dir) }
+            assertEquals(
+                "ORIGINAL",
+                study
+                    .card(owner, card)
+                    ?.examples
+                    ?.first()
+                    ?.readingGuide
+                    ?.source,
+            )
+            val other = user()
+            assertTrue(settings.settings(owner).showFurigana)
+            settings.patch(owner, SettingsPatch(showFurigana = false, showHangulHint = true))
+            assertTrue(!settings.settings(owner).showFurigana && settings.settings(owner).showHangulHint)
+            assertTrue(settings.settings(other).showFurigana && !settings.settings(other).showHangulHint)
+
             assertEquals("명사", study.card(owner, card)?.partOfSpeech)
         }
     }

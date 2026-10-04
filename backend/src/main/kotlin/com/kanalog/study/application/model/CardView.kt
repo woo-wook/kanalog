@@ -1,6 +1,7 @@
 package com.kanalog.study.application.model
 
 import com.kanalog.content.domain.GrammarFocus
+import com.kanalog.content.domain.ReadingGuide
 import java.time.Instant
 import java.util.UUID
 
@@ -24,4 +25,6 @@ data class CardView(
     val grammarFocus: GrammarFocus? = null,
     val reinforcement: Boolean = false,
     val retryVersion: Long = 0,
+    val readingGuide: ReadingGuide? = null,
+    val exampleReadingGuide: ReadingGuide? = null,
 )

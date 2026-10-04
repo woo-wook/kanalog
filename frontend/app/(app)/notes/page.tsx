@@ -306,6 +306,7 @@ export default function NotesPage() {
                   onEdit={edit}
                   pending={pending}
                   audio={audio}
+                  settings={settings.data}
                 />
               ))
             )}

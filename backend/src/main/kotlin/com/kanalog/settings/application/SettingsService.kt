@@ -37,6 +37,7 @@ class SettingsService(
             old.copy(
                 dailyNewLimit = patch.dailyNewLimit ?: old.dailyNewLimit,
                 showReadingHint = patch.showReadingHint ?: old.showReadingHint,
+                showFurigana = patch.showFurigana ?: old.showFurigana,
                 showHangulHint = patch.showHangulHint ?: old.showHangulHint,
                 autoPlayAudio = patch.autoPlayAudio ?: old.autoPlayAudio,
                 allowAudioBeforeReveal =

@@ -22,6 +22,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-flyway")
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("io.github.open-spaced-repetition:fsrs:1.0.0")
+    implementation("com.atilika.kuromoji:kuromoji-ipadic:0.9.0")
     runtimeOnly(libs.postgresql)
     testImplementation(libs.spring.boot.starter.webmvc.test)
     testImplementation(libs.spring.boot.starter.data.jpa.test)
@@ -42,3 +43,5 @@ ktlint {
 }
 
 configurations.named("ktlint") { resolutionStrategy.activateDependencyLocking() }
+
+configurations.named("runtimeClasspath") { resolutionStrategy.activateDependencyLocking() }

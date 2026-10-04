@@ -1,5 +1,6 @@
 import { ChevronDown, Eye, EyeOff, Pencil, Star } from "lucide-react";
-import type { Note } from "./api";
+import type { Note, Settings } from "./api";
+import { JapaneseText, PronunciationHint } from "./japanese-text";
 import { GrammarAnswer } from "./grammar-answer";
 import { structureGrammarAnswer } from "./grammar-content";
 import { HighlightedExample } from "./grammar-prompt";
@@ -12,7 +13,9 @@ export function NoteEntry({
   onEdit,
   pending,
   audio,
+  settings,
 }: {
+  settings?: Pick<Settings, "showFurigana" | "showHangulHint">;
   note: Note;
   onPatch: (note: Note, field: "bookmarked" | "excluded") => void;
   onEdit: (note: Note) => void;
@@ -72,12 +75,32 @@ export function NoteEntry({
           <h2
             className={`note-title jp mt-3 pr-8 text-[1.375rem] font-semibold leading-snug ${grammar ? "text-primary" : "text-foreground"}`}
           >
-            {title}
+            {grammar ? (
+              title
+            ) : (
+              <JapaneseText
+                text={title}
+                guide={note.readingGuide}
+                furigana={settings?.showFurigana !== false}
+              />
+            )}
           </h2>
-          {note.reading && !grammar && (
-            <p className="jp mt-1 text-sm text-muted-foreground">
-              {note.reading}
-            </p>
+          {note.reading &&
+            !grammar &&
+            (settings?.showFurigana === false ||
+              !note.readingGuide?.segments.some(
+                (s) => s.reading && s.text.length <= 8,
+              )) && (
+              <p className="jp mt-1 text-sm text-muted-foreground">
+                {note.reading}
+              </p>
+            )}
+          {!grammar && (
+            <PronunciationHint
+              guide={note.readingGuide}
+              manual={note.hangulHint}
+              enabled={settings?.showHangulHint}
+            />
           )}
           {preview && (
             <p className="note-preview mt-2 text-[1.0625rem] leading-relaxed text-foreground">
@@ -112,12 +135,24 @@ export function NoteEntry({
                 예문
               </h3>
               <p className="grammar-example jp study-prose text-2xl leading-relaxed">
-                {note.grammarFocus ? (
+                {note.readingGuide ? (
+                  <JapaneseText
+                    text={front}
+                    guide={note.readingGuide}
+                    focus={note.grammarFocus}
+                    furigana={settings?.showFurigana !== false}
+                  />
+                ) : note.grammarFocus ? (
                   <HighlightedExample text={front} focus={note.grammarFocus} />
                 ) : (
                   front
                 )}
               </p>
+              <PronunciationHint
+                guide={note.readingGuide}
+                manual={note.hangulHint}
+                enabled={settings?.showHangulHint}
+              />
               <GrammarAnswer
                 answer={note.meaning}
                 front={front}
@@ -146,8 +181,16 @@ export function NoteEntry({
                     예문
                   </h3>
                   <p className="jp study-prose text-xl leading-relaxed">
-                    {note.example}
+                    <JapaneseText
+                      text={note.example}
+                      guide={note.exampleReadingGuide}
+                      furigana={settings?.showFurigana !== false}
+                    />
                   </p>
+                  <PronunciationHint
+                    guide={note.exampleReadingGuide}
+                    enabled={settings?.showHangulHint}
+                  />
                   {note.exampleMeaning && (
                     <p className="study-prose mt-3 text-base leading-relaxed text-muted-foreground">
                       {note.exampleMeaning}

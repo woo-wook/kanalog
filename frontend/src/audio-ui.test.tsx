@@ -133,9 +133,9 @@ it("가나 정답의 근사 발음은 카드 안에 표시하고 평가는 별�
     defaultOptions: { queries: { staleTime: Infinity } },
   });
   client.setQueryData(["settings"], {
+    showHangulHint: true,
     audioEngine: "SUPERTONIC",
     allowAudioBeforeReveal: true,
-    showHangulHint: false,
   });
   vi.mocked(api).mockResolvedValue({
     id: "session",

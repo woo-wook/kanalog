@@ -26,3 +26,8 @@ Anki 및 AnkiWeb의 AGPL 엔진 코드는 사용하지 않는다. APKG 변환기
 개인 사용자는 [JLPT MAX 공식 릴리스](https://github.com/truthyblue/jlpt-max-deck/releases/tag/v2.1.2)에서 APKG를 직접 다운로드한다. [공식 NOTICE](https://github.com/truthyblue/jlpt-max-deck/blob/main/NOTICE)는 공식 릴리스의 개인 학습용 다운로드·사용을 허용하며, 덱 전체·추출 데이터·생성 음성의 미러링, 판매, 재포장 또는 재배포 권한을 주지 않는다. 소프트웨어의 AGPL 조건이 덱 콘텐츠에 자동으로 적용되는 것도 아니다.
 
 덱의 일부 필드는 [EDRDG JMdict](https://www.edrdg.org/wiki/index.php/JMdict-EDICT_Dictionary_Project)에서 유래하며 별도 저작권 및 CC BY-SA 4.0 조건이 있다. 공식 NOTICE는 포함된 MP3가 AivisSpeech 1.2.0의 まい 모델로 생성되었고 모델 조건이 ACML 1.0이라고 밝힌다. 이를 원어민 녹음으로 표시하지 않는다. 이 저장소와 Docker 이미지에는 APKG, 추출된 학습 본문, MP3를 포함하지 않는다. 세부 출처와 실제 파일 해시는 [데이터 출처](docs/data-sources.md)에 기록했다.
+
+## Japanese reading support
+
+Kuromoji IPADIC **0.9.0**, https://github.com/atilika/kuromoji/tree/0.9.0.
+Copyright 2010–2015 Atilika Inc. and contributors. Kuromoji code is Apache License 2.0; the bundled **mecab-ipadic 2.7.0-20070801** dictionary has separate NAIST/ICOT terms. Full upstream license and dictionary notice are retained in `backend/src/main/resources/META-INF/licenses/kuromoji` and included in the backend JAR. These notices concern the code/dictionary dependency, separately from personal MAX data and audio.

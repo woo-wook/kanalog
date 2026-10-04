@@ -49,6 +49,13 @@ class AdminCli(
                 println("Updated original grammar highlights for $updated notes")
             }
 
+            "refresh-readings" -> {
+                if (inputDir.isBlank()) error("--app.input-dir is required")
+                val owner = accounts.idByEmail(normalized) ?: error("Account does not exist")
+                val updated = importer.refreshReadings(owner, Path.of(inputDir).toAbsolutePath().normalize())
+                println("Refreshed reading metadata for $updated notes; progress and media unchanged")
+            }
+
             "import-max" -> {
                 if (inputDir.isBlank()) error("--app.input-dir is required")
                 val owner = accounts.idByEmail(normalized) ?: error("Account does not exist")

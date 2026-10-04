@@ -1,6 +1,7 @@
 package com.kanalog.imports.infrastructure
 
 import com.kanalog.common.crypto.sha256
+import com.kanalog.content.infrastructure.ReadingGuideFactory
 import com.kanalog.content.infrastructure.convertedGrammarFocus
 import com.kanalog.imports.application.model.ImportResult
 import com.kanalog.imports.application.port.out.MaxImportPort
@@ -240,6 +241,91 @@ class NormalizedMaxImportAdapter(
             }
         }
         check(updated > 0) { "No original grammar highlights to update" }
+        return updated
+    }
+
+    override fun refreshReadings(
+        owner: UUID,
+        dir: Path,
+    ): Int {
+        val report = mapper.readTree(Files.readString(dir.resolve("report.json")))
+        MaxImportPolicy.requireSupportedSource(report.requireText("version"), report.requireText("sha256"))
+        val validator = ReadingGuideFactory()
+        var updated = 0
+        Files.newBufferedReader(dir.resolve("notes.jsonl")).useLines { lines ->
+            lines.filter { it.isNotBlank() }.forEach { line ->
+                val row = mapper.readTree(line)
+                check(
+                    row.path("schemaVersion").asInt() == 1 && row.requireText("sourceVersion") == "2.1.2",
+                ) { "Unsupported reading metadata version" }
+                val existing =
+                    jdbc
+                        .query(
+                            """select n.id,n.raw_fields from study_note n join content_source s on s.id=n.source_id
+                    where n.owner_id=? and s.owner_id=? and s.source_key=? and s.source_version='2.1.2' and n.source_guid=? for update of n""",
+                            { rs, _ -> rs.getObject(1, UUID::class.java) to mapper.readTree(rs.getString(2)) },
+                            owner,
+                            owner,
+                            sourceKey,
+                            row.requireText("sourceGuid"),
+                        ).singleOrNull() ?: error("Matching owned note not found; use the account's original import scope")
+                val old = existing.second
+                listOf(
+                    "schemaVersion",
+                    "sourceVersion",
+                    "sourceGuid",
+                    "sourceCardId",
+                    "sourceNoteId",
+                    "front",
+                    "reading",
+                    "meaning",
+                    "answer",
+                    "kind",
+                    "cardDirection",
+                    "deckPath",
+                    "level",
+                    "wordAudio",
+                    "grammarFocus",
+                    "partOfSpeech",
+                    "tags",
+                    "grammarKind",
+                    "unitId",
+                ).forEach { key ->
+                    check(old.path(key) == row.path(key)) { "Content differs; metadata refresh refused" }
+                }
+                val parts = row.path("furigana")
+                if (!parts.isMissingNode &&
+                    !parts.isNull
+                ) {
+                    check(validator.sourceSegments(parts, row.requireText("front")) != null) { "Invalid front ruby metadata" }
+                }
+                val oldExamples = old.path("examples")
+                val examples = row.path("examples")
+                check(oldExamples.size() == examples.size()) { "Example count differs" }
+                for (i in 0 until examples.size()) {
+                    listOf("japanese", "reading", "korean", "audio").forEach { key ->
+                        check(oldExamples.get(i).path(key) == examples.get(i).path(key)) { "Example content differs" }
+                    }
+                    val annotation = examples.get(i).path("furigana")
+                    if (!annotation.isMissingNode &&
+                        !annotation.isNull
+                    ) {
+                        check(
+                            validator.sourceSegments(annotation, examples.get(i).requireText("japanese")) != null,
+                        ) { "Invalid example ruby metadata" }
+                    }
+                }
+                jdbc.update(
+                    "update study_note set raw_fields=? where id=? and owner_id=? and raw_fields<>?",
+                    line,
+                    existing.first,
+                    owner,
+                    line,
+                )
+                updated++
+            }
+        }
+        check(updated > 0) { "No reading metadata found" }
         return updated
     }
 
