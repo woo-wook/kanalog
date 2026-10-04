@@ -424,3 +424,29 @@ python3 tools/e2e/run_live.py
 - V10 및 완료 후 다음 배치 버튼 최종 배포 직후에는 기존 23개 테이블의 기존 컬럼 행 수·해시가 모두 동일했다. 별도 private-data/backups/level-review-queue-info-20261004 dump를 보관했다.
 - 실제 HTTPS 서비스의 최종 모바일 WebKit 새 기능 3개 + 기존 회귀 13개 = 16개 고유 브라우저 흐름을 확인했다. 기존 회귀는 첫 실행에서 12개가 통과하고 가나 새로고침 POST 대기 검사가 timeout이었다. GET 복원 계약으로 수정 후 1개를 재실행해 통과했다. 신규 3개는 N5 전체 범위 / 실제 MAX 다시 평가 및 새로고침 후 재연습·세션 통계 복원 / 한도에 도달한 빈 큐의 안내 복원을 확인했다.
 - 최종 Compose backend health / PUBLIC_APP_URL / Secure 쿠키 설정 검증 통과. DB와 음성 서비스를 교체하거나 재시작하지 않고 기존 공유 PostgreSQL의 독립 Kanalog DB에 additive 마이그레이션만 적용했다.
+
+## 2026-10-04~05 후리가나·한글 발음 보조
+
+### 구현 및 실제 데이터
+
+- MAX 2.1.2의 원본 ruby를 typed segment로 복원했다. 지원하는 전체 범위 10,237 노트 중 문법 1,078개와 예문 10,976개에 원본 읽기가 있다. 예문 22개는 원본 ruby가 없어 사전 보조 경로를 사용한다. N5 QA 범위는 878 노트, 문법 99개, 예문 ruby 1,006개/원본 없음 10개다.
+- 원본 읽기 → 가나 anchor 정렬 → Kuromoji IPADIC 0.9.0의 순서로 표시한다. 알려진 읽기를 자동 사전 값으로 덮어쓰지 않는다. 유일한 정렬만 세분화하고, 모호한 정렬은 전체 읽기를 보존한다. 단어·문장·문법 제목에 native ruby를 표시하고 원본 강조 위치를 유지한다.
+- 한글 보조는 수동 값 우선, 그 외 모라 단위 근사 변환이다. 장음/촉음/요음/ん/조사 발음 테스트를 포함한다. 자동 값을 사람이 모두 검수한 것으로 표시하지 않는다. 가나에도 사용자 설정을 적용한다.
+- V11은 `show_furigana` 기본 true 열만 추가했다. 기존 `show_hangul_hint` 기본 false를 유지했다. 사용자별 설정과 재로그인 후 보존을 검증했다.
+
+### 데이터 보존 및 배포
+
+- 갱신 전에 `kanalog` 전용 DB dump를 private-data에 보관했다. 기존 계정 전체 범위 10,237개와 QA 계정 N5 878개에 `refresh-readings`를 실행했다. DB/미디어 원본을 초기화하지 않았다.
+- 갱신 전후 기존 23개 테이블의 행 수와 기존 열의 해시를 비교했다. 의도한 `study_note.raw_fields` 메타데이터와 새 설정 열을 제외한 기존 값은 **23/23 동일**했다. 실제 사용자 콘텐츠/카드/예문/음성 ID/updated_at/복습 상태/로그가 보존됐다. 이후 브라우저 검증은 QA 계정의 학습/세션 기록을 의도적으로 추가한다.
+- backend/frontend Docker production build 성공. 기존 PostgreSQL과 voice 컨테이너를 유지하며 앱 두 컨테이너를 갱신했다. 최종 로그인 초기화 보강은 frontend만 다시 배포했다. 공용 HTTPS, Secure 쿠키, backend readiness, V11 migration 성공을 확인했다.
+
+### 실행한 검증
+
+- BE: `ktlintFormat` 후 `ktlintCheck check bootJar`, **64 tests / 0 failures**. 실제 PostgreSQL Testcontainers에서 설정 소유권, 읽기 메타데이터 재실행/원문 변경 거부/진도 보존, 기존 FSRS 및 동시성/중복 제출을 확인했다. persisted retry response에 ReadingGuide가 포함되어도 재전송 결과가 동일하다.
+- FE: **78 Vitest tests**, TypeScript, ESLint, Docker의 Next production build 성공. ruby와 highlight의 범위 결합, 제목에서 부분 한자 읽기 분할 방지, 설정 OFF/수동 보조 우선, 로그인 SSR에서 초기화 전 입력을 받지 않는 동작을 포함한다.
+- Python: **13 synthetic converter tests** 성공. rt가 원문에 섞이지 않고 스크립트/이벤트 HTML을 실행하지 않는지 확인했다. 원본 MAX 본문/음성은 fixture에 없다.
+- 실제 HTTPS 브라우저 흐름 **22종을 여러 실행에 걸쳐 확인**했다. 첫 19종 전체 실행은 16종 통과했고, 설정 이름 변경 1건과 기존 QA 복습이 없는 범위를 요구한 2건은 테스트를 수정해 개별 재검증했다. QA 진도를 초기화하지 않고 실제 복습 큐를 처리하도록 했으며 `다시`의 저장 응답을 받은 후 큐를 읽도록 했다. 이후 가나 360×640/390×844/360×740을 검증했다. 첫 접속 로그인 테스트의 간헐적인 지연을 계기로 초기화 전 폼 입력을 방지했고, 최종 배포본의 360×640 가나와 후리가나/한글 보조 두 흐름은 다시 통과했다.
+- 설정 두 표시 토글과 재접속, 실제 MAX 단어·예문·문법·제목의 원문/읽기/강조, 360/390px 모바일에서 평가 버튼 유지 및 가로 넘침 없음, 태블릿/PC 표시, 로그인/로그아웃/통계/음성 접근권한/Range/음성 디코딩, 단어장 편집·북마크·제외·합성 음성, 레벨 전체 복습·즉시 재연습·빈 큐 안내를 확인했다.
+- 화면 스크린샷은 private-data/e2e에만 저장하고 직접 확인했다. WebKit 모바일 에뮬레이션 및 Chromium 검증이며 실제 iPhone/Safari 기기의 발음 품질·화면 검증은 미실행이다.
+
+로그인 폼은 React의 서버/클라이언트 초기 snapshot을 구분해 준비되기 전에 입력과 제출을 받지 않는다. 이는 처음 접속할 때 초기화 전에 입력된 값이 유실될 수 있는 경로를 막는 보강이며, 관찰된 모든 네트워크 지연의 원인을 이것으로 확정하지 않는다. [React 공식 설명](https://react.dev/reference/react/useSyncExternalStore#adding-support-for-server-rendering)을 확인했다.

@@ -136,7 +136,7 @@ test("가나와 한글 발음 설정이 재로그인 뒤 유지된다", async ({
   await login(page);
   await page.goto("/settings");
   const kana = page.getByRole("checkbox", {
-    name: "가나 읽기를 처음부터 표시",
+    name: /정답 전에도 읽기 힌트 표시/,
   });
   const hangul = page.getByRole("checkbox", { name: /한글 발음 보조 표시/ });
   await expect(kana).toBeVisible();

@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { resolve } from "node:path";
 
 async function login(page: Page) {
-  await page.goto("/login");
+  await page.goto("/login", { waitUntil: "domcontentloaded" });
   await page.getByLabel("이메일").fill(process.env.E2E_EMAIL!);
   await page.getByLabel("비밀번호").fill(process.env.E2E_PASSWORD!);
   const loginResponse = page.waitForResponse(
@@ -15,6 +15,30 @@ async function login(page: Page) {
   await expect(
     page.getByRole("heading", { name: "오늘도 한 레슨씩" }),
   ).toBeVisible();
+}
+
+async function enableHangul(page: Page) {
+  const old = await (await page.request.get("/api/settings")).json();
+  const me = await (await page.request.get("/api/me")).json();
+  const headers = {
+    Origin: new URL(process.env.E2E_BASE_URL!).origin,
+    "X-CSRF-Token": me.csrfToken,
+  };
+  expect(
+    (
+      await page.request.patch("/api/settings", {
+        headers,
+        data: { showHangulHint: true },
+      })
+    ).ok(),
+  ).toBe(true);
+  return async () => {
+    const currentMe = await (await page.request.get("/api/me")).json();
+    headers["X-CSRF-Token"] = currentMe.csrfToken;
+    expect(
+      (await page.request.patch("/api/settings", { headers, data: old })).ok(),
+    ).toBe(true);
+  };
 }
 
 async function assertFits(page: Page) {
@@ -58,20 +82,27 @@ for (const [width, height] of [
   }) => {
     await page.setViewportSize({ width: width!, height: height! });
     await login(page);
-    await page.goto("/study?kana=katakana&groups=basic");
-    await expect(page.getByRole("button", { name: /정답 보기/ })).toBeVisible();
-    await assertFits(page);
-    await page.getByRole("button", { name: /정답 보기/ }).click();
-    await expect(page.getByText("근사 발음", { exact: true })).toBeVisible();
-    const actions = page.getByRole("group", { name: "기억 정도 평가" });
-    await expect(actions.getByRole("button")).toHaveCount(4);
-    await assertFits(page);
-    await page.getByText("발음 안내", { exact: true }).click();
-    await assertFits(page);
-    if (width === 390)
-      await page.screenshot({
-        path: resolve("../private-data/e2e/mobile-study-390.png"),
-      });
+    const restore = await enableHangul(page);
+    try {
+      await page.goto("/study?kana=katakana&groups=basic");
+      await expect(
+        page.getByRole("button", { name: /정답 보기/ }),
+      ).toBeVisible();
+      await assertFits(page);
+      await page.getByRole("button", { name: /정답 보기/ }).click();
+      await expect(page.getByText("근사 발음", { exact: true })).toBeVisible();
+      const actions = page.getByRole("group", { name: "기억 정도 평가" });
+      await expect(actions.getByRole("button")).toHaveCount(4);
+      await assertFits(page);
+      await page.getByText("발음 안내", { exact: true }).click();
+      await assertFits(page);
+      if (width === 390)
+        await page.screenshot({
+          path: resolve("../private-data/e2e/mobile-study-390.png"),
+        });
+    } finally {
+      await restore();
+    }
     await page.getByRole("button", { name: "로그아웃" }).click();
   });
 }

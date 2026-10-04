@@ -1,10 +1,19 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useSyncExternalStore } from "react";
 import { BookOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { api, json, me } from "@/api";
+const subscribeToHydration = () => () => {};
+const hydratedSnapshot = () => true;
+const serverSnapshot = () => false;
+
 export default function LoginPage() {
+  const hydrated = useSyncExternalStore(
+    subscribeToHydration,
+    hydratedSnapshot,
+    serverSnapshot,
+  );
   const router = useRouter(),
     client = useQueryClient(),
     [email, setEmail] = useState(""),
@@ -48,6 +57,7 @@ export default function LoginPage() {
             type="email"
             autoComplete="username"
             required
+            disabled={!hydrated}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -62,6 +72,7 @@ export default function LoginPage() {
             type="password"
             autoComplete="current-password"
             required
+            disabled={!hydrated}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -71,7 +82,10 @@ export default function LoginPage() {
             {error}
           </p>
         )}
-        <button disabled={pending} className="btn btn-primary w-full">
+        <button
+          disabled={!hydrated || pending}
+          className="btn btn-primary w-full"
+        >
           {pending ? "로그인 중…" : "로그인"}
         </button>
       </form>

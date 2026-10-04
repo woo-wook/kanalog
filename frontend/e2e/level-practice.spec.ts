@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 test.use({
   browserName: "webkit",
@@ -89,15 +90,19 @@ test("실제 MAX 카드의 다시 평가와 새로고침 후 즉시 재연습을
   const old = await (await page.request.get("/api/settings")).json();
   try {
     const options = await (await page.request.get("/api/study/options")).json();
-    const target = [...options]
-      .reverse()
-      .find(
-        (row: { due: number; total: number; studied: number }) =>
-          row.due === 0 && row.total > row.studied,
-      );
+    const target =
+      [...options]
+        .reverse()
+        .find(
+          (row: { due: number; total: number; studied: number }) =>
+            row.due === 0 && row.total > row.studied,
+        ) ??
+      [...options]
+        .sort((a, b) => a.due - b.due)
+        .find((row: { due: number }) => row.due > 0);
     expect(
       target,
-      "새 카드를 한 장 시험할 미학습 레벨 범위가 필요합니다",
+      "미학습 또는 예정된 MAX 카드가 있는 범위가 필요합니다",
     ).toBeTruthy();
     expect(
       (
@@ -114,7 +119,7 @@ test("실제 MAX 카드의 다시 평가와 새로고침 후 즉시 재연습을
       (
         await page.request.patch("/api/settings", {
           headers,
-          data: { dailyNewLimit: used + 1 },
+          data: { dailyNewLimit: target.due > 0 ? 0 : used + 1 },
         })
       ).ok(),
     ).toBeTruthy();
@@ -125,12 +130,34 @@ test("실제 MAX 카드의 다시 평가와 새로고침 후 즉시 재연습을
     const first = await (
       await page.request.get(`/api/study/sessions/${sessionId}`)
     ).json();
-    expect(first.cards).toHaveLength(1);
+    expect(first.cards.length).toBeGreaterThan(0);
+    const scheduledCount = first.cards.length;
     await page.getByRole("button", { name: /정답 보기/ }).click();
+    const firstSaved = page.waitForResponse((r) =>
+      r.url().endsWith("/api/study/reviews"),
+    );
     await page.getByRole("button", { name: /^다시/ }).click();
-    await expect(
-      page.getByText("한 번 더 기억해 보기", { exact: false }),
-    ).toBeVisible();
+    expect((await firstSaved).status()).toBe(200);
+    // Existing QA reviews remain intact. Finish other scheduled cards through the real API
+    // so the retry is the only remaining card; never reset FSRS/due timestamps for a fixture.
+    const pending = await (
+      await page.request.get(`/api/study/sessions/${sessionId}`)
+    ).json();
+    for (const other of pending.cards.filter(
+      (c: { reinforcement?: boolean }) => !c.reinforcement,
+    )) {
+      const response = await page.request.post("/api/study/reviews", {
+        headers,
+        data: {
+          sessionId,
+          cardId: other.id,
+          version: other.version,
+          rating: "GOOD",
+          idempotencyKey: randomUUID(),
+        },
+      });
+      expect(response.status()).toBe(200);
+    }
     await page.reload();
     await expect(
       page.getByText("한 번 더 기억해 보기", { exact: false }),
@@ -140,7 +167,7 @@ test("실제 MAX 카드의 다시 평가와 새로고침 후 즉시 재연습을
     ).json();
     expect(restored.cards).toHaveLength(1);
     expect(restored.cards[0].reinforcement).toBeTruthy();
-    expect(restored.answered).toBe(1);
+    expect(restored.answered).toBe(scheduledCount);
     const buttons = page.getByRole("button", { name: /정답 보기/ });
     const before = await buttons.boundingBox();
     expect(before!.y + before!.height).toBeLessThanOrEqual(844);
@@ -150,17 +177,21 @@ test("실제 MAX 카드의 다시 평가와 새로고침 후 즉시 재연습을
       page.getByRole("heading", { name: "이번 학습을 마쳤습니다" }),
     ).toBeVisible();
     await expect(
-      page.getByText("학습한 고유 카드 1장 · 답변 2회"),
+      page.getByText(
+        `학습한 고유 카드 ${scheduledCount}장 · 답변 ${scheduledCount + 1}회`,
+      ),
     ).toBeVisible();
     const completed = await (
       await page.request.get(`/api/study/sessions/${sessionId}`)
     ).json();
     expect(completed.cards).toHaveLength(0);
-    expect(completed.answered).toBe(2);
-    expect(completed.ratingCounts).toEqual({ AGAIN: 1, GOOD: 1 });
+    expect(completed.answered).toBe(scheduledCount + 1);
+    expect(completed.ratingCounts).toEqual({ AGAIN: 1, GOOD: scheduledCount });
     await page.reload();
     await expect(
-      page.getByText("학습한 고유 카드 1장 · 답변 2회"),
+      page.getByText(
+        `학습한 고유 카드 ${scheduledCount}장 · 답변 ${scheduledCount + 1}회`,
+      ),
     ).toBeVisible();
   } finally {
     await page.request.patch("/api/settings", {
@@ -196,7 +227,24 @@ test("빈 학습의 하루 한도 안내는 새로고침 뒤에도 유지된다"
       (row: { due: number; total: number; studied: number }) =>
         row.due === 0 && row.total > row.studied,
     );
-    expect(target).toBeTruthy();
+    const courses = await (await page.request.get("/api/courses")).json();
+    const untouchedLesson = courses
+      .filter((c: { kind: string }) =>
+        ["vocabulary", "grammar"].includes(c.kind),
+      )
+      .flatMap(
+        (c: {
+          lessons: { id: string; studiedCards: number; totalCards: number }[];
+        }) => c.lessons,
+      )
+      .find(
+        (l: { studiedCards: number; totalCards: number }) =>
+          l.studiedCards === 0 && l.totalCards > 0,
+      );
+    expect(Boolean(target || untouchedLesson)).toBeTruthy();
+    const studyUrl = target
+      ? `/study?level=${target.level}&kind=${target.kind}`
+      : `/study?lessonId=${untouchedLesson.id}`;
     expect(
       (
         await page.request.patch("/api/settings", {
@@ -205,7 +253,7 @@ test("빈 학습의 하루 한도 안내는 새로고침 뒤에도 유지된다"
         })
       ).ok(),
     ).toBeTruthy();
-    await page.goto(`/study?level=${target.level}&kind=${target.kind}`);
+    await page.goto(studyUrl);
     await expect(
       page.getByText(/오늘 새 카드 한도를 모두 사용했습니다/),
     ).toBeVisible();
