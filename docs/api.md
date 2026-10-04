@@ -128,3 +128,23 @@ POST 세션 응답의 `queueInfo`는 선택 범위의 `eligibleCards`, `unseenCa
 가나 응답은 항상 `practice:true`다. 기존 `/study/reviews`에 같은 평가·idempotency key를 제출하되 자유 연습은 서버에 저장된 세션 모드로 판단한다. 응답은 `{version,state:"PRACTICED"}`이며 `due`는 없다. 답변을 `practice_answer`에 따로 저장하고 FSRS 상태·일일 새 카드 한도·ReviewLog 통계를 변경하지 않는다. 가나는 같은 트랜잭션에서 사용자·카드별 `kana_practice_state`의 최근 평가를 갱신하며 코스 첫 연습 진도에도 반영한다. 카드 응답의 선택적 `lastRating`이 최근 평가다. 같은 키의 재전송은 평가 횟수도 추가하지 않는다. 코스의 가나 `dueCount`는 최근 AGAIN/HARD 문자 수이며 N5~N1은 기존 FSRS due 집계다. 자유 연습 한 세션에서는 카드당 한 번만 답변하며 같은 키의 재전송은 기존 성공을 반환한다. 같은 키의 다른 요청은 409 `IDEMPOTENCY_CONFLICT`, 다른 키의 중복 카드 답변은 409 `PRACTICE_ALREADY_ANSWERED`다. 자유 연습과 일반 복습 사이에서도 이미 사용한 사용자 요청 키는 재사용할 수 없다.
 
 `GET /api/study/sessions/{id}`는 소유자만 조회하며 자유 연습에서는 미답변 카드와 저장된 답변 수를 반환한다. 제외된 카드는 빠진다. 범위가 잘못되면 400 `BAD_KANA_SCOPE`, 학습 범위를 동시에 지정하면 400 `BAD_STUDY_SCOPE`다.
+
+## 레벨 전체 학습 (V9)
+
+`GET /api/study/options` → 소유자 범위 `{ level, kind, total, studied, due }[]`. 개인 비급수 카드는 급수 목록에 자동 분류하지 않는다.
+
+`PATCH /api/settings`는 `practiceLevel: "N5" | "N4" | "N3" | "N2" | "N1"`을 계정에 저장한다.
+
+`POST /api/study/sessions`의 `levelScope`는 기존 deckId/lessonId/kana와 배타적이다.
+
+```json
+{"levelScope":{"level":"N5","kind":"vocabulary","reviewOnly":false}}
+```
+
+급수 전체 복습은 kind를 생략하고 reviewOnly:true, 모든 레벨 복습은 level:null / reviewOnly:true이다. 새 학습의 level:null은 거부한다.
+
+주 평가 응답에는 필요 시 `retryCard`가 추가된다. 재연습 카드는 `reinforcement:true`와 `retryVersion`을 가진다. 재연습 제출도 `/api/study/reviews`를 사용하며 sessionId/cardId/version/rating/idempotencyKey와 함께 reinforcement:true/retryVersion을 보낸다. 저장 성공 상태는 REINFORCED, due:null이며 FSRS state/version은 유지한다.
+
+V10부터 queueInfo는 생성 당시 서버의 빈 큐 이유·다음 시각을 보존하므로 새로고침에도 안내가 유지된다. 세션 GET에는 answeredCards(고유 카드 ID 목록), ratingCounts(평가별 답변 횟수)가 추가된다. 남은 주 카드 뒤에 미완료 재연습 카드가 온다. 다른 기기의 오래된 재연습은 STALE_RETRY 또는 STALE_CARD(409), 같은 세션에서 이미 평가한 주 카드는 SESSION_ALREADY_ANSWERED(409)이다. 같은 키·다른 payload는 IDEMPOTENCY_CONFLICT(409)이다.
+
+[범위·일정·집계 정책](level-practice.md)을 참고한다.

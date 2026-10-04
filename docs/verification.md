@@ -412,3 +412,15 @@ python3 tools/e2e/run_live.py
 ```
 
 코스 테스트는 남은 신규 카드와 일일 한도가 필요하다. QA 계정은 반복 검증을 위해 하루 한도를 100장으로 설정한다. Supertonic 테스트는 실제 모델을 읽어 WAV 비무음·재생 시간 진행·페이지 이탈 정리를 확인한다. 고정 응답이나 mock 오디오를 성공으로 사용하지 않는다.
+
+## 레벨 전체 연습·오답 보강 (2026-10-04)
+
+- Backend `ktlintCheck check bootJar`: 58 tests, 0 failures/errors. PostgreSQL 16 Testcontainers / 실제 HTTP 인증 API 검증 포함. 레슨 밖의 급수·유형 선택, 복습 전용 새 카드 제외, 소유권, 제외 카드, 같은 키 재전송/충돌, 동시 새 카드 한도와 동시 재연습 제출, 즉시 재연습의 FSRS JSON 보존, 다음날 알림 도달 후 공식 스케줄러 재계산, 자정/DST 경계, 빈 큐 안내 재로딩을 검증했다.
+- Frontend Vitest: 73 tests 통과. TypeScript / ESLint / Next production build / backend·frontend Docker image build 통과.
+- 실제 데이터 보존: 첫 V9 배포 직후 기존 21개 테이블의 기존 컬럼 행 수·해시가 모두 동일했다. QA 요청 전에 비교했으며 백업은 Git에서 제외한 private-data/backups/level-review-20261004에 보관했다.
+- 실제 MAX N5 범위는 단어 779장 / 문법 99장임을 인증된 API에서 확인했다. 현재 레슨을 선택하지 않고 급수 전체 세션을 생성했다.
+- 첫 새 브라우저 검사에서 optional lessonId 필드 생략을 null로 단정한 assertion을 수정했다. 기존 가나 검사는 새로고침 때 새 POST 세션을 기다리던 부분을 기존 세션 GET 복원 확인으로 변경했다. 제품의 새 복원 동작에 맞춰 재실행 후 통과했다.
+- 실물 iPhone Safari·PWA 설치 검사는 이번 변경에서 수행하지 않았다. 모바일 WebKit 자동 검증과 구분한다. 다음날 도달은 Testcontainers에서 시간 조건을 바꿔 검증했으며, 실제 QA 계정에서는 다음날 사용자 시간대 00:00에 알림이 예약되었음을 운영 DB 읽기 전용 쿼리로 확인했다.
+- V10 및 완료 후 다음 배치 버튼 최종 배포 직후에는 기존 23개 테이블의 기존 컬럼 행 수·해시가 모두 동일했다. 별도 private-data/backups/level-review-queue-info-20261004 dump를 보관했다.
+- 실제 HTTPS 서비스의 최종 모바일 WebKit 새 기능 3개 + 기존 회귀 13개 = 16개 고유 브라우저 흐름을 확인했다. 기존 회귀는 첫 실행에서 12개가 통과하고 가나 새로고침 POST 대기 검사가 timeout이었다. GET 복원 계약으로 수정 후 1개를 재실행해 통과했다. 신규 3개는 N5 전체 범위 / 실제 MAX 다시 평가 및 새로고침 후 재연습·세션 통계 복원 / 한도에 도달한 빈 큐의 안내 복원을 확인했다.
+- 최종 Compose backend health / PUBLIC_APP_URL / Secure 쿠키 설정 검증 통과. DB와 음성 서비스를 교체하거나 재시작하지 않고 기존 공유 PostgreSQL의 독립 Kanalog DB에 additive 마이그레이션만 적용했다.

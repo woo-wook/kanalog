@@ -173,3 +173,60 @@ test("실제 MAX 카드의 다시 평가와 새로고침 후 즉시 재연습을
     });
   }
 });
+
+test("빈 학습의 하루 한도 안내는 새로고침 뒤에도 유지된다", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await page.getByLabel("이메일").fill(process.env.E2E_EMAIL!);
+  await page.getByLabel("비밀번호").fill(process.env.E2E_PASSWORD!);
+  await page.getByRole("button", { name: "로그인", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "내 레벨에서 골고루" }),
+  ).toBeVisible();
+  const me = await (await page.request.get("/api/me")).json();
+  const headers = {
+    "X-CSRF-Token": me.csrfToken,
+    Origin: new URL(process.env.E2E_BASE_URL!).origin,
+  };
+  const old = await (await page.request.get("/api/settings")).json();
+  try {
+    const options = await (await page.request.get("/api/study/options")).json();
+    const target = options.find(
+      (row: { due: number; total: number; studied: number }) =>
+        row.due === 0 && row.total > row.studied,
+    );
+    expect(target).toBeTruthy();
+    expect(
+      (
+        await page.request.patch("/api/settings", {
+          headers,
+          data: { dailyNewLimit: 0 },
+        })
+      ).ok(),
+    ).toBeTruthy();
+    await page.goto(`/study?level=${target.level}&kind=${target.kind}`);
+    await expect(
+      page.getByText(/오늘 새 카드 한도를 모두 사용했습니다/),
+    ).toBeVisible();
+    const sessionId = new URL(page.url()).searchParams.get("sessionId");
+    await page.reload();
+    await expect(
+      page.getByText(/오늘 새 카드 한도를 모두 사용했습니다/),
+    ).toBeVisible();
+    const session = await (
+      await page.request.get(`/api/study/sessions/${sessionId}`)
+    ).json();
+    expect(session.queueInfo.reason).toBe("DAILY_LIMIT");
+    expect(session.cards).toHaveLength(0);
+    expect(session.answered).toBe(0);
+    await expect(
+      page.getByRole("heading", { name: "이번 학습을 마쳤습니다" }),
+    ).not.toBeVisible();
+  } finally {
+    await page.request.patch("/api/settings", {
+      headers,
+      data: { dailyNewLimit: old.dailyNewLimit },
+    });
+  }
+});

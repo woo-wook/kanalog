@@ -166,9 +166,17 @@ test("단일 가나 코스와 섞기 평가가 다음 연습·재접속에 반�
         expect(box!.y + box!.height).toBeLessThanOrEqual(740);
       }
       if (width === 360) {
-        response = sessionResponse();
+        response = page.waitForResponse(
+          (r) =>
+            r.url().endsWith(`/api/study/sessions/${next.id}`) &&
+            r.request().method() === "GET",
+        );
         await page.reload();
-        await response;
+        const resumed = await (await response).json();
+        expect(resumed.id).toBe(next.id);
+        expect(
+          resumed.cards.slice(0, 2).map((c: { id: string }) => c.id),
+        ).toEqual([retryCard.id, hardCard.id]);
       }
     }
     const saved = page.waitForResponse((r) =>
