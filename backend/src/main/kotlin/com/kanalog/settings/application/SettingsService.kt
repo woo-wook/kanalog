@@ -22,6 +22,10 @@ class SettingsService(
         patch: SettingsPatch,
     ): SettingsView {
         val old = settings(user)
+        patch.practiceLevel?.let {
+            com.kanalog.study.domain
+                .LevelStudyRequest(it)
+        }
         val audio =
             AudioPreferences(
                 patch.playbackSpeed ?: old.playbackSpeed,
@@ -52,6 +56,7 @@ class SettingsService(
                     )?.take(200),
                 audioEngine = audio.engine,
                 supertonicVoice = audio.voice,
+                practiceLevel = patch.practiceLevel ?: old.practiceLevel,
             )
         store.save(user, next)
         return settings(user)

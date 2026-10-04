@@ -12,4 +12,5 @@ data class SettingsView(
     val preferredVoice: String?,
     val audioEngine: String,
     val supertonicVoice: String,
+    val practiceLevel: String = "N5",
 )

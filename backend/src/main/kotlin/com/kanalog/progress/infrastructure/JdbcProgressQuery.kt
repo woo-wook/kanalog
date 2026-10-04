@@ -30,7 +30,7 @@ class JdbcProgressQuery(
         """select count(*) from user_card_state s join card c on c.id=s.card_id join deck d on d.id=c.deck_id
         where s.user_id=? and c.owner_id=? and ${scope(
             lesson,
-        )} and d.import_status='READY' and c.active=true and s.suspended=false and s.first_seen_at is not null and s.due_at<=now()""",
+        )} and d.import_status='READY' and c.active=true and s.suspended=false and s.first_seen_at is not null and (s.due_at<=now() or exists(select 1 from review_followup f where f.user_id=s.user_id and f.card_id=c.id and f.due_at<=now()))""",
         owner,
         owner,
     )
@@ -86,7 +86,7 @@ class JdbcProgressQuery(
 
     override fun due(owner: UUID) =
         count(
-            """select count(*) from user_card_state s join card c on c.id=s.card_id join deck d on d.id=c.deck_id where s.user_id=? and c.owner_id=? and d.import_status='READY' and c.active=true and s.suspended=false and s.first_seen_at is not null and s.due_at<=now()""",
+            """select count(*) from user_card_state s join card c on c.id=s.card_id join deck d on d.id=c.deck_id where s.user_id=? and c.owner_id=? and d.import_status='READY' and c.active=true and s.suspended=false and s.first_seen_at is not null and (s.due_at<=now() or exists(select 1 from review_followup f where f.user_id=s.user_id and f.card_id=c.id and f.due_at<=now()))""",
             owner,
             owner,
         )

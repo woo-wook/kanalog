@@ -25,6 +25,7 @@ class JdbcSettingsStore(
                     rs.getString("preferred_voice"),
                     rs.getString("audio_engine"),
                     rs.getString("supertonic_voice"),
+                    rs.getString("practice_level"),
                 )
             }, owner)
             .firstOrNull()
@@ -34,7 +35,7 @@ class JdbcSettingsStore(
         settings: SettingsView,
     ) {
         jdbc.update(
-            """update user_settings set daily_new_limit=?,show_reading_hint=?,show_hangul_hint=?,auto_play_audio=?,allow_audio_before_reveal=?,tts_fallback=?,playback_speed=?,preferred_voice=?,audio_engine=?,supertonic_voice=? where user_id=?""",
+            """update user_settings set daily_new_limit=?,show_reading_hint=?,show_hangul_hint=?,auto_play_audio=?,allow_audio_before_reveal=?,tts_fallback=?,playback_speed=?,preferred_voice=?,audio_engine=?,supertonic_voice=?,practice_level=? where user_id=?""",
             settings.dailyNewLimit,
             settings.showReadingHint,
             settings.showHangulHint,
@@ -45,6 +46,7 @@ class JdbcSettingsStore(
             settings.preferredVoice,
             settings.audioEngine,
             settings.supertonicVoice,
+            settings.practiceLevel,
             owner,
         )
         jdbc.update("update app_user set timezone=? where id=?", settings.timezone, owner)

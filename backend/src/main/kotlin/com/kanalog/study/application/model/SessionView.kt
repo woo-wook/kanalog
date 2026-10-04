@@ -10,4 +10,6 @@ data class SessionView(
     val lessonTitle: String? = null,
     val practice: Boolean = false,
     val queueInfo: QueueInfo? = null,
+    val answeredCards: List<UUID> = emptyList(),
+    val ratingCounts: Map<String, Int> = emptyMap(),
 )

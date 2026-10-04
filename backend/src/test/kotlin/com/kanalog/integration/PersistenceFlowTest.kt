@@ -67,6 +67,356 @@ class PersistenceFlowTest
             return id
         }
 
+        @Test fun `level sessions cross lesson boundaries and isolate kind level and owner`() {
+            val owner = user()
+            val other = user()
+            val selected = listOf("N5" to "vocabulary", "N5" to "vocabulary", "N5" to "grammar", "N4" to "vocabulary")
+            selected.forEachIndexed { i, (level, kind) ->
+                val deck = UUID.randomUUID()
+                val note = UUID.randomUUID()
+                jdbc.update(
+                    "insert into deck(id,owner_id,source_path,title,level,kind) values(?,?,?,?,?,?)",
+                    deck,
+                    owner,
+                    "scope/$i",
+                    "Scope $i",
+                    level,
+                    kind,
+                )
+                jdbc.update("insert into study_note(id,owner_id,kind,front,meaning) values(?,?,?,?,?)", note, owner, kind, "テスト$i", "test")
+                jdbc.update(
+                    "insert into card(id,owner_id,deck_id,note_id,direction) values(?,?,?,?,?)",
+                    note,
+                    owner,
+                    deck,
+                    note,
+                    "recognition",
+                )
+            }
+            val input =
+                com.kanalog.study.domain
+                    .LevelStudyRequest("N5", "vocabulary")
+            val session = study.start(owner, levelScope = input)
+            assertEquals(2, session.cards.size)
+            assertTrue(session.cards.all { it.kind == "vocabulary" })
+            assertEquals(0, study.start(other, levelScope = input).cards.size)
+            assertEquals(0, study.start(owner, levelScope = input.copy(reviewOnly = true)).cards.size)
+            assertEquals(1, study.start(owner, levelScope = input.copy(kind = "grammar")).cards.size)
+        }
+
+        private fun levelCard(
+            owner: UUID,
+            level: String = "N5",
+            kind: String = "vocabulary",
+        ): UUID {
+            val deck = UUID.randomUUID()
+            val card = UUID.randomUUID()
+            jdbc.update(
+                "insert into deck(id,owner_id,source_path,title,level,kind) values(?,?,?,?,?,?)",
+                deck,
+                owner,
+                "level/$deck",
+                "Level",
+                level,
+                kind,
+            )
+            jdbc.update("insert into study_note(id,owner_id,kind,front,meaning) values(?,?,?,?,?)", card, owner, kind, "テスト", "Synthetic")
+            jdbc.update("insert into card(id,owner_id,deck_id,note_id,direction) values(?,?,?,?,?)", card, owner, deck, card, "recognition")
+            return card
+        }
+
+        @Test fun `again has one persisted immediate retry and an independent tomorrow review`() {
+            val owner = user()
+            val cardId = levelCard(owner)
+            val first =
+                study.start(
+                    owner,
+                    levelScope =
+                        com.kanalog.study.domain
+                            .LevelStudyRequest(),
+                )
+            val card = first.cards.single()
+            val req = ReviewRequest(first.id, card.id, card.version, "AGAIN", UUID.randomUUID().toString())
+            val result = study.review(owner, req)
+            val retry = study.session(owner, first.id).cards.single()
+            assertTrue(retry.reinforcement)
+            assertEquals(result.retryCard, retry)
+            val tomorrow =
+                jdbc
+                    .queryForObject(
+                        "select due_at from review_followup where user_id=? and card_id=?",
+                        java.sql.Timestamp::class.java,
+                        owner,
+                        cardId,
+                    )!!
+                    .toInstant()
+            assertEquals(
+                java.time.LocalDate
+                    .now(
+                        java.time.ZoneId.of("Asia/Seoul"),
+                    ).plusDays(1)
+                    .atStartOfDay(java.time.ZoneId.of("Asia/Seoul"))
+                    .toInstant(),
+                tomorrow,
+            )
+            val before =
+                jdbc.queryForObject(
+                    "select fsrs_json from user_card_state where user_id=? and card_id=?",
+                    String::class.java,
+                    owner,
+                    cardId,
+                )
+            val retryReq = ReviewRequest(first.id, retry.id, retry.version, "GOOD", UUID.randomUUID().toString(), true, retry.retryVersion)
+            val reinforced = study.review(owner, retryReq)
+            assertEquals(reinforced, study.review(owner, retryReq))
+            assertEquals(result, study.review(owner, req))
+            assertEquals(
+                "IDEMPOTENCY_CONFLICT",
+                assertThrows(ApiFailure::class.java) { study.review(owner, retryReq.copy(rating = "AGAIN")) }.code,
+            )
+            assertEquals(
+                "STALE_RETRY",
+                assertThrows(ApiFailure::class.java) {
+                    study.review(owner, retryReq.copy(idempotencyKey = UUID.randomUUID().toString()))
+                }.code,
+            )
+            assertTrue(study.session(owner, first.id).cards.isEmpty())
+            assertEquals(2, study.session(owner, first.id).answered)
+            assertEquals(listOf(card.id), study.session(owner, first.id).answeredCards)
+            assertEquals(mapOf("AGAIN" to 1, "GOOD" to 1), study.session(owner, first.id).ratingCounts)
+            assertEquals(
+                before,
+                jdbc.queryForObject(
+                    "select fsrs_json from user_card_state where user_id=? and card_id=?",
+                    String::class.java,
+                    owner,
+                    cardId,
+                ),
+            )
+            assertEquals(1, jdbc.queryForObject("select count(*) from review_log where user_id=?", Int::class.java, owner))
+            assertEquals(1, jdbc.queryForObject("select count(*) from review_followup where user_id=?", Int::class.java, owner))
+            jdbc.update("update user_card_state set due_at=now()+interval '30 days' where user_id=?", owner)
+            assertTrue(
+                study
+                    .start(
+                        owner,
+                        levelScope =
+                            com.kanalog.study.domain
+                                .LevelStudyRequest(reviewOnly = true),
+                    ).cards
+                    .isEmpty(),
+            )
+            jdbc.update("update review_followup set due_at=now()-interval '1 second' where user_id=?", owner)
+            assertEquals(1, study.options(owner).single().due)
+            assertEquals(1, overview.dashboard(owner).dueCount)
+            val nextDay =
+                study.start(
+                    owner,
+                    levelScope =
+                        com.kanalog.study.domain
+                            .LevelStudyRequest(reviewOnly = true),
+                )
+            val dueCard = nextDay.cards.single()
+            study.review(owner, ReviewRequest(nextDay.id, dueCard.id, dueCard.version, "GOOD", UUID.randomUUID().toString()))
+            assertEquals(0, jdbc.queryForObject("select count(*) from review_followup where user_id=?", Int::class.java, owner))
+        }
+
+        @Test fun `an earlier FSRS success preserves tomorrow reminder and review empty state ignores new quota`() {
+            val owner = user()
+            levelCard(owner)
+            val scope =
+                com.kanalog.study.domain
+                    .LevelStudyRequest()
+            val session = study.start(owner, levelScope = scope)
+            val card = session.cards.single()
+            study.review(owner, ReviewRequest(session.id, card.id, card.version, "AGAIN", UUID.randomUUID().toString()))
+            jdbc.update("update user_card_state set due_at=now()-interval '1 minute' where user_id=?", owner)
+            val earlier = study.start(owner, levelScope = scope.copy(reviewOnly = true))
+            val due = earlier.cards.single()
+            val earlierResult = study.review(owner, ReviewRequest(earlier.id, due.id, due.version, "GOOD", UUID.randomUUID().toString()))
+            assertEquals(1, jdbc.queryForObject("select count(*) from review_followup where user_id=?", Int::class.java, owner))
+            levelCard(owner)
+            jdbc.update("update user_settings set daily_new_limit=0 where user_id=?", owner)
+            val empty = study.start(owner, levelScope = scope.copy(reviewOnly = true))
+            assertTrue(empty.cards.isEmpty())
+            assertEquals("NOT_DUE", empty.queueInfo!!.reason)
+            val tomorrow =
+                jdbc
+                    .queryForObject(
+                        "select due_at from review_followup where user_id=?",
+                        java.sql.Timestamp::class.java,
+                        owner,
+                    )!!
+                    .toInstant()
+            assertEquals(minOf(earlierResult.due!!, tomorrow), empty.queueInfo.nextDueAt)
+        }
+
+        @Test fun `review scope spans all levels excludes new and honors suspension and ownership`() {
+            val owner = user()
+            val other = user()
+            val ids = listOf(levelCard(owner), levelCard(owner, "N4", "grammar"))
+            levelCard(owner)
+            levelCard(other)
+            ids.forEach { card ->
+                val session =
+                    study.start(
+                        owner,
+                        deckId = jdbc.queryForObject("select deck_id from card where id=?", UUID::class.java, card),
+                    )
+                val current = session.cards.single()
+                study.review(owner, ReviewRequest(session.id, current.id, current.version, "GOOD", UUID.randomUUID().toString()))
+                jdbc.update("update user_card_state set due_at=now()-interval '1 minute' where user_id=? and card_id=?", owner, card)
+            }
+            val all =
+                com.kanalog.study.domain
+                    .LevelStudyRequest(level = null, reviewOnly = true)
+            assertEquals(
+                ids.toSet(),
+                study
+                    .start(owner, levelScope = all)
+                    .cards
+                    .map { it.id }
+                    .toSet(),
+            )
+            assertEquals(1, study.start(owner, levelScope = all.copy(level = "N5")).cards.size)
+            jdbc.update("update user_card_state set suspended=true where user_id=? and card_id=?", owner, ids.first())
+            assertEquals(listOf(ids.last()), study.start(owner, levelScope = all).cards.map { it.id })
+            assertTrue(study.start(other, levelScope = all).cards.isEmpty())
+        }
+
+        @Test fun `broad submissions share daily limit and reject stale other session answers`() {
+            val owner = user()
+            levelCard(owner)
+            jdbc.update("update user_settings set daily_new_limit=1 where user_id=?", owner)
+            val scope =
+                com.kanalog.study.domain
+                    .LevelStudyRequest()
+            val a = study.start(owner, levelScope = scope)
+            val b = study.start(owner, levelScope = scope)
+            val card = a.cards.single()
+            study.review(owner, ReviewRequest(a.id, card.id, card.version, "AGAIN", UUID.randomUUID().toString()))
+            assertEquals(
+                "STALE_CARD",
+                assertThrows(ApiFailure::class.java) {
+                    study.review(owner, ReviewRequest(b.id, card.id, card.version, "GOOD", UUID.randomUUID().toString()))
+                }.code,
+            )
+            levelCard(owner)
+            assertTrue(study.start(owner, levelScope = scope).cards.isEmpty())
+            assertEquals(0, overview.dashboard(owner).dailyNewRemaining)
+        }
+
+        @Test fun `concurrent broad reviews cannot exceed the shared new allowance`() {
+            val owner = user()
+            levelCard(owner, "N5")
+            levelCard(owner, "N4", "grammar")
+            jdbc.update("update user_settings set daily_new_limit=1 where user_id=?", owner)
+            val scopes =
+                listOf(
+                    com.kanalog.study.domain
+                        .LevelStudyRequest("N5"),
+                    com.kanalog.study.domain
+                        .LevelStudyRequest("N4"),
+                )
+            val sessions = scopes.map { study.start(owner, levelScope = it) }
+            val executor =
+                java.util.concurrent.Executors
+                    .newFixedThreadPool(2)
+            val ready = java.util.concurrent.CountDownLatch(2)
+            val go = java.util.concurrent.CountDownLatch(1)
+            try {
+                val futures =
+                    sessions.map { session ->
+                        executor.submit<String> {
+                            ready.countDown()
+                            go.await()
+                            val card = session.cards.single()
+                            try {
+                                study
+                                    .review(
+                                        owner,
+                                        ReviewRequest(session.id, card.id, card.version, "GOOD", UUID.randomUUID().toString()),
+                                    ).state
+                            } catch (
+                                failure: ApiFailure,
+                            ) {
+                                failure.code
+                            }
+                        }
+                    }
+                assertTrue(ready.await(5, java.util.concurrent.TimeUnit.SECONDS))
+                go.countDown()
+                assertEquals(setOf("SAVED", "NEW_LIMIT"), futures.map { it.get(15, java.util.concurrent.TimeUnit.SECONDS) }.toSet())
+                assertEquals(
+                    1,
+                    jdbc.queryForObject(
+                        "select count(*) from user_card_state where user_id=? and first_seen_at is not null",
+                        Int::class.java,
+                        owner,
+                    ),
+                )
+            } finally {
+                go.countDown()
+                executor.shutdownNow()
+            }
+        }
+
+        @Test fun `concurrent immediate retry submissions save only one reinforcement`() {
+            val owner = user()
+            levelCard(owner)
+            val session =
+                study.start(
+                    owner,
+                    levelScope =
+                        com.kanalog.study.domain
+                            .LevelStudyRequest(),
+                )
+            val card = session.cards.single()
+            val retry =
+                study
+                    .review(
+                        owner,
+                        ReviewRequest(session.id, card.id, card.version, "AGAIN", UUID.randomUUID().toString()),
+                    ).retryCard!!
+            val executor =
+                java.util.concurrent.Executors
+                    .newFixedThreadPool(2)
+            val go = java.util.concurrent.CountDownLatch(1)
+            try {
+                val futures =
+                    (1..2).map {
+                        executor.submit<String> {
+                            go.await()
+                            try {
+                                study
+                                    .review(
+                                        owner,
+                                        ReviewRequest(
+                                            session.id,
+                                            retry.id,
+                                            retry.version,
+                                            "GOOD",
+                                            UUID.randomUUID().toString(),
+                                            true,
+                                            retry.retryVersion,
+                                        ),
+                                    ).state
+                            } catch (
+                                failure: ApiFailure,
+                            ) {
+                                failure.code
+                            }
+                        }
+                    }
+                go.countDown()
+                assertEquals(setOf("REINFORCED", "STALE_RETRY"), futures.map { it.get(15, java.util.concurrent.TimeUnit.SECONDS) }.toSet())
+                assertEquals(1, jdbc.queryForObject("select count(*) from reinforcement_answer where user_id=?", Int::class.java, owner))
+            } finally {
+                go.countDown()
+                executor.shutdownNow()
+            }
+        }
+
         @Test fun `V8 backfills latest kana rating from both histories and rejects foreign or vocabulary history`() {
             val schema = "kana_migration_" + UUID.randomUUID().toString().replace("-", "")
             val owner = UUID.randomUUID()

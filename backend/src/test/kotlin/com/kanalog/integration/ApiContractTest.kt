@@ -141,6 +141,61 @@ class ApiContractTest
             )
         }
 
+        @Test fun `level practice and persisted reinforcement work through authenticated JSON APIs`() {
+            val owner = login()
+            val other = login()
+            val note = newNote(owner)
+            jdbc.update("update deck set level='N5' where id=(select deck_id from card where note_id=?)", note)
+            val patched = request("PATCH", "/api/settings", """{"practiceLevel":"N4"}""", owner)
+            assertEquals(200, patched.statusCode())
+            assertEquals("N4", json(request("GET", "/api/settings", login = owner)).path("practiceLevel").asString())
+            code(request("PATCH", "/api/settings", """{"practiceLevel":"N6"}""", owner), 400, "BAD_LEVEL")
+            val options = json(request("GET", "/api/study/options", login = owner))
+            assertEquals(1, options.size())
+            assertEquals("N5", options.get(0).path("level").asString())
+            assertEquals(0, json(request("GET", "/api/study/options", login = other)).size())
+            code(request("GET", "/api/study/options"), 401, "UNAUTHORIZED")
+            val started = request("POST", "/api/study/sessions", """{"levelScope":{"level":"N5","kind":"vocabulary"}}""", owner)
+            assertEquals(200, started.statusCode())
+            val session = json(started)
+            val sessionId = session.path("id").asString()
+            val key = UUID.randomUUID().toString()
+            val body = reviewPayload(session, key, "AGAIN")
+            val reviewed = request("POST", "/api/study/reviews", body, owner)
+            assertEquals(200, reviewed.statusCode())
+            assertTrue(json(reviewed).path("retryCard").path("reinforcement").asBoolean())
+            val restored = json(request("GET", "/api/study/sessions/$sessionId", login = owner))
+            assertTrue(
+                restored
+                    .path("cards")
+                    .get(0)
+                    .path("reinforcement")
+                    .asBoolean(),
+            )
+            val card = restored.path("cards").get(0)
+            val retry =
+                mapper.writeValueAsString(
+                    mapOf(
+                        "sessionId" to sessionId,
+                        "cardId" to card.path("id").asString(),
+                        "version" to card.path("version").asLong(),
+                        "rating" to "GOOD",
+                        "idempotencyKey" to UUID.randomUUID().toString(),
+                        "reinforcement" to true,
+                        "retryVersion" to card.path("retryVersion").asLong(),
+                    ),
+                )
+            code(request("POST", "/api/study/reviews", retry, other), 404, "CARD_NOT_IN_SESSION")
+            val response = request("POST", "/api/study/reviews", retry, owner)
+            assertEquals(200, response.statusCode())
+            assertEquals(json(response), json(request("POST", "/api/study/reviews", retry, owner)))
+            assertEquals(json(reviewed), json(request("POST", "/api/study/reviews", body, owner)))
+            val complete = json(request("GET", "/api/study/sessions/$sessionId", login = owner))
+            assertEquals(0, complete.path("cards").size())
+            assertEquals(2, complete.path("answered").asInt())
+            assertEquals(1, jdbc.queryForObject("select count(*) from review_log where user_id=?", Int::class.java, owner.id))
+        }
+
         @Test fun `login settings health logout and error envelopes retain the HTTP contract`() {
             code(request("GET", "/api/me"), 401, "UNAUTHORIZED")
             val owner = login()

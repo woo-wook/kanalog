@@ -18,6 +18,9 @@ import java.util.UUID
 class StudyController(
     private val service: StudyService,
 ) {
+    @GetMapping("/api/study/options")
+    fun options(request: HttpServletRequest) = service.options(request.user().id)
+
     @GetMapping("/api/decks")
     fun decks(request: HttpServletRequest) = service.decks(request.user().id)
 
@@ -37,7 +40,7 @@ class StudyController(
     fun start(
         @RequestBody body: SessionRequest,
         request: HttpServletRequest,
-    ) = service.start(request.user().id, body.deckId, body.lessonId, body.kana, body.practice)
+    ) = service.start(request.user().id, body.deckId, body.lessonId, body.kana, body.practice, body.levelScope)
 
     @GetMapping("/api/study/sessions/{id}")
     fun session(

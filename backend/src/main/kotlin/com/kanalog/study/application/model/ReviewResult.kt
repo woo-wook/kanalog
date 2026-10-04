@@ -6,4 +6,5 @@ data class ReviewResult(
     val due: Instant?,
     val version: Long,
     val state: String,
+    val retryCard: CardView? = null,
 )

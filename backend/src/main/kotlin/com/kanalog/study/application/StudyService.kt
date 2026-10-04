@@ -13,6 +13,7 @@ import com.kanalog.study.application.port.out.ReviewScheduler
 import com.kanalog.study.application.port.out.StudyScope
 import com.kanalog.study.application.port.out.StudyStore
 import com.kanalog.study.domain.KanaMixRequest
+import com.kanalog.study.domain.LevelStudyRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -26,6 +27,8 @@ class StudyService(
     private val courses: CourseService,
     private val kanaMix: KanaMixService,
 ) {
+    fun options(userId: UUID) = store.options(userId)
+
     fun decks(userId: UUID) = store.decks(userId)
 
     fun card(
@@ -49,10 +52,11 @@ class StudyService(
         lessonId: UUID? = null,
         kana: KanaMixRequest? = null,
         practice: Boolean = false,
+        levelScope: LevelStudyRequest? = null,
     ): SessionView {
-        if (listOf(deckId, lessonId, kana).count { it != null } != 1) fail("BAD_STUDY_SCOPE", "코스 단계·덱·가나 연습 중 하나를 선택하세요")
+        if (listOf(deckId, lessonId, kana, levelScope).count { it != null } != 1) fail("BAD_STUDY_SCOPE", "코스 단계·덱·가나 연습 중 하나를 선택하세요")
         val lesson = lessonId?.let { courses.scope(userId, it) }
-        val scope = StudyScope(lesson?.deckId ?: deckId, lessonId, kana?.let { kanaMix.cards(userId, it) })
+        val scope = StudyScope(lesson?.deckId ?: deckId, lessonId, kana?.let { kanaMix.cards(userId, it) }, levelScope)
         val isPractice = practice || kana != null
         store.lockUser(userId)
         scope.deckId?.let { requireDeck(userId, it) }
@@ -66,7 +70,14 @@ class StudyService(
                 store.practiceCards(userId, scope, size)
             } else {
                 val due = store.dueCards(userId, scope, size)
-                val unseen = if (remaining > 0) store.unseenCards(userId, scope, remaining) else emptyList()
+                val unseen =
+                    if (remaining > 0 &&
+                        levelScope?.reviewOnly != true
+                    ) {
+                        store.unseenCards(userId, scope, remaining)
+                    } else {
+                        emptyList()
+                    }
                 (due + unseen).distinct()
             }
         val availability = store.availability(userId, scope)
@@ -74,12 +85,12 @@ class StudyService(
             when {
                 ids.isNotEmpty() -> null
                 availability.total == 0 -> "NO_ELIGIBLE_CARDS"
-                !isPractice && availability.unseen > 0 && used >= limit -> "DAILY_LIMIT"
+                !isPractice && levelScope?.reviewOnly != true && availability.unseen > 0 && used >= limit -> "DAILY_LIMIT"
                 else -> "NOT_DUE"
             }
         val info = QueueInfo(availability.total, availability.unseen, maxOf(0, remaining), availability.nextDue, reason)
         val id = UUID.randomUUID()
-        val title = kana?.copy(practice = isPractice)?.title()
+        val title = levelScope?.title() ?: kana?.copy(practice = isPractice)?.title()
         store.createSession(id, userId, scope, title, isPractice)
         ids.forEachIndexed { position, card -> store.reserveCard(id, userId, card, position, isPractice) }
         return SessionView(id, ids.mapNotNull { card(userId, it) }, 0, lessonId, title ?: lesson?.title, isPractice, info)
@@ -91,15 +102,18 @@ class StudyService(
     ): SessionView {
         val metadata = store.metadata(userId, sessionId) ?: fail("SESSION_NOT_FOUND", "학습 세션을 찾을 수 없습니다", FailureStatus.NOT_FOUND)
         val ids = store.sessionCards(userId, sessionId, metadata.practice)
+        val summary = store.sessionSummary(userId, sessionId)
         return SessionView(
             sessionId,
             ids.mapNotNull {
-                card(userId, it)
+                sessionCard(userId, sessionId, it)
             },
             store.answerCount(userId, sessionId, metadata.practice),
             metadata.lessonId,
             metadata.title,
             metadata.practice,
+            answeredCards = summary.cards,
+            ratingCounts = summary.ratings,
         )
     }
 
@@ -109,16 +123,23 @@ class StudyService(
         req: ReviewRequest,
     ): ReviewResult {
         if (req.idempotencyKey.length !in 8..100) fail("BAD_KEY", "요청 키를 확인하세요")
-        val digest = sha256("${req.sessionId}|${req.cardId}|${req.version}|${req.rating}")
+        val digest =
+            sha256(
+                "${req.sessionId}|${req.cardId}|${req.version}|${req.rating}${if (req.reinforcement) "|retry|${req.retryVersion}" else ""}",
+            )
         // Preserve user -> card locking order and the user's shared daily allowance.
         store.lockUser(userId)
+        store.savedReinforcement(userId, req.idempotencyKey)?.let {
+            requireSameRequest(it.requestHash, digest)
+            return ReviewResult(null, it.nextVersion, "REINFORCED")
+        }
         store.practiceRequestHash(userId, req.idempotencyKey)?.let {
             requireSameRequest(it, digest)
             return ReviewResult(null, req.version, "PRACTICED")
         }
         store.savedReview(userId, req.idempotencyKey)?.let {
             requireSameRequest(it.requestHash, digest)
-            return ReviewResult(scheduler.due(it.nextState), it.nextVersion, "SAVED")
+            return ReviewResult(scheduler.due(it.nextState), it.nextVersion, "SAVED", it.retryCard)
         }
         if (!store.sessionContains(
                 userId,
@@ -128,9 +149,23 @@ class StudyService(
         ) {
             fail("CARD_NOT_IN_SESSION", "세션 카드를 찾을 수 없습니다", FailureStatus.NOT_FOUND)
         }
+        if (req.reinforcement) return reinforcementAnswer(userId, req, digest)
         if (store.isPractice(userId, req.sessionId)) return practiceAnswer(userId, req, digest)
+        if (!store.practiceCardAvailable(userId, req.cardId)) fail("CARD_NOT_AVAILABLE", "연습할 수 없는 카드입니다", FailureStatus.CONFLICT)
         val state = store.lockState(userId, req.cardId) ?: fail("CARD_STATE_MISSING", "카드 상태를 다시 불러오세요", FailureStatus.CONFLICT)
-        state.requireReviewable(req.version, Instant.now())
+        if (store.retryStatus(userId, req.sessionId, req.cardId)?.pending ==
+            true
+        ) {
+            fail("RETRY_REQUIRED", "즉시 재연습 답변으로 제출하세요", FailureStatus.CONFLICT)
+        }
+        state.requireReviewable(req.version, Instant.now(), store.followupDue(userId, req.cardId))
+        if (store.scheduledAnswered(
+                req.sessionId,
+                req.cardId,
+            )
+        ) {
+            fail("SESSION_ALREADY_ANSWERED", "이미 이 세션에서 평가한 카드입니다", FailureStatus.CONFLICT)
+        }
         if (state.firstSeen == null) {
             val (begin, end) = localDayWindow(Instant.now(), zone(userId))
             if (store.newCardsUsed(userId, begin, end) >=
@@ -143,7 +178,49 @@ class StudyService(
         val (nextJson, due) = scheduler.review(state.json, req.rating, now)
         store.saveReview(userId, req, state, nextJson, due, now, digest, scheduler.version, scheduler.settingsJson)
         store.saveKanaRating(userId, req)
-        return ReviewResult(due, state.version + 1, "SAVED")
+        store.clearFollowup(userId, req.cardId)
+        if (req.rating == "AGAIN" && store.retryStatus(userId, req.sessionId, req.cardId) != null) {
+            val tomorrow =
+                com.kanalog.study.domain.ReinforcementPolicy
+                    .tomorrow(now, zone(userId))
+            store.markRetry(userId, req, tomorrow)
+        }
+        val retry = retryCard(userId, req.sessionId, req.cardId)
+        store.saveRetryResponse(userId, req.idempotencyKey, retry)
+        return ReviewResult(due, state.version + 1, "SAVED", retry)
+    }
+
+    private fun sessionCard(
+        user: UUID,
+        session: UUID,
+        cardId: UUID,
+    ) = retryCard(user, session, cardId) ?: card(user, cardId)
+
+    private fun retryCard(
+        user: UUID,
+        session: UUID,
+        cardId: UUID,
+    ) = store.retryStatus(user, session, cardId)?.takeIf { it.pending }?.let {
+        card(user, cardId)?.copy(reinforcement = true, retryVersion = it.version)
+    }
+
+    private fun reinforcementAnswer(
+        user: UUID,
+        req: ReviewRequest,
+        digest: String,
+    ): ReviewResult {
+        if (req.rating !in setOf("AGAIN", "HARD", "GOOD", "EASY")) fail("BAD_RATING", "평가를 확인하세요")
+        if (!store.practiceCardAvailable(user, req.cardId)) fail("CARD_NOT_AVAILABLE", "연습할 수 없는 카드입니다", FailureStatus.CONFLICT)
+        val retry = store.retryStatus(user, req.sessionId, req.cardId)
+        if (retry == null || !retry.pending ||
+            retry.version != req.retryVersion
+        ) {
+            fail("STALE_RETRY", "재연습 상태가 변경되었습니다. 다시 불러오세요", FailureStatus.CONFLICT)
+        }
+        val state = store.lockState(user, req.cardId) ?: fail("CARD_STATE_MISSING", "카드 상태를 다시 불러오세요", FailureStatus.CONFLICT)
+        if (state.version != req.version) fail("STALE_CARD", "다른 기기에서 변경된 카드입니다. 새로 불러오세요", FailureStatus.CONFLICT)
+        store.saveReinforcement(user, req, digest)
+        return ReviewResult(null, state.version, "REINFORCED")
     }
 
     private fun practiceAnswer(

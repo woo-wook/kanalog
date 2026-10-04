@@ -15,4 +15,5 @@ data class SettingsPatch(
     val preferredVoice: String? = null,
     val audioEngine: String? = null,
     val supertonicVoice: String? = null,
+    val practiceLevel: String? = null,
 )

@@ -27,7 +27,7 @@ class ProgressService(
         val used = query.newUsed(user, begin, end)
         val remaining = maxOf(0, settings.settings(user).dailyNewLimit - used)
         return DashboardView(
-            query.dueInScope(user, active?.id),
+            query.due(user),
             minOf(query.unseenInScope(user, active?.id), remaining),
             query.answers(user, begin, end, true),
             query.answers(user, begin, end),

@@ -6,8 +6,11 @@ import com.kanalog.study.application.model.DeckView
 import com.kanalog.study.application.model.ExampleView
 import com.kanalog.study.application.model.ReviewRequest
 import com.kanalog.study.application.port.out.QueueAvailability
+import com.kanalog.study.application.port.out.RetryStatus
 import com.kanalog.study.application.port.out.SavedReview
 import com.kanalog.study.application.port.out.SessionMetadata
+import com.kanalog.study.application.port.out.SessionSummary
+import com.kanalog.study.application.port.out.StudyOption
 import com.kanalog.study.application.port.out.StudyScope
 import com.kanalog.study.application.port.out.StudyStore
 import com.kanalog.study.domain.ReviewState
@@ -159,7 +162,16 @@ class JdbcStudyStore(
     )
         ?: 0
 
-    private fun deckSql(scope: StudyScope) = scope.deckId?.let { " and c.deck_id='$it'" } ?: ""
+    private fun deckSql(scope: StudyScope): String {
+        val deck = scope.deckId?.let { " and c.deck_id='$it'" } ?: ""
+        val broad =
+            scope.levelScope?.let { input ->
+                val level = input.level?.let { " and d.level='$it'" } ?: ""
+                val kind = input.kind?.let { " and d.kind='$it'" } ?: ""
+                " and exists(select 1 from deck d where d.id=c.deck_id and d.owner_id=c.owner_id and d.import_status='READY' and d.kind in ('vocabulary','grammar')$level$kind)"
+            } ?: ""
+        return deck + broad
+    }
 
     private fun scopeSql(scope: StudyScope) =
         when {
@@ -189,7 +201,8 @@ class JdbcStudyStore(
     ) = jdbc.query(
         """select c.id from card c join user_card_state s on s.card_id=c.id and s.user_id=?
         where c.owner_id=? ${deckSql(scope)} and c.active=true and s.suspended=false
-        and s.first_seen_at is not null and s.due_at<=now() ${scopeSql(scope)} order by s.due_at limit ?""",
+        and s.first_seen_at is not null and (s.due_at<=now() or exists(select 1 from review_followup f where f.user_id=s.user_id and f.card_id=c.id and f.due_at<=now()))
+        ${scopeSql(scope)} order by s.due_at limit ?""",
         { rs, _ -> rs.getObject(1, UUID::class.java) },
         owner,
         owner,
@@ -248,8 +261,9 @@ class JdbcStudyStore(
         .query(
             """select count(*)::int total,
         count(*) filter(where s.first_seen_at is null)::int unseen,
-        min(s.due_at) filter(where s.first_seen_at is not null and s.due_at>now()) next_due
+        min(least(s.due_at,f.due_at)) filter(where s.first_seen_at is not null and least(s.due_at,f.due_at)>now()) next_due
         from card c left join user_card_state s on s.card_id=c.id and s.user_id=?
+        left join review_followup f on f.card_id=c.id and f.user_id=c.owner_id
         where c.owner_id=? ${deckSql(scope)} and c.active=true and coalesce(s.suspended,false)=false ${scopeSql(scope)}""",
             {
                 rs,
@@ -269,13 +283,14 @@ class JdbcStudyStore(
         practice: Boolean,
     ) {
         jdbc.update(
-            "insert into study_session(id,user_id,deck_id,lesson_id,session_title,practice,started_at) values(?,?,?,?,?,?,now())",
+            "insert into study_session(id,user_id,deck_id,lesson_id,session_title,practice,reinforcement_enabled,started_at) values(?,?,?,?,?,?,?,now())",
             id,
             owner,
             scope.deckId,
             scope.lessonId,
             title,
             practice,
+            !practice,
         )
     }
 
@@ -302,9 +317,9 @@ class JdbcStudyStore(
         session: UUID,
     ) = jdbc
         .query(
-            """select ss.lesson_id,coalesce(ss.session_title,l.title),ss.practice from study_session ss
+            """select ss.lesson_id,coalesce(ss.session_title,l.title),ss.practice,ss.reinforcement_enabled from study_session ss
         left join course_lesson l on l.id=ss.lesson_id where ss.id=? and ss.user_id=?""",
-            { rs, _ -> SessionMetadata(rs.getObject(1, UUID::class.java), rs.getString(2), rs.getBoolean(3)) },
+            { rs, _ -> SessionMetadata(rs.getObject(1, UUID::class.java), rs.getString(2), rs.getBoolean(3), rs.getBoolean(4)) },
             session,
             owner,
         ).firstOrNull()
@@ -318,18 +333,40 @@ class JdbcStudyStore(
             if (practice) {
                 "not exists(select 1 from practice_answer p where p.session_id=sc.session_id and p.card_id=sc.card_id)"
             } else {
-                "(s.first_seen_at is null or s.due_at<=now())"
+                """(sc.retry_pending=true or
+                (not exists(select 1 from review_log r where r.session_id=sc.session_id and r.card_id=sc.card_id)
+                and (s.first_seen_at is null or s.due_at<=now() or exists(select 1 from review_followup f where f.user_id=s.user_id and f.card_id=c.id and f.due_at<=now()))))"""
             }
         return jdbc.query(
             """select sc.card_id from session_card sc join card c on c.id=sc.card_id
             left join user_card_state s on s.card_id=sc.card_id and s.user_id=?
             where sc.session_id=? and c.owner_id=? and c.active=true and coalesce(s.suspended,false)=false and $remaining
-            order by sc.position""",
+            order by sc.retry_pending,sc.position""",
             { rs, _ -> rs.getObject(1, UUID::class.java) },
             owner,
             session,
             owner,
         )
+    }
+
+    override fun sessionSummary(
+        owner: UUID,
+        session: UUID,
+    ): SessionSummary {
+        val answers =
+            jdbc.query(
+                """select card_id,rating from review_log where user_id=? and session_id=?
+            union all select card_id,rating from reinforcement_answer where user_id=? and session_id=?
+            union all select card_id,rating from practice_answer where user_id=? and session_id=?""",
+                { rs, _ -> rs.getObject(1, UUID::class.java) to rs.getString(2) },
+                owner,
+                session,
+                owner,
+                session,
+                owner,
+                session,
+            )
+        return SessionSummary(answers.map { it.first }.distinct(), answers.groupingBy { it.second }.eachCount())
     }
 
     override fun answerCount(
@@ -338,7 +375,17 @@ class JdbcStudyStore(
         practice: Boolean,
     ): Int {
         val table = if (practice) "practice_answer" else "review_log"
-        return jdbc.queryForObject("select count(*) from $table where session_id=? and user_id=?", Int::class.java, session, owner) ?: 0
+        val primary =
+            jdbc.queryForObject("select count(*) from $table where session_id=? and user_id=?", Int::class.java, session, owner) ?: 0
+        val retries =
+            jdbc.queryForObject(
+                "select count(*) from reinforcement_answer where session_id=? and user_id=?",
+                Int::class.java,
+                session,
+                owner,
+            )
+                ?: 0
+        return primary + retries
     }
 
     override fun practiceRequestHash(
@@ -357,8 +404,18 @@ class JdbcStudyStore(
         key: String,
     ) = jdbc
         .query(
-            "select request_hash,next_state,next_version from review_log where user_id=? and idempotency_key=?",
-            { rs, _ -> SavedReview(rs.getString(1), rs.getString(2), rs.getLong(3)) },
+            "select request_hash,next_state,next_version,retry_card_json from review_log where user_id=? and idempotency_key=?",
+            {
+                rs,
+                _,
+                ->
+                SavedReview(
+                    rs.getString(1),
+                    rs.getString(2),
+                    rs.getLong(3),
+                    rs.getString(4)?.let { mapper.readValue(it, CardView::class.java) },
+                )
+            },
             owner,
             key,
         ).firstOrNull()
@@ -502,6 +559,133 @@ class JdbcStudyStore(
             owner,
         )
     }
+
+    override fun saveRetryResponse(
+        owner: UUID,
+        key: String,
+        card: CardView?,
+    ) {
+        jdbc.update(
+            "update review_log set retry_card_json=? where user_id=? and idempotency_key=?",
+            card?.let {
+                mapper.writeValueAsString(it)
+            },
+            owner,
+            key,
+        )
+    }
+
+    override fun scheduledAnswered(
+        session: UUID,
+        card: UUID,
+    ): Boolean =
+        (jdbc.queryForObject("select count(*) from review_log where session_id=? and card_id=?", Int::class.java, session, card) ?: 0) > 0
+
+    override fun options(owner: UUID): List<StudyOption> =
+        jdbc.query(
+            """select d.level,d.kind,count(*)::int total,count(s.first_seen_at)::int studied,
+        count(*) filter(where s.first_seen_at is not null and (s.due_at<=now() or f.due_at<=now()))::int due
+        from card c join deck d on d.id=c.deck_id
+        left join user_card_state s on s.card_id=c.id and s.user_id=?
+        left join review_followup f on f.card_id=c.id and f.user_id=?
+        where c.owner_id=? and d.owner_id=? and d.import_status='READY' and c.active=true
+        and coalesce(s.suspended,false)=false and d.level in ('N5','N4','N3','N2','N1')
+        and d.kind in ('vocabulary','grammar') group by d.level,d.kind order by d.level desc,d.kind""",
+            { rs, _ -> StudyOption(rs.getString(1), rs.getString(2), rs.getInt(3), rs.getInt(4), rs.getInt(5)) },
+            owner,
+            owner,
+            owner,
+            owner,
+        )
+
+    override fun retryStatus(
+        owner: UUID,
+        session: UUID,
+        card: UUID,
+    ): RetryStatus? =
+        jdbc
+            .query(
+                "select sc.retry_pending,sc.retry_version from session_card sc join study_session ss on ss.id=sc.session_id where sc.session_id=? and sc.card_id=? and ss.user_id=? and ss.reinforcement_enabled=true",
+                { rs, _ -> RetryStatus(rs.getBoolean(1), rs.getLong(2)) },
+                session,
+                card,
+                owner,
+            ).firstOrNull()
+
+    override fun savedReinforcement(
+        owner: UUID,
+        key: String,
+    ): SavedReview? =
+        jdbc
+            .query(
+                "select request_hash,card_version from reinforcement_answer where user_id=? and idempotency_key=?",
+                { rs, _ -> SavedReview(rs.getString(1), "", rs.getLong(2)) },
+                owner,
+                key,
+            ).firstOrNull()
+
+    override fun saveReinforcement(
+        owner: UUID,
+        request: ReviewRequest,
+        digest: String,
+    ) {
+        jdbc.update(
+            "insert into reinforcement_answer(id,user_id,session_id,card_id,rating,idempotency_key,request_hash,card_version) values(?,?,?,?,?,?,?,?)",
+            UUID.randomUUID(),
+            owner,
+            request.sessionId,
+            request.cardId,
+            request.rating,
+            request.idempotencyKey,
+            digest,
+            request.version,
+        )
+        jdbc.update(
+            "update session_card set retry_pending=false,retry_version=retry_version+1 where session_id=? and card_id=?",
+            request.sessionId,
+            request.cardId,
+        )
+    }
+
+    override fun markRetry(
+        owner: UUID,
+        request: ReviewRequest,
+        tomorrow: Instant,
+    ) {
+        jdbc.update(
+            "update session_card set retry_pending=true,retry_version=retry_version+1 where session_id=? and card_id=?",
+            request.sessionId,
+            request.cardId,
+        )
+        jdbc.update(
+            "insert into review_followup(user_id,card_id,due_at) values(?,?,?) on conflict(user_id,card_id) do update set due_at=excluded.due_at",
+            owner,
+            request.cardId,
+            Timestamp.from(tomorrow),
+        )
+    }
+
+    override fun clearFollowup(
+        owner: UUID,
+        card: UUID,
+    ) {
+        jdbc.update("delete from review_followup where user_id=? and card_id=? and due_at<=now()", owner, card)
+    }
+
+    override fun followupDue(
+        owner: UUID,
+        card: UUID,
+    ): Boolean =
+        (
+            jdbc.queryForObject(
+                "select count(*) from review_followup where user_id=? and card_id=? and due_at<=now()",
+                Int::class.java,
+                owner,
+                card,
+            )
+                ?: 0
+        ) >
+            0
 
     override fun timezone(owner: UUID) = jdbc.queryForObject("select timezone from app_user where id=?", String::class.java, owner)
 }

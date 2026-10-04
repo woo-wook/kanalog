@@ -8,4 +8,6 @@ data class ReviewRequest(
     val version: Long,
     val rating: String,
     val idempotencyKey: String,
+    val reinforcement: Boolean = false,
+    val retryVersion: Long = 0,
 )

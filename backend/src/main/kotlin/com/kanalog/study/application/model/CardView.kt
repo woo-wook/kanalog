@@ -22,4 +22,6 @@ data class CardView(
     val examples: List<ExampleView> = emptyList(),
     val lastRating: String? = null,
     val grammarFocus: GrammarFocus? = null,
+    val reinforcement: Boolean = false,
+    val retryVersion: Long = 0,
 )
