@@ -160,3 +160,9 @@ V10부터 queueInfo는 생성 당시 서버의 빈 큐 이유·다음 시각을 
 ```
 
 base segment 합계가 원문과 다르면 클라이언트는 ruby를 사용하지 않는다. `source`는 ORIGINAL/READING/DICTIONARY/NONE, `hangulSource`는 MANUAL/APPROXIMATE이다. 표시 설정에 따라 FE가 보조를 숨겨도 원본 본문/읽기는 유지된다. 자동 가나/한글의 정확성을 보장하지 않으며 외부 TTS 음성 생성 방식과 별도 기능이다.
+
+## 가나 참고표와 발음 완결 여부 (2026-10-05)
+
+- `GET /api/kana/reference`: 로그인 필요. `{key,title,rows:[{title,characters:[{hiragana,katakana,romaji,hangul}]}]}[]`. 기본 46쌍·탁음 20쌍·반탁음 5쌍·요음 33쌍을 실제 가나 학습 목록에서 만든다. 조회는 카드·진도·학습 세션을 생성하지 않는다.
+- `ReadingGuide.hangulStatus`: `COMPLETE`, `PARTIAL`, `UNAVAILABLE`. `PARTIAL`의 `hangul`에는 미확인 원문이 `〔 〕`에 남는다. `UNAVAILABLE`은 한글을 생성할 읽기가 확인되지 않은 상태다. 원본 읽기, 수동 보조, 학습 상태를 변경하지 않는다.
+- 문법 학습의 정답 전 화면에는 일본어 문형과 강조된 예문만 표시한다. 한국어 뜻·설명은 정답 공개 뒤에 나타난다. 단어장 문법 상세는 학습 참고용 해설을 그대로 제공한다.
