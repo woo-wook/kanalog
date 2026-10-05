@@ -84,9 +84,11 @@ export async function checkGrammar(
     const focus = session.cards[target].grammarFocus;
     expect(Boolean(focus)).toBe(true);
     expect((await baseJapanese(prompt)) === focus.title).toBe(true);
-    await expect(
-      page.getByRole("region", { name: "문형의 쓰임" }),
-    ).toBeVisible();
+    await expect(page.getByRole("region", { name: "문형의 쓰임" })).toHaveCount(
+      0,
+    );
+    await expect(page.locator(".grammar-point-meaning")).toHaveCount(0);
+    await expect(page.locator(".grammar-body")).toHaveCount(0);
     await expect(page.getByRole("region", { name: "정답과 해설" })).toHaveCount(
       0,
     );

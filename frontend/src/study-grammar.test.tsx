@@ -23,7 +23,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.clearAllMocks();
 });
-function mount(front?: string, allowAudioBeforeReveal = true) {
+function mount(front?: string, allowAudioBeforeReveal = true, focused = false) {
   vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
   const client = new QueryClient({
     defaultOptions: { queries: { staleTime: Infinity } },
@@ -47,6 +47,15 @@ function mount(front?: string, allowAudioBeforeReveal = true) {
             front: front ?? `문법 질문 ${i + 1}`,
             meaning: "あの本です。\n저 책입니다.\n추가 설명입니다.",
             explanation: "\u2063",
+            grammarFocus: focused
+              ? {
+                  title: "あの",
+                  segments: [
+                    { text: "あの", highlighted: true },
+                    { text: "本です。", highlighted: false },
+                  ],
+                }
+              : undefined,
           })),
         },
   );
@@ -99,4 +108,17 @@ it("긴 해설을 스크롤한 후 다음 카드는 맨 위 질문부터 표시�
   expect(
     screen.queryByRole("region", { name: "정답과 해설" }),
   ).not.toBeInTheDocument();
+});
+
+it("문법 회상 화면은 정답 보기 전에는 한국어 해설을 노출하지 않는다", async () => {
+  mount("あの本です。", false, true);
+  await screen.findByRole("heading", { name: "あの" });
+  expect(screen.queryByText("저 책입니다.")).not.toBeInTheDocument();
+  expect(screen.queryByText("추가 설명입니다.")).not.toBeInTheDocument();
+  expect(screen.queryByRole("region", { name: "정답과 해설" })).toBeNull();
+  await userEvent.click(screen.getByRole("button", { name: /정답 보기/ }));
+  expect(screen.getByRole("region", { name: "정답과 해설" })).toHaveTextContent(
+    "저 책입니다.",
+  );
+  expect(screen.getByText("추가 설명입니다.")).toBeVisible();
 });
