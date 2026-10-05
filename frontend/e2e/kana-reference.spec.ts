@@ -34,6 +34,14 @@ test("실제 가나 참고표는 104쌍을 한 페이지에 표시하며 모바�
     await expect(
       page.getByRole("heading", { name: "히라가나 · 가타카나" }),
     ).toBeVisible();
+    const searchPadding = await page
+      .getByRole("searchbox", { name: "가나 찾기" })
+      .evaluate((el) => ({
+        left: parseFloat(getComputedStyle(el).paddingLeft),
+        right: parseFloat(getComputedStyle(el).paddingRight),
+      }));
+    expect(searchPadding.left).toBeGreaterThanOrEqual(40);
+    expect(searchPadding.right).toBeGreaterThanOrEqual(44);
     await expect(page.locator(".kana-reference-pair")).toHaveCount(104);
     const source = await (await page.request.get("/api/kana/reference")).json();
     const pairs = source.flatMap((g: { rows: { characters: unknown[] }[] }) =>

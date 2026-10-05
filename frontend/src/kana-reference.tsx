@@ -34,14 +34,14 @@ export function KanaReference({
     .filter((group) => group.rows.length);
   return (
     <div className="space-y-6">
-      <div className="relative">
+      <div className="kana-reference-search relative">
         <Search
           className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
           aria-hidden="true"
         />
         <input
           type="search"
-          className="field h-12 pl-11 pr-12 text-base"
+          className="field h-12 text-base"
           aria-label="가나 찾기"
           placeholder="문자·로마자로 찾기"
           value={search}

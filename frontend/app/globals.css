@@ -178,6 +178,13 @@ progress::-moz-progress-bar {
 .notes-search .field {
   padding-left: 2.5rem;
 }
+.kana-reference-search .field {
+  padding-left: 2.75rem;
+  padding-right: 3rem;
+}
+.kana-reference-search input::-webkit-search-cancel-button {
+  display: none;
+}
 .note-form .field {
   font-size: 1rem;
 }
