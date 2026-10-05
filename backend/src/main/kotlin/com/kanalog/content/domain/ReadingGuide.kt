@@ -12,6 +12,7 @@ data class ReadingGuide(
     val source: String,
     val hangul: String? = null,
     val hangulSource: String? = null,
+    val hangulStatus: String = if (hangul == null) "UNAVAILABLE" else "COMPLETE",
 )
 
 /** Kana anchors constrain kanji blocks; ambiguous splits retain the supplied whole reading. */

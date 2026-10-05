@@ -44,7 +44,8 @@ class ReadingGuideFactory {
         val supplied = reading?.takeIf(KanaAlignment::isKana)?.let { KanaAlignment.align(text, it) }
         val tokens =
             if (sentence ||
-                (source == null && supplied == null && KanaAlignment.hasKanji(text))
+                (source == null && supplied == null && KanaAlignment.hasKanji(text)) ||
+                source?.any { it.reading == null && KanaAlignment.hasKanji(it.text) } == true
             ) {
                 tokenizer.tokenize(text)
             } else {
@@ -63,35 +64,63 @@ class ReadingGuideFactory {
             } else {
                 null
             }
-        val segments = source ?: supplied ?: dictionary ?: listOf(ReadingSegment(text))
+        val segments =
+            source?.let { originalSegments ->
+                var offset = 0
+                originalSegments.flatMap { segment ->
+                    val start = offset
+                    offset += segment.text.length
+                    if (segment.reading != null || !KanaAlignment.hasKanji(segment.text)) {
+                        listOf(segment)
+                    } else {
+                        // Only complete tokens inside an unannotated span may supply a reading.
+                        val result = mutableListOf<ReadingSegment>()
+                        var cursor = start
+                        tokens.filter { it.position >= start && it.position + it.surface.length <= offset }.forEach { token ->
+                            if (token.position > cursor) result += ReadingSegment(text.substring(cursor, token.position))
+                            result +=
+                                if (token.reading != "*" && KanaAlignment.isKana(token.reading)) {
+                                    KanaAlignment.align(token.surface, token.reading) ?: listOf(ReadingSegment(token.surface))
+                                } else {
+                                    listOf(ReadingSegment(token.surface))
+                                }
+                            cursor = token.position + token.surface.length
+                        }
+                        if (cursor < offset) result += ReadingSegment(text.substring(cursor, offset))
+                        result
+                    }
+                }
+            } ?: supplied ?: dictionary ?: listOf(ReadingSegment(text))
         val particles =
             tokens.filter { it.partOfSpeechLevel1 == "助詞" && it.surface in listOf("は", "へ", "を") }.associate {
                 it.position to
                     KanaAlignment.hiragana(it.pronunciation)
             }
         var offset = 0
-        val pieces =
-            segments.map { segment ->
+        val vowelBreaks = mutableSetOf<Int>()
+        var readingOffset = 0
+        val pronunciation =
+            segments.joinToString("") { segment ->
                 val start = offset
                 offset += segment.text.length
-                if (segment.reading == null && segment.text.isBlank()) {
-                    segment.text
-                } else {
-                    HangulPronunciation.convert(
-                        segment.reading
-                            ?: segment.text.mapIndexed { index, char -> particles[start + index] ?: char.toString() }.joinToString(""),
+                vowelBreaks += readingOffset
+                val value =
+                    KanaAlignment.hiragana(
+                        segment.reading ?: segment.text
+                            .mapIndexed { index, char ->
+                                if (particles.containsKey(start + index)) vowelBreaks += readingOffset + index + 1
+                                particles[start + index] ?: char.toString()
+                            }.joinToString(""),
                     )
-                }
+                readingOffset += value.length
+                value
             }
-        val hangul =
-            manualHangul?.takeIf { it.isNotBlank() }
-                ?: if (source == null && supplied == null && hasSuppliedReading) {
-                    HangulPronunciation.convert(reading.orEmpty())
-                } else if (pieces.any { it == null }) {
-                    null
-                } else {
-                    pieces.joinToString("") { it.orEmpty() }
-                }
+        val automatic =
+            HangulPronunciation.guide(
+                if (source == null && supplied == null && hasSuppliedReading) reading.orEmpty() else pronunciation,
+                if (source == null && supplied == null && hasSuppliedReading) emptySet() else vowelBreaks,
+            )
+        val hangul = manualHangul?.takeIf { it.isNotBlank() } ?: automatic.text
         return ReadingGuide(
             segments,
             when {
@@ -110,6 +139,7 @@ class ReadingGuideFactory {
             } else {
                 "APPROXIMATE"
             },
+            if (!manualHangul.isNullOrBlank()) "COMPLETE" else automatic.status,
         )
     }
 }

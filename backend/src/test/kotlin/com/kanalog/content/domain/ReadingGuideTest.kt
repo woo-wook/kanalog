@@ -30,6 +30,18 @@ class ReadingGuideTest {
         assertEquals("심분", HangulPronunciation.convert("しんぶん"))
         assertEquals("캉코쿠", HangulPronunciation.convert("かんこく"))
         assertEquals("파아티이", HangulPronunciation.convert("パーティー"))
+        assertEquals("스으츠", HangulPronunciation.convert("スーツ"))
+        assertEquals("와아루도", HangulPronunciation.convert("ワールド"))
+        assertEquals("웨에", HangulPronunciation.convert("ウェー"))
         assertNull(HangulPronunciation.convert("未知"))
+    }
+
+    @Test fun `small vowels are supported and unresolved digits stay visibly marked in partial hints`() {
+        assertEquals("아이스", HangulPronunciation.convert("ぁぃす"))
+        val partial = HangulPronunciation.guide("これを3こ")
+        assertEquals("코레오〔3〕코", partial.text)
+        assertEquals("PARTIAL", partial.status)
+        assertEquals("UNAVAILABLE", HangulPronunciation.guide("未知XYZ").status)
+        assertNull(HangulPronunciation.guide("未知XYZ").text)
     }
 }

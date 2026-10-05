@@ -1,6 +1,6 @@
 package com.kanalog.content.domain
 
-/** A reading aid, not a phonetic transcription. Unsupported characters suppress the guide. */
+/** A reading aid, not a phonetic transcription. Unknown spans remain visibly unresolved. */
 object HangulPronunciation {
     private val syllables =
         linkedMapOf<String, String>().apply {
@@ -59,9 +59,79 @@ object HangulPronunciation {
                     "ゔぇ" to "베",
                     "ゔぉ" to "보",
                     "いぇ" to "예",
+                    "ぁ" to "아",
+                    "ぃ" to "이",
+                    "ぅ" to "우",
+                    "ぇ" to "에",
+                    "ぉ" to "오",
+                    "ゃ" to "야",
+                    "ゅ" to "유",
+                    "ょ" to "요",
+                    "ゎ" to "와",
+                    "ゐ" to "이",
+                    "ゑ" to "에",
+                    "ゕ" to "카",
+                    "ゖ" to "케",
                 ),
             )
         }
+
+    data class Guide(
+        val text: String?,
+        val status: String,
+    )
+
+    private const val PUNCTUATION = "。、！？?!・,.:;「」『』（）()〜～…—-\"'[]/／【】〈〉《》«»"
+
+    fun guide(
+        reading: String,
+        vowelBreaks: Set<Int> = emptySet(),
+    ): Guide {
+        val kana = KanaAlignment.hiragana(reading)
+        convert(kana, vowelBreaks)?.let { return Guide(it, "COMPLETE") }
+        if (kana.isBlank() || kana.length > 2048) return Guide(null, "UNAVAILABLE")
+        val out = StringBuilder()
+        var converted = false
+        var cursor = 0
+        while (cursor < kana.length) {
+            val start = cursor
+            val supported = supported(kana.codePointAt(cursor))
+            do {
+                cursor += Character.charCount(kana.codePointAt(cursor))
+            } while (cursor < kana.length && supported(kana.codePointAt(cursor)) == supported)
+            val span = kana.substring(start, cursor)
+            val result =
+                if (span.isBlank()) {
+                    span
+                } else if (supported) {
+                    convert(
+                        span,
+                        vowelBreaks
+                            .filter { it in start until cursor }
+                            .map {
+                                it -
+                                    start
+                            }.toSet(),
+                    )
+                } else {
+                    null
+                }
+            if (result == null) {
+                out.append("〔").append(span).append("〕")
+            } else {
+                out.append(result)
+                if (span.any { it in 'ぁ'..'ゖ' }) converted = true
+            }
+        }
+        return if (converted) Guide(out.toString(), "PARTIAL") else Guide(null, "UNAVAILABLE")
+    }
+
+    private fun supported(point: Int): Boolean =
+        point <= Char.MAX_VALUE.code &&
+            (
+                syllables.containsKey(point.toChar().toString()) || point.toChar() in "っー" || point.toChar() in PUNCTUATION ||
+                    point.toChar().isWhitespace()
+            )
 
     private fun final(
         char: Char,
@@ -77,7 +147,10 @@ object HangulPronunciation {
 
     private fun vowel(char: Char): Char? = if (char in '가'..'힣') "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ"[(char.code - '가'.code) / 28 % 21] else null
 
-    fun convert(reading: String): String? {
+    fun convert(
+        reading: String,
+        vowelBreaks: Set<Int> = emptySet(),
+    ): String? {
         val kana = KanaAlignment.hiragana(reading)
         if (kana.isBlank() || kana.length > 2048) return null
         val out = StringBuilder()
@@ -115,18 +188,20 @@ object HangulPronunciation {
                         out.lastOrNull()?.let(::vowel) ?: return null
                     out.append(
                         when (previous) {
-                            'ㅏ', 'ㅑ' -> "아"
-                            'ㅣ' -> "이"
+                            'ㅏ', 'ㅑ', 'ㅘ' -> "아"
+                            'ㅣ', 'ㅟ' -> "이"
                             'ㅜ', 'ㅠ' -> "우"
                             'ㅗ', 'ㅛ' -> "오"
-                            'ㅔ', 'ㅐ' -> "에"
+                            'ㅔ', 'ㅐ', 'ㅚ', 'ㅙ', 'ㅞ' -> "에"
+                            'ㅓ', 'ㅕ', 'ㅝ' -> "어"
+                            'ㅡ' -> "으"
                             else -> return null
                         },
                     )
                     i++
                 }
 
-                char.isWhitespace() || char in "。、！？?!・,.:;「」『』（）()〜～…—-" -> {
+                char.isWhitespace() || char in PUNCTUATION -> {
                     out.append(char)
                     i++
                 }
@@ -135,9 +210,9 @@ object HangulPronunciation {
                     val pair = kana.substring(i, minOf(i + 2, kana.length))
                     val sound = syllables[pair] ?: syllables[char.toString()] ?: return null
                     // Japanese /ou/ and /ei/ commonly represent long o/e; retain two morae.
-                    if (char == 'う' && (kana.getOrNull(i - 1) ?: ' ') in "おこごそぞとどのほぼぽもよろょ") {
+                    if (i !in vowelBreaks && char == 'う' && (kana.getOrNull(i - 1) ?: ' ') in "おこごそぞとどのほぼぽもよろょ") {
                         out.append("오")
-                    } else if (char == 'い' && (kana.getOrNull(i - 1) ?: ' ') in "えけげせぜてでねへべぺめれ") {
+                    } else if (i !in vowelBreaks && char == 'い' && (kana.getOrNull(i - 1) ?: ' ') in "えけげせぜてでねへべぺめれ") {
                         out.append("에")
                     } else {
                         out.append(sound)

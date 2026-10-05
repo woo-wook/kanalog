@@ -105,6 +105,7 @@ export interface ReadingGuide {
   source: "ORIGINAL" | "READING" | "DICTIONARY" | "NONE";
   hangul?: string | null;
   hangulSource?: "MANUAL" | "APPROXIMATE" | null;
+  hangulStatus?: "COMPLETE" | "PARTIAL" | "UNAVAILABLE";
 }
 export interface StudyCard {
   readingGuide?: ReadingGuide | null;
@@ -293,4 +294,18 @@ export async function me(): Promise<User> {
   const user = await api<User>("/me");
   setCsrfToken(user.csrfToken);
   return user;
+}
+
+export interface KanaReferenceGroup {
+  key: string;
+  title: string;
+  rows: {
+    title: string;
+    characters: {
+      hiragana: string;
+      katakana: string;
+      romaji: string;
+      hangul: string;
+    }[];
+  }[];
 }

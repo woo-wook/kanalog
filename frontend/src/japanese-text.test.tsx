@@ -89,3 +89,25 @@ it("문형 제목에는 온전하게 포함된 원본 한자 묶음의 읽기만
     )?.segments[0]?.reading,
   ).toBeNull();
 });
+
+it("읽기 미상 부분을 표시하고 전체 발음이 없을 때도 누락 이유를 안내한다", () => {
+  const { rerender } = render(
+    <PronunciationHint
+      guide={{ ...guide, hangul: "코레〔3〕", hangulStatus: "PARTIAL" }}
+      enabled
+    />,
+  );
+  expect(screen.getByText("코레〔3〕")).toBeVisible();
+  expect(screen.getByText(/일부 읽기 확인 필요/)).toBeVisible();
+  rerender(
+    <PronunciationHint
+      guide={{ ...guide, hangul: null, hangulStatus: "UNAVAILABLE" }}
+      enabled
+    />,
+  );
+  expect(screen.getByText(/읽기를 확인하지 못해/)).toBeVisible();
+  rerender(
+    <PronunciationHint guide={{ ...guide, hangul: null }} enabled={false} />,
+  );
+  expect(screen.queryByLabelText("한글 발음 보조")).toBeNull();
+});

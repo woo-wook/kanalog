@@ -33,4 +33,18 @@ class ReadingGuideFactoryTest {
         assertEquals("私は学校へ行く。", guide.segments.joinToString("") { it.text })
         assertNull(factory.create("𠮷𠮷XYZ")!!.hangul)
     }
+
+    @Test fun `fills missing source readings without changing original ruby or the base sentence`() {
+        val raw = mapper.readTree("""[{"text":"日本","reading":"にっぽん"},{"text":"の学校へ行く。"}]""")
+        val guide = factory.create("日本の学校へ行く。", original = raw, sentence = true)!!
+        assertEquals("ORIGINAL", guide.source)
+        assertEquals("にっぽん", guide.segments.first().reading)
+        assertEquals("日本の学校へ行く。", guide.segments.joinToString("") { it.text })
+        assertEquals("닙폰노각코오에이쿠。", guide.hangul)
+    }
+
+    @Test fun `pronunciation continues across ruby boundaries rather than converting each piece alone`() {
+        val raw = mapper.readTree("""[{"text":"新","reading":"しん"},{"text":"聞","reading":"ぶん"}]""")
+        assertEquals("심분", factory.create("新聞", original = raw)!!.hangul)
+    }
 }

@@ -84,7 +84,18 @@ export function PronunciationHint({
   manual?: string | null;
 }) {
   const value = manual?.trim() || guide?.hangul;
-  if (!enabled || !value) return null;
+  if (!enabled || (!value && !guide)) return null;
+  if (!value)
+    return (
+      <p
+        className="pronunciation-hint muted mt-3 text-sm leading-relaxed"
+        aria-label="한글 발음 보조"
+      >
+        읽기를 확인하지 못해 한글 발음을 표시할 수 없어요. 가나와 음성을 참고해
+        주세요.
+      </p>
+    );
+  const partial = !manual?.trim() && guide?.hangulStatus === "PARTIAL";
   const automatic = !manual?.trim() && guide?.hangulSource !== "MANUAL";
   return (
     <div
@@ -93,6 +104,7 @@ export function PronunciationHint({
     >
       <p className="mb-1 text-[11px] font-semibold tracking-wide text-muted-foreground">
         근사 발음{automatic ? " · 자동" : ""}
+        {partial ? " · 일부 읽기 확인 필요" : ""}
       </p>
       <p
         className="break-words text-lg font-medium leading-relaxed text-primary"
@@ -100,6 +112,11 @@ export function PronunciationHint({
       >
         {value}
       </p>
+      {partial && (
+        <p className="muted mt-2 text-xs leading-relaxed">
+          〔 〕 안은 읽기가 확인되지 않은 원문이에요.
+        </p>
+      )}
     </div>
   );
 }
