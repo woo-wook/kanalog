@@ -450,3 +450,33 @@ python3 tools/e2e/run_live.py
 - 화면 스크린샷은 private-data/e2e에만 저장하고 직접 확인했다. WebKit 모바일 에뮬레이션 및 Chromium 검증이며 실제 iPhone/Safari 기기의 발음 품질·화면 검증은 미실행이다.
 
 로그인 폼은 React의 서버/클라이언트 초기 snapshot을 구분해 준비되기 전에 입력과 제출을 받지 않는다. 이는 처음 접속할 때 초기화 전에 입력된 값이 유실될 수 있는 경로를 막는 보강이며, 관찰된 모든 네트워크 지연의 원인을 이것으로 확정하지 않는다. [React 공식 설명](https://react.dev/reference/react/useSyncExternalStore#adding-support-for-server-rendering)을 확인했다.
+
+## 문법 정답 숨김·한글 발음 복구·가나 참고표 (2026-10-05)
+
+### 변경 및 데이터 보존
+
+- 문법 정답 전 한국어 뜻·쓰임·접속을 제거했다. 일본어 문형·원본 강조·예문으로 회상한 뒤 정답과 해설을 공개한다. 단어장 해설은 그대로 제공한다.
+- 원본 ruby 조각 사이의 촉음/비음 문맥과 외래어 장음을 보완했다. 원본 읽기를 사전 값으로 바꾸지 않고 읽기가 없는 한자 범위만 보충한다. 미확인 숫자/약어는 `〔원문〕`과 PARTIAL 안내로 구분한다.
+- 실제 개인 변환본 전체에 동일한 ReadingGuideFactory를 적용했다. 어휘 9,159개(전체 변환 9,137 / 일부 22), 문법 1,078개(1,075 / 3), 예문 10,998개(10,994 / 4)에서 발음 보조가 생성됐다. 수정 전 누락은 각각 78 / 161 / 1,067개였고 수정 후 누락은 0이다. 원문 출력·본문 재작성·재import는 없다. 집계 기준은 hangul-hints.md에 기록했다.
+- `/courses/kana`는 기존 KanaInventory의 기본 46쌍·탁음 20쌍·반탁음 5쌍·요음 33쌍을 재사용한다. 두 문자를 한 셀에 비교하며 검색·분류 이동·서버 저장된 한글 표시 설정을 따른다. 참고 API GET은 학습 상태를 만들지 않는다.
+- 배포 전 kanalog DB 백업을 private-data/backups/grammar-kana-20261005에 보관했다. 앱 갱신 뒤 QA 브라우저 검사 전에 기존 23개 테이블의 모든 열(원본 raw_fields 포함)과 행 수/해시를 비교해 **23/23 동일**을 확인했다. DB와 voice 컨테이너·미디어 volume은 유지했다. 이후 QA 검사는 QA 계정에만 학습/세션 기록을 추가한다.
+
+### 검증 결과
+
+- Backend: `ktlintFormat` → `ktlintCheck check bootJar`, **69 tests / 0 failures / 0 errors**. PostgreSQL 16 Testcontainers, 참고 API 인증/104쌍/GET 무상태, ReadingGuide 상태 JSON 계약, 원본 읽기 보존·미상 범위 보완·조각 경계 비음·조사 장음 경계·외래어 장음·부분 안내 포함.
+- Frontend: **81 Vitest tests**, TypeScript, ESLint 통과. 문법 학습 전체 화면의 공개 전후 해설, 원본 강조, 한글 설정·부분/불가 안내, 참고표 검색·한글 설정을 검증했다. CSS 마지막 수정 후에도 전체 81개·타입·린트를 다시 통과했다.
+- backend/frontend Docker production build 성공. Apple Silicon arm64 호스트에서 기존 Compose 앱 두 컨테이너를 갱신했다. 검색창 수정은 frontend만 추가 갱신했다.
+- 실제 공개 주소에서 Chromium/WebKit **5개 흐름 통과**: 긴 문법의 데스크톱/태블릿, 360/390px 모바일, あの 문형 공개 전후, 104쌍 참고표, 기존 후리가나/한글 설정·단어/예문/문법 표시. 본문/원본 강조를 API와 비교하고 설정을 복원했다.
+- 스크린샷 직접 확인으로 검색 아이콘 겹침을 발견했다. CSS 공통 field 규칙으로 실제 왼쪽 padding이 13.6px인 것을 새 브라우저 검사 실패로 재현했고 참고표 전용 padding으로 수정했다. 마지막 frontend 배포 뒤 참고표 전체 브라우저 검사를 다시 통과했다(왼쪽 40px 이상/오른쪽 44px 이상, 360/390/768/1280px 화면·셀 넘침 없음, 검색, 분류 이동, 설정 복원, 로그아웃 후 API 401). 최종 390px 스크린샷도 직접 확인했다.
+- 공개 URL readiness/HTTPS/Secure 쿠키 검사를 통과했다. 실제 iPhone/Safari 하드웨어 및 오디오 청취 품질은 이번 변경에서 검사하지 않았다.
+
+재현 명령(비밀번호는 private QA 파일에서만 읽는다):
+
+```sh
+JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home backend/gradlew -p backend ktlintCheck check bootJar
+pnpm --dir frontend test
+pnpm --dir frontend exec tsc --noEmit
+pnpm --dir frontend lint
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/kana-reference.spec.ts e2e/grammar-layout.spec.ts e2e/grammar-desktop.spec.ts e2e/readings.spec.ts
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/check_deployment.py
+```
