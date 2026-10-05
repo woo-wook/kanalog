@@ -71,6 +71,11 @@ export default function CurriculumLevelPage() {
               </div>
             )}
           </header>
+          {level.key === "starter" && (
+            <Link href="/courses/kana" className="btn w-full">
+              히라가나·가타카나 참고표
+            </Link>
+          )}
           {level.jlptLevel && level.available && (
             <section className="surface p-5" aria-label="레벨 전체 학습">
               <h2 className="font-semibold">레슨 밖에서도 골고루</h2>

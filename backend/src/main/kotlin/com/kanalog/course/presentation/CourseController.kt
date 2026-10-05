@@ -13,6 +13,9 @@ import java.util.UUID
 class CourseController(
     private val courses: CourseService,
 ) {
+    @GetMapping("/api/kana/reference")
+    fun reference() = courses.reference()
+
     @GetMapping("/api/courses")
     fun list(request: HttpServletRequest) = courses.list(request.user().id)
 

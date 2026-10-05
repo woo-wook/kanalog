@@ -28,6 +28,21 @@ export default function CoursesPage() {
           문자 읽기부터 고급 어휘와 문법까지, 작은 레슨을 하나씩 이어가세요.
         </p>
       </header>
+      <Link
+        href="/courses/kana"
+        className="surface flex min-h-16 items-center justify-between gap-3 p-5"
+      >
+        <span>
+          <span className="block font-semibold">히라가나·가타카나 참고표</span>
+          <span className="muted mt-1 block text-sm">
+            두 문자를 나란히, 기본부터 요음까지
+          </span>
+        </span>
+        <ArrowRight
+          className="size-5 shrink-0 text-primary"
+          aria-hidden="true"
+        />
+      </Link>
       {next && (
         <section
           aria-label="이어서 학습"

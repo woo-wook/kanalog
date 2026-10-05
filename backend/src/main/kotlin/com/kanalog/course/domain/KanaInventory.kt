@@ -22,7 +22,56 @@ data class KanaCourse(
     val lessons: List<KanaLesson>,
 )
 
+data class KanaReferenceCharacter(
+    val hiragana: String,
+    val katakana: String,
+    val romaji: String,
+    val hangul: String,
+)
+
+data class KanaReferenceRow(
+    val title: String,
+    val characters: List<KanaReferenceCharacter>,
+)
+
+data class KanaReferenceGroup(
+    val key: String,
+    val title: String,
+    val rows: List<KanaReferenceRow>,
+)
+
 object KanaInventory {
+    fun reference(): List<KanaReferenceGroup> {
+        val scripts = courses()
+        val groups =
+            listOf(
+                Triple("basic", "기본 문자", 0..9),
+                Triple("voiced", "탁음", 10..13),
+                Triple("semiVoiced", "반탁음", 14..14),
+                Triple(
+                    "yoon",
+                    "요음",
+                    15..15,
+                ),
+            )
+        return groups.map { (key, title, indices) ->
+            KanaReferenceGroup(
+                key,
+                title,
+                indices.map { index ->
+                    val hira = scripts[0].lessons[index]
+                    val kata = scripts[1].lessons[index]
+                    KanaReferenceRow(
+                        hira.title.substringBefore(" · "),
+                        hira.characters.zip(kata.characters).map { (a, b) ->
+                            KanaReferenceCharacter(a.glyph, b.glyph, a.romaji, a.hangul)
+                        },
+                    )
+                },
+            )
+        }
+    }
+
     fun courses(): List<KanaCourse> =
         listOf("hiragana", "katakana").mapIndexed { position, kind ->
             KanaCourse(

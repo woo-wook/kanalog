@@ -4,6 +4,7 @@ import com.kanalog.common.error.FailureStatus
 import com.kanalog.common.error.fail
 import com.kanalog.course.application.port.out.CourseStore
 import com.kanalog.course.domain.CoursePlan
+import com.kanalog.course.domain.KanaInventory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -12,6 +13,8 @@ import java.util.UUID
 class CourseService(
     private val store: CourseStore,
 ) {
+    fun reference() = KanaInventory.reference()
+
     fun list(owner: UUID) = store.list(owner)
 
     fun get(

@@ -141,6 +141,47 @@ class ApiContractTest
             )
         }
 
+        @Test fun `kana reference is authenticated and uses the same 104 pairs without creating study state`() {
+            code(request("GET", "/api/kana/reference"), 401, "UNAUTHORIZED")
+            val owner = login()
+            val response = request("GET", "/api/kana/reference", login = owner)
+            assertEquals(200, response.statusCode())
+            val payload = json(response)
+            assertTrue(payload.isArray)
+            val groups = (0 until payload.size()).map { payload.get(it) }
+            assertEquals(listOf("basic", "voiced", "semiVoiced", "yoon"), groups.map { it.path("key").asString() })
+            assertEquals(listOf(46, 20, 5, 33), groups.map { group -> group.path("rows").sumOf { it.path("characters").size() } })
+            assertEquals(0, jdbc.queryForObject("select count(*) from user_card_state where user_id=?", Int::class.java, owner.id))
+            val note = newNote(owner)
+            val notes = json(request("GET", "/api/notes?query=猫", login = owner))
+            assertEquals(
+                "COMPLETE",
+                notes
+                    .path("content")
+                    .get(0)
+                    .path("readingGuide")
+                    .path("hangulStatus")
+                    .asString(),
+            )
+            assertEquals(
+                "네코",
+                notes
+                    .path("content")
+                    .get(0)
+                    .path("readingGuide")
+                    .path("hangul")
+                    .asString(),
+            )
+            assertEquals(
+                note.toString(),
+                notes
+                    .path("content")
+                    .get(0)
+                    .path("id")
+                    .asString(),
+            )
+        }
+
         @Test fun `level practice and persisted reinforcement work through authenticated JSON APIs`() {
             val owner = login()
             val other = login()
