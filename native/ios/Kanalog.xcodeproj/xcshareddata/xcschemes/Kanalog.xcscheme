@@ -50,6 +50,17 @@
                ReferencedContainer = "container:Kanalog.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "E84CCFB2A67E01A2A6D78E91"
+               BuildableName = "KanalogLayoutTests.xctest"
+               BlueprintName = "KanalogLayoutTests"
+               ReferencedContainer = "container:Kanalog.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>

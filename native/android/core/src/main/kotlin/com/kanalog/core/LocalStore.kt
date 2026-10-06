@@ -27,7 +27,7 @@ class LocalStore(
     private var state =
         if (file.exists()) {
             require(file.length() <= MAX_STATE_BYTES) { "로컬 기록 파일이 너무 큽니다" }
-            json.decodeFromString<LocalState>(file.readText()).also { require(it.schemaVersion == 1) { "지원하지 않는 기록 형식" } }
+            restoreOwners(json.decodeFromString<LocalState>(file.readText()).also { require(it.schemaVersion == 1) { "지원하지 않는 기록 형식" } })
         } else {
             LocalState()
         }
@@ -65,6 +65,10 @@ class LocalStore(
             ) {
                 throw IllegalArgumentException("손상된 콘텐츠 패키지", e)
             }
+        commit(preparePackage(content))
+    }
+
+    private fun preparePackage(content: ContentPackage): LocalState {
         require(content.schemaVersion == 1) { "지원하지 않는 콘텐츠 형식" }
         require(content.packageId.isNotBlank() && content.version.isNotBlank()) { "패키지 식별자가 없습니다" }
         require(
@@ -74,10 +78,28 @@ class LocalStore(
                 .size == content.notes.size,
         ) { "중복되거나 너무 많은 카드" }
         content.notes.forEach(::validateNote)
-        val incoming = content.notes.associateBy { it.id }
-        val existing = state.notes.map { it.id }.toSet()
-        val merged = state.notes.map { incoming[it.id] ?: it } + content.notes.filter { it.id !in existing }
-        commit(state.copy(notes = merged, packages = state.packages + (content.packageId to content.version)))
+        val byId = state.notes.associateBy { it.id }
+        val owners = state.notePackages.toMutableMap()
+        val incoming =
+            content.notes.associate { note ->
+                require(!note.id.startsWith("personal:")) { "개인 단어 ID는 가져올 수 없습니다" }
+                val owner = owners[note.id]
+                val previous = byId[note.id]
+                val kanaOverlay =
+                    owner == "kanalog-kana" && previous != null && previous.kind in KANA_KINDS &&
+                        note.kind == previous.kind && note.front == previous.front && note.group == previous.group
+                require(owner == null || owner == content.packageId || kanaOverlay) { "다른 패키지의 카드 ID입니다: ${note.id}" }
+                if (kanaOverlay && owner != content.packageId) {
+                    note.id to previous.copy(audio = note.audio ?: previous.audio)
+                } else {
+                    owners[note.id] = content.packageId
+                    note.id to note
+                }
+            }
+        val retained = state.notes.filter { owners[it.id] != content.packageId || it.id in incoming }
+        val retainedIds = retained.map { it.id }.toSet()
+        val merged = retained.map { incoming[it.id] ?: it } + incoming.values.filter { it.id !in retainedIds }
+        return state.copy(notes = merged, packages = state.packages + (content.packageId to content.version), notePackages = owners)
     }
 
     @Synchronized fun installVerified(
@@ -152,7 +174,7 @@ class LocalStore(
                 .distinct()
                 .size == content.notes.size,
         )
-        content.notes.forEach(::validateNote)
+        val next = preparePackage(content)
         val included = manifest.files.map { it.path }.toSet()
         content.notes
             .flatMap {
@@ -169,7 +191,7 @@ class LocalStore(
             if ((index + 1) % 64 == 0 || index == media.lastIndex) progress?.invoke(InstallProgress("MEDIA", index + 1, media.size))
         }
         progress?.invoke(InstallProgress("COMMIT", 0, 1))
-        install(text)
+        commit(next)
         progress?.invoke(InstallProgress("DONE", 1, 1))
     }
 
@@ -383,6 +405,22 @@ class LocalStore(
     companion object {
         private const val MAX_STATE_BYTES = 256L * 1024 * 1024
         val KANA_KINDS = setOf("hiragana", "katakana")
+
+        private fun restoreOwners(state: LocalState): LocalState {
+            val personalPackages = state.packages.keys.filter { it != "kanalog-kana" }
+            val owners = state.notePackages.toMutableMap()
+            state.notes.filterNot { it.id.startsWith("personal:") }.forEach { note ->
+                if (note.id !in owners) {
+                    owners[note.id] =
+                        if (note.kind in KANA_KINDS && "kanalog-kana" in state.packages) {
+                            "kanalog-kana"
+                        } else {
+                            personalPackages.singleOrNull() ?: "legacy-unattributed"
+                        }
+                }
+            }
+            return state.copy(notePackages = owners)
+        }
 
         fun validAudio(path: String): Boolean = Regex("media/[a-fA-F0-9]{64}\\.(mp3|wav|ogg|m4a|aac)").matches(path)
 

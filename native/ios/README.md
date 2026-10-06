@@ -42,3 +42,9 @@ NATIVE_PACKAGE_PATH="$PWD/private-data/native/ios" swift test --package-path nat
 패키지 JSON/미디어 파일 각각 최대 64MiB, manifest 최대 8MiB/60,000 파일, 전체 미디어 포함 최대 4GiB를 허용합니다. schema/type/ID/경로/심볼릭 링크/해시/크기를 검증한 뒤 콘텐츠와 진도를 한 번에 저장합니다. 제거된 콘텐츠의 기존 평가/메모/북마크는 보존합니다. 선택적 HTTPS 다운로드 경계는 학습 코드와 분리되어 있습니다. 현재 공개 catalog나 자동 진도 동기화는 구현하지 않습니다.
 
 공식 API: [Liquid Glass](https://developer.apple.com/documentation/swiftui/applying-liquid-glass-to-custom-views), [AVSpeechSynthesizer](https://developer.apple.com/documentation/avfaudio/avspeechsynthesizer), [swift-fsrs](https://github.com/open-spaced-repetition/swift-fsrs).
+
+## 통계 집계 범위
+
+홈의 복습 수와 “지금 복습”은 단어·문법만 대상으로 합니다. 가나는 복습일과 신규 한도에 관계없이 선택한 분류 전체를 연습하며 평가에 FSRS 상태를 저장합니다. 첫 “다시”의 세션 끝 보강은 한 번만 진행하고 공식 FSRS 상태를 추가 갱신하지 않습니다.
+
+“학습한 단어·문법”과 “연습한 가나”는 현재 설치된 해당 유형 콘텐츠 중 평가한 ID 수입니다. “오늘 평가(전체)”와 전체 평가·완료 연습·최근 기록은 가나·단어·문법을 모두 포함합니다. 평가 수에는 즉시 보강과 제거된 콘텐츠의 보존 기록도 포함하며 오늘의 경계는 저장한 시간대를 따릅니다.

@@ -41,6 +41,7 @@ targets:
     scheme:
       testTargets:
         - KanalogUITests
+        - KanalogLayoutTests
   KanalogUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -51,4 +52,15 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: me.hanwook.kanalog.uitests
+        GENERATE_INFOPLIST_FILE: YES
+  KanalogLayoutTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: UIUnitTests
+    dependencies:
+      - target: Kanalog
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: me.hanwook.kanalog.layouttests
         GENERATE_INFOPLIST_FILE: YES

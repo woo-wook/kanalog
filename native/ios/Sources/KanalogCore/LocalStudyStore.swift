@@ -153,10 +153,10 @@ public final class LocalStudyStore: @unchecked Sendable {
             guard let note = snapshot.notes[request.noteID] else { throw CoreError.missingNote }
             var progress = snapshot.progress[request.noteID] ?? NoteProgress()
             guard progress.version == request.expectedVersion else { throw CoreError.staleVersion }
-            let wasNew = !session.scope.isKanaPractice && !current.reinforcement && progress.card == nil
+            let wasNew = !current.reinforcement && progress.card == nil
             if wasNew && !note.kind.isKana && newUsed(snapshot, now: now) >= snapshot.settings.newCardsPerDay { throw CoreError.dailyLimit }
             var officialLog: ReviewLog?
-            if !session.scope.isKanaPractice && !current.reinforcement {
+            if !current.reinforcement {
                 let scheduler = FSRS(parameters: .init(requestRetention: snapshot.settings.retention, w: FSRSDefaults.defaultWv6, enableFuzz: false, enableShortTerm: true))
                 let scheduled = try scheduler.next(card: progress.card ?? Card(due: now), now: now, grade: request.rating.official)
                 progress.card = scheduled.card; officialLog = scheduled.log
@@ -166,7 +166,7 @@ public final class LocalStudyStore: @unchecked Sendable {
             progress.version += 1
             snapshot.progress[request.noteID] = progress
             session.answered += 1
-            if request.rating == .again && !current.reinforcement && !session.scope.isKanaPractice {
+            if request.rating == .again && !current.reinforcement {
                 session.items.append(SessionItem(id: UUID().uuidString, noteID: note.id, version: progress.version, reinforcement: true))
             }
             snapshot.sessions[session.id] = session
@@ -176,11 +176,11 @@ public final class LocalStudyStore: @unchecked Sendable {
         }
     }
     public func session(_ id: String) throws -> StudySession? { try snapshot().sessions[id] }
-    public func dueCount(now: Date = Date()) throws -> Int {
+    public func dueCount(now: Date = Date(), kinds: Set<ContentKind> = [.vocabulary, .grammar]) throws -> Int {
         let snapshot = try snapshot()
         return snapshot.notes.values.filter { note in
             let progress = snapshot.progress[note.id]
-            return progress?.excluded != true && progress?.card != nil && (progress!.card!.due <= now || (progress?.tomorrowReminder.map { $0 <= now } ?? false))
+            return kinds.contains(note.kind) && progress?.excluded != true && progress?.card != nil && (progress!.card!.due <= now || (progress?.tomorrowReminder.map { $0 <= now } ?? false))
         }.count
     }
 }

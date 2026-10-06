@@ -5,10 +5,54 @@ import java.nio.file.Files
 import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ContentTest {
+    @Test fun `private kana audio overlay keeps builtin ownership and existing review`() {
+        val file = Files.createTempDirectory("kanalog").resolve("state.json").toFile()
+        val store = LocalStore(file)
+        store.install(File(System.getProperty("builtinFile")).readText())
+        val now = Instant.parse("2026-10-06T03:00:00Z")
+        val id = "hiragana:あ"
+        val original = store.snapshot().notes.single { it.id == id }
+        store.setFlags(id, bookmarked = true, memo = "내 합성 메모")
+        val progress = store.review(id, "GOOD", "kana-review", 0, now)
+        val overlay =
+            """
+            {"schemaVersion":1,"packageId":"private-synthetic","version":"1","notes":[
+            {"id":"hiragana:あ","kind":"hiragana","group":"basic","front":"あ",
+            "meaning":"교체하면 안 되는 합성 뜻","audio":"media/${"0".repeat(64)}.mp3"}]}
+            """.trimIndent()
+        store.install(overlay)
+        assertEquals(208, store.snapshot().notes.size)
+        assertEquals(original.copy(audio = "media/${"0".repeat(64)}.mp3"), store.snapshot().notes.single { it.id == id })
+        assertEquals("kanalog-kana", store.snapshot().notePackages[id])
+        assertEquals(progress, store.snapshot().progress[id])
+        assertFailsWith<IllegalArgumentException> { store.install(overlay.replace("\"front\":\"あ\"", "\"front\":\"い\"")) }
+        store.install("""{"schemaVersion":1,"packageId":"private-synthetic","version":"2","notes":[]}""")
+        val reopened = LocalStore(file).snapshot()
+        assertEquals(208, reopened.notes.size)
+        assertEquals(progress, reopened.progress[id])
+        assertEquals(1, reopened.reviews.size)
+    }
+
+    @Test fun `legacy profile owners are restored without losing prior cards or reviews`() {
+        val file = Files.createTempDirectory("kanalog").resolve("state.json").toFile()
+        file.writeText(
+            """
+            {"schemaVersion":1,"packages":{"sample":"1"},"notes":[
+            {"id":"old","kind":"vocabulary","front":"合成"}]}
+            """.trimIndent(),
+        )
+        val store = LocalStore(file)
+        assertEquals("sample", store.snapshot().notePackages["old"])
+        store.install("""{"schemaVersion":1,"packageId":"sample","version":"2","notes":[]}""")
+        assertTrue(store.snapshot().notes.isEmpty())
+        assertEquals("sample", LocalStore(file).snapshot().notePackages["old"])
+    }
+
     @Test fun `builtin inventory and kana session include every chosen character`() {
         val file = Files.createTempDirectory("kanalog").resolve("state.json").toFile()
         val store = LocalStore(file)

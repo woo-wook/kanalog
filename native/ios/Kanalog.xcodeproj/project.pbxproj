@@ -10,6 +10,7 @@
 		1740BC4BDF611CA79E865849 /* PronunciationPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62405937B74B767E8FA058D0 /* PronunciationPlayer.swift */; };
 		1B77E5F50F095CCDECF3A496 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4726E9ED2438BD2ED52065 /* SettingsView.swift */; };
 		2B5775F88DC100197A5B96E4 /* KanalogUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E3E4D5CCAD32AE7D403A7E /* KanalogUITests.swift */; };
+		4D192805C5071EAEECC771EA /* FlowLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E39B51122A6403519BF64F46 /* FlowLayoutTests.swift */; };
 		5B2DC3C9E985EB6D34529071 /* builtin-content.json in Resources */ = {isa = PBXBuildFile; fileRef = 0366FBB54692B173E1C954E2 /* builtin-content.json */; };
 		6177F4F2E2FBD3E0E6188D05 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2AC2EB9C485D9B4CA1A546 /* RootView.swift */; };
 		7DD6E691FF22FB76111F2274 /* PersonalAssets in Resources */ = {isa = PBXBuildFile; fileRef = 1F5EBF627C698618D919E2CC /* PersonalAssets */; };
@@ -27,6 +28,13 @@
 			remoteGlobalIDString = FB24910461DFD94CBC77D303;
 			remoteInfo = Kanalog;
 		};
+		AD6FC98CD80289880BDB851F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6D838FE8911712FA3EFACD85 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FB24910461DFD94CBC77D303;
+			remoteInfo = Kanalog;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +43,7 @@
 		1F5EBF627C698618D919E2CC /* PersonalAssets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PersonalAssets; path = Resources/PersonalAssets; sourceTree = SOURCE_ROOT; };
 		1F6B72DD4088ADF424721871 /* ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ios; path = .; sourceTree = SOURCE_ROOT; };
 		223568C77E67AE8115DCE32D /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		33DAF7412B2B94B01AFD90BF /* KanalogLayoutTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KanalogLayoutTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4844B6C18E899B84B944907E /* KanalogUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KanalogUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		56F260C66E668E3F2221DC67 /* StudyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyView.swift; sourceTree = "<group>"; };
 		62405937B74B767E8FA058D0 /* PronunciationPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PronunciationPlayer.swift; sourceTree = "<group>"; };
@@ -42,6 +51,7 @@
 		C2E3E4D5CCAD32AE7D403A7E /* KanalogUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KanalogUITests.swift; sourceTree = "<group>"; };
 		DA2AC2EB9C485D9B4CA1A546 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		E068F0E430EC053E3283992E /* KanalogApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KanalogApp.swift; sourceTree = "<group>"; };
+		E39B51122A6403519BF64F46 /* FlowLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayoutTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +87,7 @@
 			isa = PBXGroup;
 			children = (
 				0DA220AB0C227758C91CCD0A /* Kanalog.app */,
+				33DAF7412B2B94B01AFD90BF /* KanalogLayoutTests.xctest */,
 				4844B6C18E899B84B944907E /* KanalogUITests.xctest */,
 			);
 			name = Products;
@@ -127,8 +138,17 @@
 				37625BF016D0A8570B90679B /* Packages */,
 				9BA414C465AF979FB3084251 /* Resources */,
 				7D16F2D2B05B37AD252B33C4 /* UITests */,
+				F68636EBCBBC6EAE473F6338 /* UIUnitTests */,
 				4216CCD4DDC1FADC1ADB3FFC /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		F68636EBCBBC6EAE473F6338 /* UIUnitTests */ = {
+			isa = PBXGroup;
+			children = (
+				E39B51122A6403519BF64F46 /* FlowLayoutTests.swift */,
+			);
+			path = UIUnitTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -151,6 +171,24 @@
 			productName = KanalogUITests;
 			productReference = 4844B6C18E899B84B944907E /* KanalogUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		E84CCFB2A67E01A2A6D78E91 /* KanalogLayoutTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 654BD2DF01248D05B5CEEC5C /* Build configuration list for PBXNativeTarget "KanalogLayoutTests" */;
+			buildPhases = (
+				8FF6F2F971CDF095C05D0E67 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				86720485C5F7F40B576E4E21 /* PBXTargetDependency */,
+			);
+			name = KanalogLayoutTests;
+			packageProductDependencies = (
+			);
+			productName = KanalogLayoutTests;
+			productReference = 33DAF7412B2B94B01AFD90BF /* KanalogLayoutTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		FB24910461DFD94CBC77D303 /* Kanalog */ = {
 			isa = PBXNativeTarget;
@@ -185,6 +223,9 @@
 						ProvisioningStyle = Automatic;
 						TestTargetID = FB24910461DFD94CBC77D303;
 					};
+					E84CCFB2A67E01A2A6D78E91 = {
+						ProvisioningStyle = Automatic;
+					};
 					FB24910461DFD94CBC77D303 = {
 						ProvisioningStyle = Automatic;
 					};
@@ -209,6 +250,7 @@
 			targets = (
 				FB24910461DFD94CBC77D303 /* Kanalog */,
 				C56F0A320ADBD3CDC342B3BD /* KanalogUITests */,
+				E84CCFB2A67E01A2A6D78E91 /* KanalogLayoutTests */,
 			);
 		};
 /* End PBXProject section */
@@ -234,6 +276,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8FF6F2F971CDF095C05D0E67 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D192805C5071EAEECC771EA /* FlowLayoutTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C32BF8A0134A598A68094B22 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -254,6 +304,11 @@
 			isa = PBXTargetDependency;
 			target = FB24910461DFD94CBC77D303 /* Kanalog */;
 			targetProxy = 7273D9B27A03474E583A0180 /* PBXContainerItemProxy */;
+		};
+		86720485C5F7F40B576E4E21 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FB24910461DFD94CBC77D303 /* Kanalog */;
+			targetProxy = AD6FC98CD80289880BDB851F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -403,6 +458,23 @@
 			};
 			name = Debug;
 		};
+		6483D1CCC37C91149C15E39D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = me.hanwook.kanalog.layouttests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Kanalog.app/Kanalog";
+			};
+			name = Release;
+		};
 		79120499F9C94293C86913F6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -461,6 +533,23 @@
 			};
 			name = Release;
 		};
+		C02A3CC915019E6E55776BA8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = me.hanwook.kanalog.layouttests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Kanalog.app/Kanalog";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -469,6 +558,15 @@
 			buildConfigurations = (
 				1336D14044B43F6C3DA6EB13 /* Debug */,
 				79120499F9C94293C86913F6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		654BD2DF01248D05B5CEEC5C /* Build configuration list for PBXNativeTarget "KanalogLayoutTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C02A3CC915019E6E55776BA8 /* Debug */,
+				6483D1CCC37C91149C15E39D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

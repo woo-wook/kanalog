@@ -97,7 +97,7 @@ final class AppModel: ObservableObject {
     var dueCount: Int {
         snapshot.notes.values.filter { note in
             let state = snapshot.progress[note.id]
-            return state?.excluded != true && state?.card != nil && (state!.card!.due <= Date() || (state?.tomorrowReminder.map { $0 <= Date() } ?? false))
+            return !note.kind.isKana && state?.excluded != true && state?.card != nil && (state!.card!.due <= Date() || (state?.tomorrowReminder.map { $0 <= Date() } ?? false))
         }.count
     }
 }

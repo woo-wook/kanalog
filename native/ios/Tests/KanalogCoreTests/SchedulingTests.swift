@@ -23,7 +23,7 @@ import Testing
     #expect(throws: CoreError.staleVersion) { try b.submit(ReviewRequest(key: "stale", sessionID: stale.id, itemID: staleItem.id, noteID: staleItem.noteID, expectedVersion: staleItem.version, rating: .good), now: fixedNow.addingTimeInterval(900)) }
 }
 
-@Test func kanaIncludesAll208AndDifficultyPriorityWithoutChangingFSRS() throws {
+@Test func kanaIncludesAll208AndDifficultyPriorityWhileSavingFSRS() throws {
     let packageURL = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("shared/builtin-content.json")
     let package = try ContentPackage.decode(Data(contentsOf: packageURL))
     let directory = try temporaryDirectory()
@@ -38,8 +38,8 @@ import Testing
     let next = try store.startSession(scope: scope, now: fixedNow)
     #expect(next.items.count == 208)
     #expect(next.items[0].noteID == item.noteID)
-    #expect(try store.snapshot().progress[item.noteID]?.card == nil)
-    #expect(try store.session(first.id)?.items.count == 208)
+    #expect(try store.snapshot().progress[item.noteID]?.card != nil)
+    #expect(try store.session(first.id)?.items.count == 209)
     let basic = try store.startSession(scope: StudyScope(kinds: [.hiragana], groups: [.basic]), now: fixedNow)
     #expect(basic.items.count == 46)
 }
@@ -61,4 +61,46 @@ import Testing
     #expect(nextDay.items.count == 2)
     #expect(nextDay.items[0].noteID == item.noteID)
     #expect(nextDay.items[0].version == 1)
+}
+
+@Test func kanaAgainAddsOneReinforcementWithoutUsingVocabularyDailyQuota() throws {
+    let directory = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = try LocalStudyStore(directory: directory)
+    let kana = Note(id: "hiragana:あ", kind: .hiragana, group: .basic, front: "あ", reading: "あ", meaning: "아")
+    try store.install(ContentPackage(packageId: "synthetic", version: "1", notes: [kana] + fixtureNotes(1)))
+    var settings = StudySettings(); settings.newCardsPerDay = 1
+    try store.setSettings(settings)
+    let session = try store.startSession(scope: StudyScope(kinds: [.hiragana]), now: fixedNow)
+    let item = try #require(session.current)
+    let first = try store.submit(ReviewRequest(key: "kana-initial", sessionID: session.id, itemID: item.id, noteID: item.noteID, expectedVersion: item.version, rating: .again), now: fixedNow)
+    #expect(first.card?.reps == 1)
+    let retry = try #require(store.session(session.id)?.current)
+    #expect(retry.reinforcement)
+    let reinforced = try store.submit(ReviewRequest(key: "kana-reinforcement", sessionID: session.id, itemID: retry.id, noteID: retry.noteID, expectedVersion: retry.version, rating: .again), now: fixedNow.addingTimeInterval(10))
+    #expect(reinforced.card == first.card)
+    #expect(try store.session(session.id)?.items.count == 2)
+    #expect(try store.session(session.id)?.complete == true)
+    let words = try store.startSession(scope: StudyScope(kinds: [.vocabulary]), now: fixedNow)
+    #expect(words.items.count == 1)
+    let practice = try store.startSession(scope: StudyScope(kinds: [.hiragana]), now: fixedNow.addingTimeInterval(20))
+    #expect(practice.items.count == 1)
+    #expect(practice.items[0].noteID == kana.id)
+}
+
+@Test func defaultDueCountMatchesVocabularyGrammarReviewScope() throws {
+    let directory = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = try LocalStudyStore(directory: directory)
+    let kana = Note(id: "hiragana:あ", kind: .hiragana, group: .basic, front: "あ", reading: "あ", meaning: "아")
+    try store.install(ContentPackage(packageId: "synthetic", version: "1", notes: [kana] + fixtureNotes(1)))
+    for kind in [ContentKind.hiragana, .vocabulary] {
+        let session = try store.startSession(scope: StudyScope(kinds: [kind]), now: fixedNow)
+        let item = try #require(session.current)
+        _ = try store.submit(ReviewRequest(key: "due-\(kind.rawValue)", sessionID: session.id, itemID: item.id, noteID: item.noteID, expectedVersion: item.version, rating: .good), now: fixedNow)
+    }
+    let dueNow = fixedNow.addingTimeInterval(900)
+    #expect(try store.dueCount(now: dueNow) == 1)
+    #expect(try store.dueCount(now: dueNow, kinds: [.hiragana]) == 1)
+    #expect(try store.startSession(scope: StudyScope(kinds: [.vocabulary, .grammar], reviewOnly: true), now: dueNow).items.count == 1)
 }

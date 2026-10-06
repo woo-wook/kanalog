@@ -45,6 +45,40 @@ class LocalStoreTest {
         assertTrue(store.snapshot().notes.isEmpty())
     }
 
+    @Test fun `different package cannot replace active or archived content id`() {
+        val store = LocalStore(Files.createTempDirectory("kanalog").resolve("state.json").toFile())
+        store.install(sample)
+        assertFailsWith<IllegalArgumentException> { store.install(sample.replace("\"sample\"", "\"intruder\"")) }
+        store.install("""{"schemaVersion":1,"packageId":"sample","version":"2","notes":[]}""")
+        assertFailsWith<IllegalArgumentException> { store.install(sample.replace("\"sample\"", "\"intruder\"")) }
+    }
+
+    @Test fun `same package removes inactive cards from queue but preserves progress and reimport`() {
+        val file = Files.createTempDirectory("kanalog").resolve("state.json").toFile()
+        val store = LocalStore(file)
+        store.install(sample)
+        store.setFlags("one", bookmarked = true)
+        val now = Instant.parse("2026-10-06T03:00:00Z")
+        val progress = store.review("one", "GOOD", "saved", 0, now)
+        store.install("""{"schemaVersion":1,"packageId":"sample","version":"2","notes":[]}""")
+        assertTrue(store.snapshot().notes.isEmpty())
+        assertTrue(store.queue(StudyScope(setOf("vocabulary")), now.plusSeconds(86400)).isEmpty())
+        assertEquals(progress, store.snapshot().progress.getValue("one"))
+        assertEquals(1, store.snapshot().reviews.size)
+        store.install(sample.replace("\"version\":\"1\"", "\"version\":\"3\""))
+        assertEquals(progress, LocalStore(file).snapshot().progress.getValue("one"))
+        assertEquals(1, store.snapshot().notes.size)
+    }
+
+    @Test fun `imported package cannot replace or claim personal note namespace`() {
+        val store = LocalStore(Files.createTempDirectory("kanalog").resolve("state.json").toFile())
+        val id = store.savePersonalNote("合成", "ごうせい", "내 합성 뜻")
+        val prior = store.snapshot()
+        assertFailsWith<IllegalArgumentException> { store.install(sample.replace("\"one\"", "\"$id\"")) }
+        assertFailsWith<IllegalArgumentException> { store.install(sample.replace("\"one\"", "\"personal:unclaimed\"")) }
+        assertEquals(prior, store.snapshot())
+    }
+
     @Test fun `manifest mismatch rejects before replacing saved package`() {
         val store = LocalStore(Files.createTempDirectory("kanalog").resolve("state.json").toFile())
         store.install(sample)

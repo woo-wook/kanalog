@@ -104,6 +104,7 @@ import kotlinx.serialization.Serializable
     val schemaVersion: Int = 1,
     val notes: List<Note> = emptyList(),
     val packages: Map<String, String> = emptyMap(),
+    val notePackages: Map<String, String> = emptyMap(),
     val progress: Map<String, Progress> = emptyMap(),
     val reviews: List<Review> = emptyList(),
     val settings: Settings = Settings(),

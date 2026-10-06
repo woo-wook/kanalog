@@ -34,18 +34,19 @@ struct HomeView: View {
         Form {
             Section {
                 Text("오늘도 한 걸음").font(.title2.bold())
-                Text("복습할 카드 \(model.dueCount)장 · 기기에서 바로 학습").foregroundStyle(.secondary)
+                Text("단어·문법 복습 \(model.dueCount)장 · 기기에서 바로 학습").foregroundStyle(.secondary)
                 Button("지금 복습") { Task { await model.start(StudyScope(kinds: [.vocabulary, .grammar], reviewOnly: true)) } }.disabled(model.working)
                 if let recent = model.snapshot.sessions.values.filter({ !$0.complete }).max(by: { $0.createdAt < $1.createdAt }) {
                     Button("이어서 학습 · \(recent.answered)/\(recent.items.count)") { model.resume(recent) }
                 }
             }
             Section("가나 전체 섞어 연습") {
-                Toggle("히라가나", isOn: selected(.hiragana))
-                Toggle("가타카나", isOn: selected(.katakana))
+                Toggle("히라가나", isOn: selected(.hiragana)).accessibilityIdentifier("kana.hiragana")
+                Toggle("가타카나", isOn: selected(.katakana)).accessibilityIdentifier("kana.katakana")
                 ForEach(KanaGroup.allCases, id: \.self) { group in Toggle(group.label, isOn: groupBinding(group)) }
                 let count = model.snapshot.notes.values.filter { kanaKinds.contains($0.kind) && $0.group.map(groups.contains) == true && model.snapshot.progress[$0.id]?.excluded != true }.count
-                Button("선택한 \(count)자 연습") { Task { await model.start(StudyScope(kinds: kanaKinds, groups: groups)) } }.disabled(count == 0 || model.working)
+                Button("선택한 \(count)자 연습") { Task { await model.start(StudyScope(kinds: kanaKinds, groups: groups)) } }
+                    .disabled(count == 0 || model.working).accessibilityIdentifier("kana.practice.start")
                 NavigationLink("가나 참고표") { KanaReferenceView() }
             }
             Section("레벨 전체 학습") {

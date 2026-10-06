@@ -13,7 +13,7 @@ struct SettingsView: View {
             Section("읽기 보조") {
                 Toggle("후리가나", isOn: $settings.showFurigana)
                 Toggle("정답 전 읽기 힌트", isOn: $settings.showHintBeforeAnswer)
-                Toggle("한글 발음 보조", isOn: $settings.showHangul)
+                Toggle("한글 발음 보조", isOn: $settings.showHangul).accessibilityIdentifier("settings.hangul")
                 Text("한글은 일본어 발음의 근사 표기입니다.").font(.footnote).foregroundStyle(.secondary)
             }
             Section("학습") {
@@ -35,8 +35,8 @@ struct SettingsView: View {
                     saving = true
                     let value = settings
                     Task { await model.saveSettings(value); saving = false; saved = model.snapshot.settings == value }
-                }.disabled(saving)
-                if saved { Label("기기에 저장했습니다", systemImage: "checkmark.circle").foregroundStyle(.secondary) }
+                }.disabled(saving).accessibilityIdentifier("settings.save")
+                if saved { Label("기기에 저장했습니다", systemImage: "checkmark.circle").foregroundStyle(.secondary).accessibilityIdentifier("settings.saved") }
             }
             Section("내 콘텐츠") {
                 ForEach(model.snapshot.packages.keys.sorted(), id: \.self) { id in
@@ -67,21 +67,23 @@ struct StatisticsView: View {
     }
     var body: some View {
         let snapshot = model.snapshot
-        let studied = snapshot.progress.values.filter { $0.lastRating != nil }.count
+        let studied = snapshot.notes.values.filter { !$0.kind.isKana && snapshot.progress[$0.id]?.lastRating != nil }.count
+        let kanaStudied = snapshot.notes.values.filter { $0.kind.isKana && snapshot.progress[$0.id]?.lastRating != nil }.count
         let today = todayReviews
         List {
             Section("내 학습") {
-                LabeledContent("학습한 카드", value: "\(studied)장")
-                LabeledContent("지금 복습", value: "\(model.dueCount)장")
-                LabeledContent("오늘 평가", value: "\(today.count)개")
+                LabeledContent("학습한 단어·문법", value: "\(studied)장")
+                LabeledContent("연습한 가나", value: "\(kanaStudied)자")
+                LabeledContent("단어·문법 복습", value: "\(model.dueCount)장")
+                LabeledContent("오늘 평가(전체)", value: "\(today.count)개")
                 LabeledContent("전체 평가", value: "\(snapshot.reviews.count)개")
-                LabeledContent("완료한 연습", value: "\(snapshot.sessions.values.filter { $0.complete && !$0.items.isEmpty }.count)회")
+                LabeledContent("완료한 연습(전체)", value: "\(snapshot.sessions.values.filter { $0.complete && !$0.items.isEmpty }.count)회")
             }
-            Section("오늘의 평가") {
+            Section("오늘의 평가(전체)") {
                 ForEach(StudyRating.allCases, id: \.self) { rating in LabeledContent(rating.label, value: "\(today.filter { $0.request.rating == rating }.count)개") }
                 LabeledContent("즉시 보강", value: "\(today.filter(\.receipt.reinforcement).count)개")
             }
-            Section("최근 기록") {
+            Section("최근 기록(전체)") {
                 ForEach(Array(snapshot.reviews.suffix(50).reversed().enumerated()), id: \.element.request.key) { _, review in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(snapshot.notes[review.request.noteID]?.title ?? "보존된 카드 기록").font(.headline).lineLimit(1)

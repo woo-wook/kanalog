@@ -20,7 +20,7 @@ struct StudyView: View {
                                     Button { Task { await model.flags(note.id, bookmarked: !(model.snapshot.progress[note.id]?.bookmarked ?? false)) } } label: { Image(systemName: model.snapshot.progress[note.id]?.bookmarked == true ? "bookmark.fill" : "bookmark") }.accessibilityLabel("북마크")
                                 }
                                 NoteCard(note: note, revealed: revealed)
-                                Button { model.pronounce(note) } label: { Label("발음 듣기", systemImage: "speaker.wave.2.fill") }.buttonStyle(.bordered)
+                                Button { model.pronounce(note) } label: { Label("발음 듣기", systemImage: "speaker.wave.2.fill") }.buttonStyle(.bordered).accessibilityIdentifier("study.audio")
                                 if revealed {
                                     Toggle("학습에서 제외", isOn: Binding(get: { model.snapshot.progress[note.id]?.excluded == true }, set: { value in Task { await model.flags(note.id, excluded: value) } }))
                                 }
@@ -28,7 +28,7 @@ struct StudyView: View {
                         }.id(item.id)
                         VStack(spacing: 12) {
                             if !revealed {
-                                Button("정답 보기") { revealed = true }.buttonStyle(PrimaryGlassStyle()).frame(maxWidth: .infinity)
+                                Button("정답 보기") { revealed = true }.buttonStyle(PrimaryGlassStyle()).frame(maxWidth: .infinity).accessibilityIdentifier("study.reveal")
                             } else {
                                 HStack(spacing: 8) {
                                     ForEach(StudyRating.allCases, id: \.self) { rating in
@@ -37,6 +37,7 @@ struct StudyView: View {
                                             Task { await model.rate(rating, key: requestKey) }
                                         }
                                         .buttonStyle(.borderedProminent)
+                                        .accessibilityIdentifier("study.rating.\(rating.rawValue)")
                                         .tint(rating == .again ? .orange : rating == .hard ? .purple : .indigo)
                                         .disabled(model.working || (selectedRating != nil && selectedRating != rating))
                                         .frame(maxWidth: .infinity)
@@ -68,7 +69,7 @@ struct StudyView: View {
         }
         .navigationTitle("학습")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .cancellationAction) { Button("닫기") { model.audio.stop(); model.currentSession = nil }.disabled(model.working) } }
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button("닫기") { model.audio.stop(); model.currentSession = nil }.disabled(model.working).accessibilityIdentifier("study.close") } }
         .alert("저장하지 못했습니다", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
             Button("확인", role: .cancel) { model.error = nil }
         } message: { Text(model.error ?? "") }
@@ -189,16 +190,22 @@ struct FlowLayout: Layout {
     }
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         let layout = arrangement(width: bounds.width, subviews: subviews)
-        for (index, point) in layout.points.enumerated() { subviews[index].place(at: CGPoint(x: bounds.minX + point.x, y: bounds.minY + point.y), proposal: .unspecified) }
-    }
-    private func arrangement(width: CGFloat, subviews: Subviews) -> (size: CGSize, points: [CGPoint]) {
-        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0
-        var points: [CGPoint] = []
-        for view in subviews {
-            let size = view.sizeThatFits(.unspecified)
-            if x > 0 && x + size.width > width { y += rowHeight + spacing; x = 0; rowHeight = 0 }
-            points.append(CGPoint(x: x, y: y)); x += size.width + spacing; rowHeight = max(rowHeight, size.height)
+        for (index, item) in layout.items.enumerated() {
+            subviews[index].place(at: CGPoint(x: bounds.minX + item.point.x, y: bounds.minY + item.point.y), proposal: ProposedViewSize(width: item.width, height: nil))
         }
-        return (CGSize(width: width, height: y + rowHeight), points)
+    }
+    private func arrangement(width: CGFloat, subviews: Subviews) -> (size: CGSize, items: [(point: CGPoint, width: CGFloat)]) {
+        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0
+        var items: [(point: CGPoint, width: CGFloat)] = []
+        let availableWidth = max(0, width)
+        for view in subviews {
+            let intrinsic = view.sizeThatFits(.unspecified)
+            let proposedWidth = min(intrinsic.width, availableWidth)
+            let size = view.sizeThatFits(ProposedViewSize(width: proposedWidth, height: nil))
+            if x > 0 && x + proposedWidth > availableWidth { y += rowHeight + spacing; x = 0; rowHeight = 0 }
+            items.append((point: CGPoint(x: x, y: y), width: proposedWidth))
+            x += proposedWidth + spacing; rowHeight = max(rowHeight, size.height)
+        }
+        return (CGSize(width: availableWidth, height: y + rowHeight), items)
     }
 }
