@@ -31,6 +31,7 @@ build/
 *.log
 *.jar
 !gradle/wrapper/gradle-wrapper.jar
+!native/android/gradle/wrapper/gradle-wrapper.jar
 hs_err_pid*
 replay_pid*
 
@@ -71,3 +72,16 @@ frontend/public/tts/
 ### Python ###
 __pycache__/
 *.py[cod]
+
+### Native build and signing artifacts ###
+.build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+local.properties
+*.apk
+*.aab
+*.ipa
+*.keystore
+*.p12
+*.mobileprovision

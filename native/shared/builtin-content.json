@@ -1,0 +1,3750 @@
+{
+  "schemaVersion" : 1,
+  "packageId" : "kanalog-kana",
+  "version" : "1",
+  "notes" : [ {
+    "id" : "hiragana:あ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "あ",
+    "reading" : "あ",
+    "meaning" : "아",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "あ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "아",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:い",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "い",
+    "reading" : "い",
+    "meaning" : "이",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "い",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "이",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:う",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "う",
+    "reading" : "う",
+    "meaning" : "우",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "う",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "우",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:え",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "え",
+    "reading" : "え",
+    "meaning" : "에",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "え",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "에",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:お",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "お",
+    "reading" : "お",
+    "meaning" : "오",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "お",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "오",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:か",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "か",
+    "reading" : "か",
+    "meaning" : "카",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "か",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "카",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:き",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "き",
+    "reading" : "き",
+    "meaning" : "키",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "き",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "키",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:く",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "く",
+    "reading" : "く",
+    "meaning" : "쿠",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "く",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "쿠",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:け",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "け",
+    "reading" : "け",
+    "meaning" : "케",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "け",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "케",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:こ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "こ",
+    "reading" : "こ",
+    "meaning" : "코",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "こ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "코",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:さ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "さ",
+    "reading" : "さ",
+    "meaning" : "사",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "さ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "사",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:し",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "し",
+    "reading" : "し",
+    "meaning" : "시",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "し",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "시",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:す",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "す",
+    "reading" : "す",
+    "meaning" : "스",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "す",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "스",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:せ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "せ",
+    "reading" : "せ",
+    "meaning" : "세",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "せ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "세",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:そ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "そ",
+    "reading" : "そ",
+    "meaning" : "소",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "そ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "소",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:た",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "た",
+    "reading" : "た",
+    "meaning" : "타",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "た",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "타",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ち",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "ち",
+    "reading" : "ち",
+    "meaning" : "치",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ち",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "치",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:つ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "つ",
+    "reading" : "つ",
+    "meaning" : "츠",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "つ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "츠",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:て",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "て",
+    "reading" : "て",
+    "meaning" : "테",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "て",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "테",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:と",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "と",
+    "reading" : "と",
+    "meaning" : "토",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "と",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "토",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:な",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "な",
+    "reading" : "な",
+    "meaning" : "나",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "な",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "나",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:に",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "に",
+    "reading" : "に",
+    "meaning" : "니",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "に",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "니",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぬ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "ぬ",
+    "reading" : "ぬ",
+    "meaning" : "누",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぬ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "누",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ね",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "ね",
+    "reading" : "ね",
+    "meaning" : "네",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ね",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "네",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:の",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "の",
+    "reading" : "の",
+    "meaning" : "노",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "の",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "노",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:は",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "は",
+    "reading" : "は",
+    "meaning" : "하",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "は",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "하",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ひ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "ひ",
+    "reading" : "ひ",
+    "meaning" : "히",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ひ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "히",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ふ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "ふ",
+    "reading" : "ふ",
+    "meaning" : "후",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ふ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "후",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:へ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "へ",
+    "reading" : "へ",
+    "meaning" : "헤",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "へ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "헤",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ほ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "ほ",
+    "reading" : "ほ",
+    "meaning" : "호",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ほ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "호",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ま",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "ま",
+    "reading" : "ま",
+    "meaning" : "마",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ま",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "마",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:み",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "み",
+    "reading" : "み",
+    "meaning" : "미",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "み",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "미",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:む",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "む",
+    "reading" : "む",
+    "meaning" : "무",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "む",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "무",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:め",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "め",
+    "reading" : "め",
+    "meaning" : "메",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "め",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "메",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:も",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "も",
+    "reading" : "も",
+    "meaning" : "모",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "も",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "모",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:や",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "や",
+    "reading" : "や",
+    "meaning" : "야",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "や",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "야",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ゆ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "ゆ",
+    "reading" : "ゆ",
+    "meaning" : "유",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ゆ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "유",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:よ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "よ",
+    "reading" : "よ",
+    "meaning" : "요",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "よ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "요",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ら",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "ら",
+    "reading" : "ら",
+    "meaning" : "라",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ら",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "라",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:り",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "り",
+    "reading" : "り",
+    "meaning" : "리",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "り",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "리",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:る",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "る",
+    "reading" : "る",
+    "meaning" : "루",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "る",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "루",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:れ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "れ",
+    "reading" : "れ",
+    "meaning" : "레",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "れ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "레",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ろ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "ろ",
+    "reading" : "ろ",
+    "meaning" : "로",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ろ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "로",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:わ",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "わ",
+    "reading" : "わ",
+    "meaning" : "와",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "わ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "와",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:を",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "を",
+    "reading" : "を",
+    "meaning" : "오",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "を",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "오",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ん",
+    "kind" : "hiragana",
+    "group" : "basic",
+    "front" : "ん",
+    "reading" : "ん",
+    "meaning" : "응",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ん",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "응",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:が",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "が",
+    "reading" : "が",
+    "meaning" : "가",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "が",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "가",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぎ",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "ぎ",
+    "reading" : "ぎ",
+    "meaning" : "기",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぎ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "기",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぐ",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "ぐ",
+    "reading" : "ぐ",
+    "meaning" : "구",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぐ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "구",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:げ",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "げ",
+    "reading" : "げ",
+    "meaning" : "게",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "げ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "게",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ご",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "ご",
+    "reading" : "ご",
+    "meaning" : "고",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ご",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "고",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ざ",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "ざ",
+    "reading" : "ざ",
+    "meaning" : "자",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ざ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "자",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:じ",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "じ",
+    "reading" : "じ",
+    "meaning" : "지",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "じ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "지",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ず",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "ず",
+    "reading" : "ず",
+    "meaning" : "즈",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ず",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "즈",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぜ",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "ぜ",
+    "reading" : "ぜ",
+    "meaning" : "제",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぜ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "제",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぞ",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "ぞ",
+    "reading" : "ぞ",
+    "meaning" : "조",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぞ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "조",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:だ",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "だ",
+    "reading" : "だ",
+    "meaning" : "다",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "だ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "다",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぢ",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "ぢ",
+    "reading" : "ぢ",
+    "meaning" : "지",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぢ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "지",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:づ",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "づ",
+    "reading" : "づ",
+    "meaning" : "즈",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "づ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "즈",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:で",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "で",
+    "reading" : "で",
+    "meaning" : "데",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "で",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "데",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ど",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "ど",
+    "reading" : "ど",
+    "meaning" : "도",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ど",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "도",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ば",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "ば",
+    "reading" : "ば",
+    "meaning" : "바",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ば",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "바",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:び",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "び",
+    "reading" : "び",
+    "meaning" : "비",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "び",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "비",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぶ",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "ぶ",
+    "reading" : "ぶ",
+    "meaning" : "부",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぶ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "부",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:べ",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "べ",
+    "reading" : "べ",
+    "meaning" : "베",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "べ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "베",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぼ",
+    "kind" : "hiragana",
+    "group" : "voiced",
+    "front" : "ぼ",
+    "reading" : "ぼ",
+    "meaning" : "보",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぼ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "보",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぱ",
+    "kind" : "hiragana",
+    "group" : "semiVoiced",
+    "front" : "ぱ",
+    "reading" : "ぱ",
+    "meaning" : "파",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぱ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "파",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぴ",
+    "kind" : "hiragana",
+    "group" : "semiVoiced",
+    "front" : "ぴ",
+    "reading" : "ぴ",
+    "meaning" : "피",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぴ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "피",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぷ",
+    "kind" : "hiragana",
+    "group" : "semiVoiced",
+    "front" : "ぷ",
+    "reading" : "ぷ",
+    "meaning" : "푸",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぷ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "푸",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぺ",
+    "kind" : "hiragana",
+    "group" : "semiVoiced",
+    "front" : "ぺ",
+    "reading" : "ぺ",
+    "meaning" : "페",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぺ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "페",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぽ",
+    "kind" : "hiragana",
+    "group" : "semiVoiced",
+    "front" : "ぽ",
+    "reading" : "ぽ",
+    "meaning" : "포",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぽ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "포",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:きゃ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "きゃ",
+    "reading" : "きゃ",
+    "meaning" : "캬",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "きゃ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "캬",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:きゅ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "きゅ",
+    "reading" : "きゅ",
+    "meaning" : "큐",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "きゅ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "큐",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:きょ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "きょ",
+    "reading" : "きょ",
+    "meaning" : "쿄",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "きょ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "쿄",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:しゃ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "しゃ",
+    "reading" : "しゃ",
+    "meaning" : "샤",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "しゃ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "샤",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:しゅ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "しゅ",
+    "reading" : "しゅ",
+    "meaning" : "슈",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "しゅ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "슈",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:しょ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "しょ",
+    "reading" : "しょ",
+    "meaning" : "쇼",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "しょ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "쇼",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ちゃ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "ちゃ",
+    "reading" : "ちゃ",
+    "meaning" : "차",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ちゃ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "차",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ちゅ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "ちゅ",
+    "reading" : "ちゅ",
+    "meaning" : "추",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ちゅ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "추",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ちょ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "ちょ",
+    "reading" : "ちょ",
+    "meaning" : "초",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ちょ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "초",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:にゃ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "にゃ",
+    "reading" : "にゃ",
+    "meaning" : "냐",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "にゃ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "냐",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:にゅ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "にゅ",
+    "reading" : "にゅ",
+    "meaning" : "뉴",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "にゅ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "뉴",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:にょ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "にょ",
+    "reading" : "にょ",
+    "meaning" : "뇨",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "にょ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "뇨",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ひゃ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "ひゃ",
+    "reading" : "ひゃ",
+    "meaning" : "햐",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ひゃ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "햐",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ひゅ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "ひゅ",
+    "reading" : "ひゅ",
+    "meaning" : "휴",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ひゅ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "휴",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ひょ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "ひょ",
+    "reading" : "ひょ",
+    "meaning" : "효",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ひょ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "효",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:みゃ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "みゃ",
+    "reading" : "みゃ",
+    "meaning" : "먀",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "みゃ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "먀",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:みゅ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "みゅ",
+    "reading" : "みゅ",
+    "meaning" : "뮤",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "みゅ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "뮤",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:みょ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "みょ",
+    "reading" : "みょ",
+    "meaning" : "묘",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "みょ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "묘",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:りゃ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "りゃ",
+    "reading" : "りゃ",
+    "meaning" : "랴",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "りゃ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "랴",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:りゅ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "りゅ",
+    "reading" : "りゅ",
+    "meaning" : "류",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "りゅ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "류",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:りょ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "りょ",
+    "reading" : "りょ",
+    "meaning" : "료",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "りょ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "료",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぎゃ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "ぎゃ",
+    "reading" : "ぎゃ",
+    "meaning" : "갸",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぎゃ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "갸",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぎゅ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "ぎゅ",
+    "reading" : "ぎゅ",
+    "meaning" : "규",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぎゅ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "규",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぎょ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "ぎょ",
+    "reading" : "ぎょ",
+    "meaning" : "교",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぎょ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "교",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:じゃ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "じゃ",
+    "reading" : "じゃ",
+    "meaning" : "자",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "じゃ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "자",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:じゅ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "じゅ",
+    "reading" : "じゅ",
+    "meaning" : "쥬",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "じゅ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "쥬",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:じょ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "じょ",
+    "reading" : "じょ",
+    "meaning" : "죠",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "じょ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "죠",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:びゃ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "びゃ",
+    "reading" : "びゃ",
+    "meaning" : "뱌",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "びゃ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "뱌",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:びゅ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "びゅ",
+    "reading" : "びゅ",
+    "meaning" : "뷰",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "びゅ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "뷰",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:びょ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "びょ",
+    "reading" : "びょ",
+    "meaning" : "뵤",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "びょ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "뵤",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぴゃ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "ぴゃ",
+    "reading" : "ぴゃ",
+    "meaning" : "퍄",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぴゃ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "퍄",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぴゅ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "ぴゅ",
+    "reading" : "ぴゅ",
+    "meaning" : "퓨",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぴゅ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "퓨",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "hiragana:ぴょ",
+    "kind" : "hiragana",
+    "group" : "yoon",
+    "front" : "ぴょ",
+    "reading" : "ぴょ",
+    "meaning" : "표",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ぴょ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "표",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:あ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ア",
+    "reading" : "ア",
+    "meaning" : "아",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ア",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "아",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:い",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "イ",
+    "reading" : "イ",
+    "meaning" : "이",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "イ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "이",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:う",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ウ",
+    "reading" : "ウ",
+    "meaning" : "우",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ウ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "우",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:え",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "エ",
+    "reading" : "エ",
+    "meaning" : "에",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "エ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "에",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:お",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "オ",
+    "reading" : "オ",
+    "meaning" : "오",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "オ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "오",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:か",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "カ",
+    "reading" : "カ",
+    "meaning" : "카",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "カ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "카",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:き",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "キ",
+    "reading" : "キ",
+    "meaning" : "키",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "キ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "키",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:く",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ク",
+    "reading" : "ク",
+    "meaning" : "쿠",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ク",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "쿠",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:け",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ケ",
+    "reading" : "ケ",
+    "meaning" : "케",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ケ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "케",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:こ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "コ",
+    "reading" : "コ",
+    "meaning" : "코",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "コ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "코",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:さ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "サ",
+    "reading" : "サ",
+    "meaning" : "사",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "サ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "사",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:し",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "シ",
+    "reading" : "シ",
+    "meaning" : "시",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "シ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "시",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:す",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ス",
+    "reading" : "ス",
+    "meaning" : "스",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ス",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "스",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:せ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "セ",
+    "reading" : "セ",
+    "meaning" : "세",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "セ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "세",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:そ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ソ",
+    "reading" : "ソ",
+    "meaning" : "소",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ソ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "소",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:た",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "タ",
+    "reading" : "タ",
+    "meaning" : "타",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "タ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "타",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ち",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "チ",
+    "reading" : "チ",
+    "meaning" : "치",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "チ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "치",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:つ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ツ",
+    "reading" : "ツ",
+    "meaning" : "츠",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ツ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "츠",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:て",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "テ",
+    "reading" : "テ",
+    "meaning" : "테",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "テ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "테",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:と",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ト",
+    "reading" : "ト",
+    "meaning" : "토",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ト",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "토",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:な",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ナ",
+    "reading" : "ナ",
+    "meaning" : "나",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ナ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "나",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:に",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ニ",
+    "reading" : "ニ",
+    "meaning" : "니",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ニ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "니",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぬ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ヌ",
+    "reading" : "ヌ",
+    "meaning" : "누",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ヌ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "누",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ね",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ネ",
+    "reading" : "ネ",
+    "meaning" : "네",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ネ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "네",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:の",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ノ",
+    "reading" : "ノ",
+    "meaning" : "노",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ノ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "노",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:は",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ハ",
+    "reading" : "ハ",
+    "meaning" : "하",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ハ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "하",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ひ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ヒ",
+    "reading" : "ヒ",
+    "meaning" : "히",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ヒ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "히",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ふ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "フ",
+    "reading" : "フ",
+    "meaning" : "후",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "フ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "후",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:へ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ヘ",
+    "reading" : "ヘ",
+    "meaning" : "헤",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ヘ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "헤",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ほ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ホ",
+    "reading" : "ホ",
+    "meaning" : "호",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ホ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "호",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ま",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "マ",
+    "reading" : "マ",
+    "meaning" : "마",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "マ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "마",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:み",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ミ",
+    "reading" : "ミ",
+    "meaning" : "미",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ミ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "미",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:む",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ム",
+    "reading" : "ム",
+    "meaning" : "무",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ム",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "무",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:め",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "メ",
+    "reading" : "メ",
+    "meaning" : "메",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "メ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "메",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:も",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "モ",
+    "reading" : "モ",
+    "meaning" : "모",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "モ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "모",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:や",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ヤ",
+    "reading" : "ヤ",
+    "meaning" : "야",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ヤ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "야",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ゆ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ユ",
+    "reading" : "ユ",
+    "meaning" : "유",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ユ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "유",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:よ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ヨ",
+    "reading" : "ヨ",
+    "meaning" : "요",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ヨ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "요",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ら",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ラ",
+    "reading" : "ラ",
+    "meaning" : "라",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ラ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "라",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:り",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "リ",
+    "reading" : "リ",
+    "meaning" : "리",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "リ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "리",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:る",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ル",
+    "reading" : "ル",
+    "meaning" : "루",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ル",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "루",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:れ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "レ",
+    "reading" : "レ",
+    "meaning" : "레",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "レ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "레",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ろ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ロ",
+    "reading" : "ロ",
+    "meaning" : "로",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ロ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "로",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:わ",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ワ",
+    "reading" : "ワ",
+    "meaning" : "와",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ワ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "와",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:を",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ヲ",
+    "reading" : "ヲ",
+    "meaning" : "오",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ヲ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "오",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ん",
+    "kind" : "katakana",
+    "group" : "basic",
+    "front" : "ン",
+    "reading" : "ン",
+    "meaning" : "응",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ン",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "응",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:が",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ガ",
+    "reading" : "ガ",
+    "meaning" : "가",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ガ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "가",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぎ",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ギ",
+    "reading" : "ギ",
+    "meaning" : "기",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ギ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "기",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぐ",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "グ",
+    "reading" : "グ",
+    "meaning" : "구",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "グ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "구",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:げ",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ゲ",
+    "reading" : "ゲ",
+    "meaning" : "게",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ゲ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "게",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ご",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ゴ",
+    "reading" : "ゴ",
+    "meaning" : "고",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ゴ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "고",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ざ",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ザ",
+    "reading" : "ザ",
+    "meaning" : "자",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ザ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "자",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:じ",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ジ",
+    "reading" : "ジ",
+    "meaning" : "지",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ジ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "지",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ず",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ズ",
+    "reading" : "ズ",
+    "meaning" : "즈",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ズ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "즈",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぜ",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ゼ",
+    "reading" : "ゼ",
+    "meaning" : "제",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ゼ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "제",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぞ",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ゾ",
+    "reading" : "ゾ",
+    "meaning" : "조",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ゾ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "조",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:だ",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ダ",
+    "reading" : "ダ",
+    "meaning" : "다",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ダ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "다",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぢ",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ヂ",
+    "reading" : "ヂ",
+    "meaning" : "지",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ヂ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "지",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:づ",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ヅ",
+    "reading" : "ヅ",
+    "meaning" : "즈",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ヅ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "즈",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:で",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "デ",
+    "reading" : "デ",
+    "meaning" : "데",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "デ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "데",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ど",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ド",
+    "reading" : "ド",
+    "meaning" : "도",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ド",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "도",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ば",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "バ",
+    "reading" : "バ",
+    "meaning" : "바",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "バ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "바",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:び",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ビ",
+    "reading" : "ビ",
+    "meaning" : "비",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ビ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "비",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぶ",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ブ",
+    "reading" : "ブ",
+    "meaning" : "부",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ブ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "부",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:べ",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ベ",
+    "reading" : "ベ",
+    "meaning" : "베",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ベ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "베",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぼ",
+    "kind" : "katakana",
+    "group" : "voiced",
+    "front" : "ボ",
+    "reading" : "ボ",
+    "meaning" : "보",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ボ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "보",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぱ",
+    "kind" : "katakana",
+    "group" : "semiVoiced",
+    "front" : "パ",
+    "reading" : "パ",
+    "meaning" : "파",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "パ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "파",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぴ",
+    "kind" : "katakana",
+    "group" : "semiVoiced",
+    "front" : "ピ",
+    "reading" : "ピ",
+    "meaning" : "피",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ピ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "피",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぷ",
+    "kind" : "katakana",
+    "group" : "semiVoiced",
+    "front" : "プ",
+    "reading" : "プ",
+    "meaning" : "푸",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "プ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "푸",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぺ",
+    "kind" : "katakana",
+    "group" : "semiVoiced",
+    "front" : "ペ",
+    "reading" : "ペ",
+    "meaning" : "페",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ペ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "페",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぽ",
+    "kind" : "katakana",
+    "group" : "semiVoiced",
+    "front" : "ポ",
+    "reading" : "ポ",
+    "meaning" : "포",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ポ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "포",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:きゃ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "キャ",
+    "reading" : "キャ",
+    "meaning" : "캬",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "キャ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "캬",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:きゅ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "キュ",
+    "reading" : "キュ",
+    "meaning" : "큐",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "キュ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "큐",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:きょ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "キョ",
+    "reading" : "キョ",
+    "meaning" : "쿄",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "キョ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "쿄",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:しゃ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "シャ",
+    "reading" : "シャ",
+    "meaning" : "샤",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "シャ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "샤",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:しゅ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "シュ",
+    "reading" : "シュ",
+    "meaning" : "슈",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "シュ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "슈",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:しょ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ショ",
+    "reading" : "ショ",
+    "meaning" : "쇼",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ショ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "쇼",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ちゃ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "チャ",
+    "reading" : "チャ",
+    "meaning" : "차",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "チャ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "차",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ちゅ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "チュ",
+    "reading" : "チュ",
+    "meaning" : "추",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "チュ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "추",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ちょ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "チョ",
+    "reading" : "チョ",
+    "meaning" : "초",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "チョ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "초",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:にゃ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ニャ",
+    "reading" : "ニャ",
+    "meaning" : "냐",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ニャ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "냐",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:にゅ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ニュ",
+    "reading" : "ニュ",
+    "meaning" : "뉴",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ニュ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "뉴",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:にょ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ニョ",
+    "reading" : "ニョ",
+    "meaning" : "뇨",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ニョ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "뇨",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ひゃ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ヒャ",
+    "reading" : "ヒャ",
+    "meaning" : "햐",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ヒャ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "햐",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ひゅ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ヒュ",
+    "reading" : "ヒュ",
+    "meaning" : "휴",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ヒュ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "휴",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ひょ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ヒョ",
+    "reading" : "ヒョ",
+    "meaning" : "효",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ヒョ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "효",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:みゃ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ミャ",
+    "reading" : "ミャ",
+    "meaning" : "먀",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ミャ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "먀",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:みゅ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ミュ",
+    "reading" : "ミュ",
+    "meaning" : "뮤",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ミュ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "뮤",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:みょ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ミョ",
+    "reading" : "ミョ",
+    "meaning" : "묘",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ミョ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "묘",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:りゃ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "リャ",
+    "reading" : "リャ",
+    "meaning" : "랴",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "リャ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "랴",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:りゅ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "リュ",
+    "reading" : "リュ",
+    "meaning" : "류",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "リュ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "류",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:りょ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "リョ",
+    "reading" : "リョ",
+    "meaning" : "료",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "リョ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "료",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぎゃ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ギャ",
+    "reading" : "ギャ",
+    "meaning" : "갸",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ギャ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "갸",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぎゅ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ギュ",
+    "reading" : "ギュ",
+    "meaning" : "규",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ギュ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "규",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぎょ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ギョ",
+    "reading" : "ギョ",
+    "meaning" : "교",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ギョ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "교",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:じゃ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ジャ",
+    "reading" : "ジャ",
+    "meaning" : "자",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ジャ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "자",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:じゅ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ジュ",
+    "reading" : "ジュ",
+    "meaning" : "쥬",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ジュ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "쥬",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:じょ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ジョ",
+    "reading" : "ジョ",
+    "meaning" : "죠",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ジョ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "죠",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:びゃ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ビャ",
+    "reading" : "ビャ",
+    "meaning" : "뱌",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ビャ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "뱌",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:びゅ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ビュ",
+    "reading" : "ビュ",
+    "meaning" : "뷰",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ビュ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "뷰",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:びょ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ビョ",
+    "reading" : "ビョ",
+    "meaning" : "뵤",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ビョ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "뵤",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぴゃ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ピャ",
+    "reading" : "ピャ",
+    "meaning" : "퍄",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ピャ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "퍄",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぴゅ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ピュ",
+    "reading" : "ピュ",
+    "meaning" : "퓨",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ピュ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "퓨",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  }, {
+    "id" : "katakana:ぴょ",
+    "kind" : "katakana",
+    "group" : "yoon",
+    "front" : "ピョ",
+    "reading" : "ピョ",
+    "meaning" : "표",
+    "readingGuide" : {
+      "segments" : [ {
+        "text" : "ピョ",
+        "reading" : null
+      } ],
+      "source" : "READING",
+      "hangul" : "표",
+      "hangulSource" : "MANUAL",
+      "hangulStatus" : "COMPLETE"
+    },
+    "examples" : [ ]
+  } ]
+}

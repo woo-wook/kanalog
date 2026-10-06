@@ -45,3 +45,14 @@ ktlint {
 configurations.named("ktlint") { resolutionStrategy.activateDependencyLocking() }
 
 configurations.named("runtimeClasspath") { resolutionStrategy.activateDependencyLocking() }
+
+tasks.register<JavaExec>("nativeExport") {
+    group = "application"
+    description = "Export offline native content without starting Spring or connecting to a database"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("com.kanalog.tools.NativeContentExporter")
+    args(providers.gradleProperty("nativeOutput").getOrElse("../native/shared/builtin-content.json"))
+    providers.gradleProperty("nativeInput").orNull?.let { input ->
+        args(input, providers.gradleProperty("nativeMediaMap").get())
+    }
+}
