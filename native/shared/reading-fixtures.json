@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "hangul": [
+    {"reading":"きゃく","text":"캬쿠","status":"COMPLETE"},
+    {"reading":"コーヒー","text":"코오히이","status":"COMPLETE"},
+    {"reading":"がっこう","text":"각코오","status":"COMPLETE"},
+    {"reading":"きって","text":"킷테","status":"COMPLETE"},
+    {"reading":"きっぷ","text":"킵푸","status":"COMPLETE"},
+    {"reading":"しんぶん","text":"심분","status":"COMPLETE"},
+    {"reading":"かんこく","text":"캉코쿠","status":"COMPLETE"},
+    {"reading":"パーティー","text":"파아티이","status":"COMPLETE"},
+    {"reading":"スーツ","text":"스으츠","status":"COMPLETE"},
+    {"reading":"ワールド","text":"와아루도","status":"COMPLETE"},
+    {"reading":"ウェー","text":"웨에","status":"COMPLETE"},
+    {"reading":"ぁぃす","text":"아이스","status":"COMPLETE"},
+    {"reading":"これを3こ","text":"코레오〔3〕코","status":"PARTIAL"},
+    {"reading":"未知XYZ","text":null,"status":"UNAVAILABLE"}
+  ],
+  "alignment": [
+    {"text":"食べる","reading":"たべる","segments":[{"text":"食","reading":"た"},{"text":"べる","reading":null}]},
+    {"text":"日本語","reading":"にほんご","segments":[{"text":"日本語","reading":"にほんご"}]},
+    {"text":"お母さん","reading":"おかあさん","segments":[{"text":"お","reading":null},{"text":"母","reading":"かあ"},{"text":"さん","reading":null}]},
+    {"text":"行った","reading":"いった","segments":[{"text":"行","reading":"い"},{"text":"った","reading":null}]},
+    {"text":"甲の乙","reading":"あのいのう","segments":[{"text":"甲の乙","reading":"あのいのう"}]},
+    {"text":"カメラ","reading":"かめら","segments":[{"text":"カメラ","reading":null}]},
+    {"text":"𠮷","reading":"よし","segments":[{"text":"𠮷","reading":"よし"}]},
+    {"text":"食べる","reading":"たべます","segments":null},
+    {"text":"日本","reading":"unknown","segments":null}
+  ]
+}
