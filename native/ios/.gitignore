@@ -1,0 +1,6 @@
+.build/
+DerivedData/
+Resources/PersonalAssets/*
+!Resources/PersonalAssets/README.md
+*.xcuserstate
+xcuserdata/

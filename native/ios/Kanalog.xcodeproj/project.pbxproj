@@ -1,0 +1,511 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1740BC4BDF611CA79E865849 /* PronunciationPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62405937B74B767E8FA058D0 /* PronunciationPlayer.swift */; };
+		1B77E5F50F095CCDECF3A496 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4726E9ED2438BD2ED52065 /* SettingsView.swift */; };
+		2B5775F88DC100197A5B96E4 /* KanalogUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E3E4D5CCAD32AE7D403A7E /* KanalogUITests.swift */; };
+		5B2DC3C9E985EB6D34529071 /* builtin-content.json in Resources */ = {isa = PBXBuildFile; fileRef = 0366FBB54692B173E1C954E2 /* builtin-content.json */; };
+		6177F4F2E2FBD3E0E6188D05 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2AC2EB9C485D9B4CA1A546 /* RootView.swift */; };
+		7DD6E691FF22FB76111F2274 /* PersonalAssets in Resources */ = {isa = PBXBuildFile; fileRef = 1F5EBF627C698618D919E2CC /* PersonalAssets */; };
+		7E3B855561AADA3C4580BCEA /* KanalogApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E068F0E430EC053E3283992E /* KanalogApp.swift */; };
+		8AA112E5531389C023C0683A /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223568C77E67AE8115DCE32D /* LibraryView.swift */; };
+		D48B460759AC54B4DC2DC822 /* StudyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56F260C66E668E3F2221DC67 /* StudyView.swift */; };
+		F0AEE9FC927FA54D6ED3AFFE /* KanalogCore in Frameworks */ = {isa = PBXBuildFile; productRef = CAFD90E5668C36AAC8D7D468 /* KanalogCore */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7273D9B27A03474E583A0180 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6D838FE8911712FA3EFACD85 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FB24910461DFD94CBC77D303;
+			remoteInfo = Kanalog;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0366FBB54692B173E1C954E2 /* builtin-content.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "builtin-content.json"; sourceTree = "<group>"; };
+		0DA220AB0C227758C91CCD0A /* Kanalog.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Kanalog.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1F5EBF627C698618D919E2CC /* PersonalAssets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PersonalAssets; path = Resources/PersonalAssets; sourceTree = SOURCE_ROOT; };
+		1F6B72DD4088ADF424721871 /* ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ios; path = .; sourceTree = SOURCE_ROOT; };
+		223568C77E67AE8115DCE32D /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		4844B6C18E899B84B944907E /* KanalogUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KanalogUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		56F260C66E668E3F2221DC67 /* StudyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyView.swift; sourceTree = "<group>"; };
+		62405937B74B767E8FA058D0 /* PronunciationPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PronunciationPlayer.swift; sourceTree = "<group>"; };
+		7C4726E9ED2438BD2ED52065 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		C2E3E4D5CCAD32AE7D403A7E /* KanalogUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KanalogUITests.swift; sourceTree = "<group>"; };
+		DA2AC2EB9C485D9B4CA1A546 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		E068F0E430EC053E3283992E /* KanalogApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KanalogApp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		732E03F5640BF1081796D31E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F0AEE9FC927FA54D6ED3AFFE /* KanalogCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		05689C80D3664CA9AB50BDCB /* native */ = {
+			isa = PBXGroup;
+			children = (
+				7A19101FC9BC26FBF01E1D45 /* shared */,
+			);
+			name = native;
+			path = ..;
+			sourceTree = "<group>";
+		};
+		37625BF016D0A8570B90679B /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				1F6B72DD4088ADF424721871 /* ios */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		4216CCD4DDC1FADC1ADB3FFC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0DA220AB0C227758C91CCD0A /* Kanalog.app */,
+				4844B6C18E899B84B944907E /* KanalogUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		7A19101FC9BC26FBF01E1D45 /* shared */ = {
+			isa = PBXGroup;
+			children = (
+				0366FBB54692B173E1C954E2 /* builtin-content.json */,
+			);
+			path = shared;
+			sourceTree = "<group>";
+		};
+		7D16F2D2B05B37AD252B33C4 /* UITests */ = {
+			isa = PBXGroup;
+			children = (
+				C2E3E4D5CCAD32AE7D403A7E /* KanalogUITests.swift */,
+			);
+			path = UITests;
+			sourceTree = "<group>";
+		};
+		94DCFE34E51D2ECDA88C523F /* App */ = {
+			isa = PBXGroup;
+			children = (
+				E068F0E430EC053E3283992E /* KanalogApp.swift */,
+				223568C77E67AE8115DCE32D /* LibraryView.swift */,
+				62405937B74B767E8FA058D0 /* PronunciationPlayer.swift */,
+				DA2AC2EB9C485D9B4CA1A546 /* RootView.swift */,
+				7C4726E9ED2438BD2ED52065 /* SettingsView.swift */,
+				56F260C66E668E3F2221DC67 /* StudyView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		9BA414C465AF979FB3084251 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				1F5EBF627C698618D919E2CC /* PersonalAssets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		D5DAD7495F6CCD8A5D57B64F = {
+			isa = PBXGroup;
+			children = (
+				94DCFE34E51D2ECDA88C523F /* App */,
+				05689C80D3664CA9AB50BDCB /* native */,
+				37625BF016D0A8570B90679B /* Packages */,
+				9BA414C465AF979FB3084251 /* Resources */,
+				7D16F2D2B05B37AD252B33C4 /* UITests */,
+				4216CCD4DDC1FADC1ADB3FFC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C56F0A320ADBD3CDC342B3BD /* KanalogUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E0A4A8315ACFDBA7D08D2129 /* Build configuration list for PBXNativeTarget "KanalogUITests" */;
+			buildPhases = (
+				45C685E843A2A1EB338490BC /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				23FA34718943C70413E27C01 /* PBXTargetDependency */,
+			);
+			name = KanalogUITests;
+			packageProductDependencies = (
+			);
+			productName = KanalogUITests;
+			productReference = 4844B6C18E899B84B944907E /* KanalogUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		FB24910461DFD94CBC77D303 /* Kanalog */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D9D0EF12858EEA4578DFC753 /* Build configuration list for PBXNativeTarget "Kanalog" */;
+			buildPhases = (
+				C32BF8A0134A598A68094B22 /* Sources */,
+				AAD353978E65E636086178D1 /* Resources */,
+				732E03F5640BF1081796D31E /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Kanalog;
+			packageProductDependencies = (
+				CAFD90E5668C36AAC8D7D468 /* KanalogCore */,
+			);
+			productName = Kanalog;
+			productReference = 0DA220AB0C227758C91CCD0A /* Kanalog.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6D838FE8911712FA3EFACD85 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					C56F0A320ADBD3CDC342B3BD = {
+						ProvisioningStyle = Automatic;
+						TestTargetID = FB24910461DFD94CBC77D303;
+					};
+					FB24910461DFD94CBC77D303 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 3D4CC2658750B12D3F3A2C5B /* Build configuration list for PBXProject "Kanalog" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = D5DAD7495F6CCD8A5D57B64F;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				000C49914D7EC8FA24B50009 /* XCLocalSwiftPackageReference "." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 4216CCD4DDC1FADC1ADB3FFC /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FB24910461DFD94CBC77D303 /* Kanalog */,
+				C56F0A320ADBD3CDC342B3BD /* KanalogUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AAD353978E65E636086178D1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7DD6E691FF22FB76111F2274 /* PersonalAssets in Resources */,
+				5B2DC3C9E985EB6D34529071 /* builtin-content.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		45C685E843A2A1EB338490BC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2B5775F88DC100197A5B96E4 /* KanalogUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C32BF8A0134A598A68094B22 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7E3B855561AADA3C4580BCEA /* KanalogApp.swift in Sources */,
+				8AA112E5531389C023C0683A /* LibraryView.swift in Sources */,
+				1740BC4BDF611CA79E865849 /* PronunciationPlayer.swift in Sources */,
+				6177F4F2E2FBD3E0E6188D05 /* RootView.swift in Sources */,
+				1B77E5F50F095CCDECF3A496 /* SettingsView.swift in Sources */,
+				D48B460759AC54B4DC2DC822 /* StudyView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		23FA34718943C70413E27C01 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FB24910461DFD94CBC77D303 /* Kanalog */;
+			targetProxy = 7273D9B27A03474E583A0180 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1336D14044B43F6C3DA6EB13 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1DF58B4D9A367FAC1EC16BFB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = me.hanwook.kanalog.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Kanalog;
+			};
+			name = Release;
+		};
+		2C281AD86E77CC18DFC23537 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Kanalog;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.hanwook.kanalog;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6329223D65BF1BB4F8526900 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Kanalog;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = me.hanwook.kanalog;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		63D56EE0F406DD8E2ECD19D7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = me.hanwook.kanalog.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Kanalog;
+			};
+			name = Debug;
+		};
+		79120499F9C94293C86913F6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3D4CC2658750B12D3F3A2C5B /* Build configuration list for PBXProject "Kanalog" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1336D14044B43F6C3DA6EB13 /* Debug */,
+				79120499F9C94293C86913F6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D9D0EF12858EEA4578DFC753 /* Build configuration list for PBXNativeTarget "Kanalog" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2C281AD86E77CC18DFC23537 /* Debug */,
+				6329223D65BF1BB4F8526900 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E0A4A8315ACFDBA7D08D2129 /* Build configuration list for PBXNativeTarget "KanalogUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				63D56EE0F406DD8E2ECD19D7 /* Debug */,
+				1DF58B4D9A367FAC1EC16BFB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		000C49914D7EC8FA24B50009 /* XCLocalSwiftPackageReference "." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CAFD90E5668C36AAC8D7D468 /* KanalogCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KanalogCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 6D838FE8911712FA3EFACD85 /* Project object */;
+}
