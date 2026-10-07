@@ -10,6 +10,8 @@ plugins {
 group = "com.kanalog"
 version = "0.1.0"
 
+springBoot { mainClass.set("com.kanalog.AppKt") }
+
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
 repositories { mavenCentral() }
 dependencies {
