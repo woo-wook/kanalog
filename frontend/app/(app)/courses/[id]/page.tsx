@@ -29,7 +29,7 @@ export default function CoursePage() {
           >
             <div className="flex min-w-0 items-start gap-3">
               <span
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-semibold tabular-nums ${lesson.completed ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold tabular-nums ${lesson.completed ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}
               >
                 {lesson.completed ? (
                   <Check className="h-4 w-4" aria-label="첫 연습 완료" />

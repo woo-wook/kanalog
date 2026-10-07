@@ -51,7 +51,7 @@ export function GrammarAnswer({
               <h3 className="mb-3 flex items-center gap-2.5 text-base font-semibold text-foreground">
                 <span
                   aria-hidden="true"
-                  className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-white text-xs font-semibold tabular-nums text-primary ring-1 ring-border"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-card text-xs font-semibold tabular-nums text-primary ring-1 ring-border"
                 >
                   {String(index + 1).padStart(2, "0")}
                 </span>

@@ -51,7 +51,7 @@ export function KanaReference({
           <button
             type="button"
             aria-label="검색 지우기"
-            className="absolute right-1 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-xl text-muted-foreground"
+            className="absolute right-1 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"
             onClick={() => setSearch("")}
           >
             <X className="size-4" aria-hidden="true" />
@@ -63,7 +63,7 @@ export function KanaReference({
           <a
             key={group.key}
             href={`#kana-${group.key}`}
-            className="flex min-h-11 items-center justify-center rounded-xl bg-secondary px-1 text-sm font-medium"
+            className="flex min-h-11 items-center justify-center rounded-full bg-secondary px-1 text-sm font-medium hover:bg-primary/10"
           >
             {group.title}
           </a>
@@ -112,7 +112,7 @@ export function KanaReference({
                     <div
                       key={c.hiragana}
                       aria-label={`히라가나 ${c.hiragana}, 가타카나 ${c.katakana}, ${c.romaji}`}
-                      className="kana-reference-pair min-w-0 rounded-xl border border-border/60 bg-secondary/35 px-1 py-3 text-center sm:px-2 sm:py-4"
+                      className="kana-reference-pair min-w-0 rounded-2xl border border-border/60 bg-secondary/35 px-1 py-3 text-center sm:px-2 sm:py-4"
                     >
                       <div
                         className="jp grid grid-cols-2 items-center text-[22px] font-semibold leading-relaxed sm:text-3xl"

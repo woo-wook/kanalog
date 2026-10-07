@@ -28,8 +28,11 @@ export default function StatsPage() {
   ];
   return (
     <div>
-      <h1 className="text-3xl font-bold">학습 통계</h1>
-      <p className="muted mt-2">
+      <p className="text-xs font-semibold text-primary">쌓여가는 학습</p>
+      <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+        학습 통계
+      </h1>
+      <p className="muted mt-2 text-sm leading-relaxed">
         학습한 카드는 한 번 이상 답변한 카드입니다. 답변 횟수와 구분해
         표시합니다.
       </p>
@@ -37,12 +40,16 @@ export default function StatsPage() {
         {items.map(([label, value]) => (
           <div key={label} className="surface p-4">
             <p className="muted text-sm">{label}</p>
-            <strong className="mt-3 block text-2xl">{value ?? 0}</strong>
+            <strong className="mt-3 block text-2xl font-semibold tabular-nums">
+              {value ?? 0}
+            </strong>
           </div>
         ))}
       </div>
       <section className="surface mt-6 p-5" aria-label="레벨별 첫 연습 진도">
-        <h2 className="text-xl font-bold">레벨별 첫 연습 진도</h2>
+        <h2 className="text-xl font-semibold tracking-tight">
+          레벨별 첫 연습 진도
+        </h2>
         <p className="muted mt-2 text-sm">
           기본 레슨에서 보통·쉬움으로 한 번 이상 평가한 카드입니다. 선택 단원과
           복습은 별도로 이어갑니다.

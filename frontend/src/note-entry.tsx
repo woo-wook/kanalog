@@ -46,7 +46,7 @@ export function NoteEntry({
     >
       <button
         type="button"
-        className={`absolute right-3 top-3 z-10 flex size-11 items-center justify-center rounded-xl transition-colors hover:bg-secondary ${note.bookmarked ? "text-primary" : "text-muted-foreground"}`}
+        className={`absolute right-3 top-3 z-10 flex size-11 items-center justify-center rounded-full transition-colors hover:bg-secondary ${note.bookmarked ? "text-primary" : "text-muted-foreground"}`}
         aria-label={note.bookmarked ? "북마크 해제" : "북마크 추가"}
         aria-pressed={Boolean(note.bookmarked)}
         disabled={pending}
@@ -67,7 +67,7 @@ export function NoteEntry({
       >
         <summary className="note-summary cursor-pointer list-none rounded-2xl p-5 [&::-webkit-details-marker]:hidden">
           <div className="flex min-h-6 flex-wrap items-center gap-2 pr-10 text-xs font-medium text-muted-foreground">
-            <span className="rounded-md bg-secondary px-2 py-1">{type}</span>
+            <span className="rounded-full bg-secondary px-3 py-1">{type}</span>
             {note.level && <span>{note.level}</span>}
             {note.excluded && (
               <span className="flex items-center gap-1">

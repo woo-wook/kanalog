@@ -59,7 +59,7 @@ export function PracticeLauncher({ dueCount }: { dueCount?: number }) {
         <label className="text-xs font-medium text-muted-foreground">
           내 학습 레벨
           <select
-            className="ml-2 min-h-11 rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground"
+            className="ml-2 min-h-11 rounded-full border border-border bg-card px-4 text-sm font-semibold text-foreground"
             value={level}
             disabled={saving || settings.isPending}
             onChange={(e) => void changeLevel(e.target.value)}
@@ -78,7 +78,7 @@ export function PracticeLauncher({ dueCount }: { dueCount?: number }) {
           한도만큼 새 카드를 만나요.
         </p>
         {(options.error || settings.error || error) && (
-          <p role="alert" className="mt-3 text-sm text-red-700">
+          <p role="alert" className="mt-3 text-sm text-destructive">
             {error || "연습 정보를 불러오지 못했습니다."}
             <button
               className="ml-2 underline"
@@ -105,9 +105,9 @@ export function PracticeLauncher({ dueCount }: { dueCount?: number }) {
               <Link
                 key={kind}
                 href={`/study?level=${level}&kind=${kind}`}
-                className="group flex min-h-28 items-center gap-4 rounded-2xl border border-primary/15 bg-primary/5 p-5 transition-colors hover:bg-primary/10"
+                className="group flex min-h-28 items-center gap-4 rounded-[28px] border border-primary/15 bg-primary/5 p-5 transition-colors hover:bg-primary/10"
               >
-                <span className="rounded-xl bg-white p-3 text-primary">
+                <span className="rounded-2xl bg-card p-3 text-primary">
                   <Icon className="h-6 w-6" aria-hidden="true" />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -122,7 +122,10 @@ export function PracticeLauncher({ dueCount }: { dueCount?: number }) {
                 />
               </Link>
             ) : (
-              <div key={kind} className="rounded-2xl border border-border p-5">
+              <div
+                key={kind}
+                className="rounded-[28px] border border-border bg-card p-5"
+              >
                 <p className="font-semibold">{name}</p>
                 <p className="muted mt-2 text-xs">
                   이 레벨의 가져온 데이터가 없습니다.

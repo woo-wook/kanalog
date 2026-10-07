@@ -46,7 +46,7 @@ export function GrammarPrompt({
   if (!focus) return null;
   return (
     <>
-      <p className="inline-flex rounded-lg bg-primary/8 px-3 py-1.5 text-sm font-semibold text-primary">
+      <p className="inline-flex rounded-full bg-primary/8 px-3 py-1.5 text-sm font-semibold text-primary">
         문법 회상
       </p>
       <h1 className="study-prompt study-prompt-grammar jp mt-3 font-semibold text-primary">

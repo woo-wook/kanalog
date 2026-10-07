@@ -13,5 +13,7 @@ if not account_file.is_file():
 account = json.loads(account_file.read_text())
 env = dict(os.environ, E2E_BASE_URL=os.environ.get('E2E_BASE_URL', 'http://localhost:3200'),
            E2E_EMAIL=account['email'], E2E_PASSWORD=account['password'])
+# Playwright enables FORCE_COLOR in workers; avoid conflicting inherited NO_COLOR.
+env.pop('NO_COLOR', None)
 raise SystemExit(subprocess.run(['pnpm', 'exec', 'playwright', 'test', *sys.argv[1:]],
                                cwd=root / 'frontend', env=env).returncode)

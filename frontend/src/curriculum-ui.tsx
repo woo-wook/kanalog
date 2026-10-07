@@ -15,7 +15,7 @@ export function LevelSelector({
       className="flex max-w-full gap-2 overflow-x-auto pb-3"
     >
       {levels.map((level) => {
-        const classes = `flex min-h-12 shrink-0 items-center gap-2 rounded-xl border px-4 text-sm font-semibold ${level.key === selectedKey ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground hover:border-primary/40"}`;
+        const classes = `flex min-h-12 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-semibold ${level.key === selectedKey ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground hover:border-primary/40"}`;
         const content = (
           <>
             <span className="text-xs opacity-80">
@@ -207,7 +207,7 @@ export function UnitPath({
                   href={`/study?lessonId=${lesson.id}${repeat ? "&practice=1" : ""}`}
                   aria-label={`${lesson.title} · ${action}`}
                   aria-current={current ? "step" : undefined}
-                  className={`min-w-0 flex-1 rounded-xl border p-4 transition-colors hover:border-primary/40 ${current ? "border-primary/30 bg-primary/5" : "border-transparent bg-secondary/60"}`}
+                  className={`min-w-0 flex-1 rounded-2xl border p-4 transition-colors hover:border-primary/40 ${current ? "border-primary/30 bg-primary/5" : "border-transparent bg-secondary/60"}`}
                 >
                   <div className="flex min-w-0 items-start justify-between gap-2">
                     <div className="min-w-0">

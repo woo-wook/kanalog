@@ -172,7 +172,7 @@ export default function NotesPage() {
         <button className="btn btn-primary shrink-0 text-sm">검색</button>
       </form>
       <div
-        className="mt-4 flex rounded-xl bg-secondary p-1"
+        className="mt-4 flex rounded-full bg-secondary p-1"
         role="group"
         aria-label="단어장 분류"
       >
@@ -181,7 +181,7 @@ export default function NotesPage() {
             type="button"
             key={value}
             aria-pressed={kind === value}
-            className={`min-h-11 min-w-0 flex-1 rounded-lg px-2 text-sm font-medium transition-colors ${kind === value ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            className={`min-h-11 min-w-0 flex-1 rounded-full px-2 text-sm font-medium transition-colors ${kind === value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
             onClick={() => {
               audio.stop();
               setPage(0);

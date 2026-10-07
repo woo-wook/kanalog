@@ -556,7 +556,7 @@ function StudyContent() {
         </p>
         <div className="mt-5 grid grid-cols-4 gap-2 text-sm">
           {ratings.map((r) => (
-            <div key={r.value} className="rounded-xl bg-[#f3f6f3] p-3">
+            <div key={r.value} className="rounded-2xl bg-secondary p-3">
               {r.label}
               <strong className="mt-1 block text-xl">{counts[r.value]}</strong>
             </div>
@@ -588,7 +588,7 @@ function StudyContent() {
           </button>
         )}
         {error !== null && (
-          <p role="alert" className="mt-3 text-sm text-[#993d36]">
+          <p role="alert" className="mt-3 text-sm text-destructive">
             복습 카드를 불러오지 못했습니다. 다시 눌러 주세요.
           </p>
         )}
@@ -664,7 +664,7 @@ function StudyContent() {
       </div>
       {card.reinforcement && (
         <p
-          className="mb-3 rounded-xl bg-primary/8 px-4 py-3 text-sm font-semibold text-primary"
+          className="mb-3 rounded-2xl bg-primary/8 px-4 py-3 text-sm font-semibold text-primary"
           role="status"
         >
           한 번 더 기억해 보기
@@ -695,7 +695,7 @@ function StudyContent() {
               <p
                 className={
                   card.kind === "grammar"
-                    ? "inline-flex rounded-lg bg-primary/8 px-3 py-1.5 text-sm font-semibold text-primary"
+                    ? "inline-flex rounded-full bg-primary/8 px-3 py-1.5 text-sm font-semibold text-primary"
                     : "muted text-xs sm:text-sm"
                 }
               >
@@ -889,7 +889,7 @@ function StudyContent() {
             {examples.slice(0, 1).map((example, exampleIndex) => (
               <div
                 key={exampleIndex}
-                className="mt-3 rounded-xl bg-secondary/70 p-3"
+                className="mt-3 rounded-2xl bg-secondary/70 p-3"
               >
                 <p className="jp text-base leading-relaxed">
                   <JapaneseText
@@ -921,7 +921,7 @@ function StudyContent() {
             ))}
             {(examples.length > 1 || explanation) && (
               <details
-                className="study-details mt-3 rounded-xl border border-border p-3"
+                className="study-details mt-3 rounded-2xl border border-border p-3"
                 open={card.kind === "grammar"}
               >
                 <summary className="min-h-6 cursor-pointer text-xs font-medium text-muted-foreground">
@@ -1006,7 +1006,7 @@ function StudyContent() {
       )}
       {error !== null && (
         <div
-          className="mt-4 rounded-xl border border-[#e7c4bd] bg-white p-4 text-sm text-[#993d36]"
+          className="mt-4 rounded-2xl border border-destructive/25 bg-destructive/5 p-4 text-sm text-destructive"
           role="alert"
         >
           <p>

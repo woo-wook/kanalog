@@ -99,7 +99,7 @@ export function PronunciationHint({
   const automatic = !manual?.trim() && guide?.hangulSource !== "MANUAL";
   return (
     <div
-      className="pronunciation-hint mt-3 rounded-xl bg-primary/5 px-4 py-3 text-left"
+      className="pronunciation-hint mt-3 rounded-2xl bg-primary/5 px-4 py-3 text-left"
       aria-label="한글 발음 보조"
     >
       <p className="mb-1 text-[11px] font-semibold tracking-wide text-muted-foreground">

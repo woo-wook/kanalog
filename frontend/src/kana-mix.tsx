@@ -84,7 +84,7 @@ export function KanaMix({
           {groups.map((g) => (
             <label
               key={g.key}
-              className="flex min-h-12 items-center gap-2 rounded-xl bg-secondary/60 px-3 py-2 text-sm"
+              className={`flex min-h-12 items-center gap-2 rounded-full border px-3 py-2 text-sm transition-colors ${selected.includes(g.key) ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-secondary/60 text-foreground"}`}
             >
               <input
                 type="checkbox"

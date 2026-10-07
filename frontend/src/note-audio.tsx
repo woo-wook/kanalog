@@ -37,7 +37,7 @@ export function NoteAudio({
     return (
       <button
         type="button"
-        className="btn min-h-11 rounded-xl bg-primary/8 px-3 text-sm text-primary"
+        className="btn min-h-11 rounded-full bg-primary/8 px-3 text-sm text-primary"
         disabled={
           !player.enabled || (player.busy && player.active?.key === target.key)
         }

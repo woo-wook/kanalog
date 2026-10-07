@@ -150,7 +150,7 @@ export default function HomePage() {
           <div className="mt-4 space-y-3">
             {due.slice(0, 4).map(({ level, lesson }) => (
               <Link
-                className="flex items-center justify-between gap-3 rounded-xl bg-secondary p-4"
+                className="flex items-center justify-between gap-3 rounded-2xl bg-secondary p-4 transition-colors hover:bg-primary/10"
                 key={lesson.id}
                 href={lessonHref(lesson)}
               >

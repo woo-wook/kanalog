@@ -148,8 +148,11 @@ export default function SettingsPage() {
   }
   return (
     <div className="max-w-2xl">
-      <h1 className="text-3xl font-bold">학습 설정</h1>
-      <p className="muted mt-2">
+      <p className="text-xs font-semibold text-primary">나에게 맞는 학습</p>
+      <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+        학습 설정
+      </h1>
+      <p className="muted mt-2 text-sm leading-relaxed">
         설정은 계정에 저장되어 다른 기기에도 적용됩니다.
       </p>
       {query.isPending ? (
@@ -158,7 +161,7 @@ export default function SettingsPage() {
         <ErrorMessage error={query.error} />
       ) : (
         value && (
-          <div className="surface mt-6 space-y-6 p-6">
+          <div className="surface mt-6 space-y-6 p-5 sm:p-7">
             <div>
               <label htmlFor="limit" className="block font-semibold">
                 하루 새 카드 수
@@ -178,7 +181,7 @@ export default function SettingsPage() {
                 }
               />
             </div>
-            <div className="border-t pt-5">
+            <div className="border-t border-border pt-5">
               {toggles.map((item) => (
                 <label
                   key={item.key}
@@ -194,14 +197,14 @@ export default function SettingsPage() {
                   </span>
                   <input
                     type="checkbox"
-                    className="mt-1 h-5 w-5 accent-[var(--accent)]"
+                    className="mt-1 h-5 w-5 accent-primary"
                     checked={Boolean(value[item.key])}
                     onChange={(e) => update({ [item.key]: e.target.checked })}
                   />
                 </label>
               ))}
             </div>
-            <div className="border-t pt-5">
+            <div className="border-t border-border pt-5">
               <label htmlFor="engine" className="block font-semibold">
                 음성 엔진
               </label>
@@ -293,7 +296,7 @@ export default function SettingsPage() {
                 }
               />
             </div>
-            <div className="border-t pt-5">
+            <div className="border-t border-border pt-5">
               <label htmlFor="speed" className="block font-semibold">
                 재생 속도
               </label>

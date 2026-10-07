@@ -37,13 +37,13 @@ export default function LoginPage() {
   }
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-12">
-      <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+      <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
         <BookOpen className="h-6 w-6" aria-hidden="true" />
       </div>
-      <h1 className="text-center text-2xl font-semibold tracking-tight">
+      <h1 className="text-center text-3xl font-semibold tracking-tight">
         일본어 학습
       </h1>
-      <p className="muted mt-3 text-center">
+      <p className="muted mt-3 text-center text-sm leading-relaxed">
         히라가나부터, 오늘의 학습을 이어가세요.
       </p>
       <form onSubmit={submit} className="surface mt-8 space-y-5 p-6 sm:p-7">

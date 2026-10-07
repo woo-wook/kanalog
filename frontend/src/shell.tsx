@@ -15,6 +15,7 @@ import {
 import { useEffect } from "react";
 import { api, ApiError, me, setCsrfToken } from "./api";
 import { reloadApp } from "./reload-app";
+import { appConfig } from "./app-config";
 const nav = [
   { href: "/", label: "홈", icon: Home },
   { href: "/courses", label: "코스", icon: GraduationCap },
@@ -50,11 +51,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const isStudy = path === "/study";
   const brand = (
     <>
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
         <BookOpen className="h-4 w-4" aria-hidden="true" />
       </span>
       <span className="text-base font-semibold tracking-tight">
-        일본어 학습
+        {appConfig.name}
       </span>
     </>
   );
@@ -99,7 +100,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       >
         본문으로 건너뛰기
       </a>
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-border bg-card md:flex">
+      <aside className="material-navigation-rail fixed inset-y-0 left-0 z-30 hidden w-60 flex-col md:flex">
         <Link href="/" className="flex items-center gap-2.5 px-5 py-5">
           {brand}
         </Link>
@@ -109,9 +110,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
               key={href}
               href={href}
               aria-current={active(href) ? "page" : undefined}
-              className={`flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${active(href) ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+              className="material-nav-link flex min-h-12 items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors"
             >
-              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="material-nav-indicator">
+                <Icon className="h-5 w-5" aria-hidden="true" />
+              </span>
               {label}
             </Link>
           ))}
@@ -119,7 +122,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <div className="border-t border-border px-3 py-4">
           <button
             onClick={reloadApp}
-            className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground hover:bg-secondary"
+            className="flex min-h-12 w-full items-center gap-3 rounded-full px-3 text-sm text-muted-foreground hover:bg-secondary"
             aria-label="새로고침"
           >
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -137,7 +140,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </span>
             <button
               onClick={logout}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground"
+              className="material-icon-button flex shrink-0 items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground"
               aria-label="로그아웃"
             >
               <LogOut className="h-4 w-4" aria-hidden="true" />
@@ -145,21 +148,21 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </aside>
-      <header className="fixed inset-x-0 top-0 z-30 flex items-center justify-between bg-card px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] shadow-sm md:hidden">
+      <header className="material-top-app-bar fixed inset-x-0 top-0 z-30 flex items-center justify-between px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] md:hidden">
         <Link href="/" className="flex items-center gap-2.5">
           {brand}
         </Link>
         <div className="flex items-center gap-1">
           <button
             onClick={reloadApp}
-            className="flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary"
+            className="material-icon-button flex items-center justify-center text-muted-foreground hover:bg-secondary"
             aria-label="새로고침"
           >
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
           </button>
           <button
             onClick={logout}
-            className="flex h-11 w-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary"
+            className="material-icon-button flex items-center justify-center text-muted-foreground hover:bg-secondary"
             aria-label="로그아웃"
           >
             <LogOut className="h-4 w-4" aria-hidden="true" />
@@ -178,7 +181,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </div>
       </main>
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 flex items-stretch bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_8px_-2px_hsl(222_47%_11%/0.06)] md:hidden"
+        className="material-navigation-bar fixed inset-x-0 bottom-0 z-30 flex items-stretch pb-[env(safe-area-inset-bottom)] md:hidden"
         aria-label="주요 메뉴"
       >
         {nav.map(({ href, label, icon: Icon }) => (
@@ -186,9 +189,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
             key={href}
             href={href}
             aria-current={active(href) ? "page" : undefined}
-            className={`flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-colors ${active(href) ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+            className="material-nav-link flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-1 text-xs font-medium transition-colors"
           >
-            <Icon className="h-5 w-5" aria-hidden="true" />
+            <span className="material-nav-indicator">
+              <Icon className="h-5 w-5" aria-hidden="true" />
+            </span>
             {label}
           </Link>
         ))}
@@ -205,7 +210,10 @@ export function Loading() {
 }
 export function ErrorMessage({ error }: { error: unknown }) {
   return (
-    <p role="alert" className="surface border-red-200 p-4 text-destructive">
+    <p
+      role="alert"
+      className="surface border-destructive/30 p-4 text-destructive"
+    >
       {error instanceof Error ? error.message : "요청을 처리하지 못했습니다."}
     </p>
   );
