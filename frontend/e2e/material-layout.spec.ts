@@ -21,6 +21,10 @@ test("Material 탐색·상태색·화면은 모바일부터 데스크톱까지 �
       await expect(page.getByRole("main")).toBeVisible();
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       await expect(
+        page.getByRole("status").filter({ hasText: "불러오는 중" }),
+      ).toHaveCount(0);
+      await expect(page.locator(".surface[role=alert]")).toHaveCount(0);
+      await expect(
         page.locator(".material-nav-link[aria-current='page']:visible"),
       ).toHaveCount(1);
       const layout = await page.evaluate(() => ({

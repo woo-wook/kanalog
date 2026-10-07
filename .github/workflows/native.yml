@@ -74,6 +74,8 @@ jobs:
             python3 - <<'PY'
           from pathlib import Path
           for line in Path('ios-ui.log').read_text().splitlines():
+              if 'KANALOG_UI' in line:
+                  print('::notice title=iOS test stage::' + line.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))
               if 'error:' in line or 'failed' in line.lower():
                   print('::error title=iOS UI::' + line.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))
           PY

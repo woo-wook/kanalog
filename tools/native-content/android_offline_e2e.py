@@ -86,6 +86,7 @@ def main():
     adb("shell", "am", "force-stop", "com.kanalog.android")
     adb("shell", "am", "start", "-n", "com.kanalog.android/.MainActivity")
     wait_text("오늘도 한 걸음")
+    wait_text("모든 레벨 단어·문법 복습")
     baseline = len(snapshot()["reviews"])
     screenshot("home")
     for text in ["가타카나", "탁음 20", "반탁음 5", "요음 33"]:
@@ -147,7 +148,12 @@ def main():
     summary = {"offline": True, "notes": len(current["notes"]), "answersAdded": 4,
                "kanaScope": 208, "storedFsrsCards": len(reviewed), "displaySettingPersisted": True}
     (output / "report.json").write_text(json.dumps(summary, indent=2))
-    print("PASS offline actual MAX vocabulary/grammar, hidden answer, FSRS, next-day reminder", flush=True)
+    tap("뒤로")
+    tap("기록")
+    wait_text("나의 학습 기록")
+    wait_text("최근 7일 답변")
+    screenshot("statistics")
+    print("PASS offline actual MAX vocabulary/grammar, hidden answer, FSRS, next-day reminder and statistics", flush=True)
     print(json.dumps(summary), flush=True)
 
 
