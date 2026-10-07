@@ -21,7 +21,7 @@ struct LibraryView: View {
             ForEach(results) { note in
                 NavigationLink { NoteDetailView(noteID: note.id) } label: {
                     VStack(alignment: .leading, spacing: 6) {
-                        HStack { Text(note.title).font(.headline).lineLimit(2); Spacer(); if model.snapshot.progress[note.id]?.bookmarked == true { Image(systemName: "bookmark.fill").foregroundStyle(.indigo) } }
+                        HStack { Text(note.title).font(.headline).lineLimit(2); Spacer(); if model.snapshot.progress[note.id]?.bookmarked == true { Image(systemName: "bookmark.fill").foregroundStyle(KanalogTheme.primary) } }
                         if let reading = note.reading, reading != note.title { Text(reading).font(.subheadline).foregroundStyle(.secondary).lineLimit(1) }
                         if let meaning = note.meaning {
                             let structured = note.kind == .grammar ? GrammarAnswer.parse(meaning, front: note.front) : nil

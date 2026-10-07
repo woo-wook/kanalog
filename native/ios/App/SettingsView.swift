@@ -60,16 +60,20 @@ struct SettingsView: View {
 
 struct StatisticsView: View {
     @EnvironmentObject var model: AppModel
-    private var todayReviews: [SavedReview] {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: model.snapshot.settings.timezone) ?? .current
-        return model.snapshot.reviews.filter { calendar.isDateInToday($0.receipt.reviewedAt) }
+    private func localDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = .current
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.timeZone = TimeZone(identifier: model.snapshot.settings.timezone) ?? .current
+        return formatter.string(from: date)
     }
     var body: some View {
         let snapshot = model.snapshot
         let studied = snapshot.notes.values.filter { !$0.kind.isKana && snapshot.progress[$0.id]?.lastRating != nil }.count
         let kanaStudied = snapshot.notes.values.filter { $0.kind.isKana && snapshot.progress[$0.id]?.lastRating != nil }.count
-        let today = todayReviews
+        let statistics = StudyStatistics(reviews: snapshot.reviews, timezone: TimeZone(identifier: snapshot.settings.timezone) ?? .current)
+        let today = statistics.todayReviews
         List {
             Section("내 학습") {
                 LabeledContent("학습한 단어·문법", value: "\(studied)장")
@@ -78,6 +82,16 @@ struct StatisticsView: View {
                 LabeledContent("오늘 평가(전체)", value: "\(today.count)개")
                 LabeledContent("전체 평가", value: "\(snapshot.reviews.count)개")
                 LabeledContent("완료한 연습(전체)", value: "\(snapshot.sessions.values.filter { $0.complete && !$0.items.isEmpty }.count)회")
+                LabeledContent("연속 학습", value: "\(statistics.streak)일")
+                LabeledContent("최근 학습", value: statistics.lastStudiedAt.map(localDate) ?? "아직 없음")
+            }
+            Section {
+                LabeledContent("최근 7일 답변", value: "\(statistics.answers7Days)개")
+                LabeledContent("최근 7일 고유 카드", value: "\(statistics.uniqueCards7Days)장")
+                LabeledContent("최근 30일 답변", value: "\(statistics.answers30Days)개")
+                LabeledContent("최근 30일 고유 카드", value: "\(statistics.uniqueCards30Days)장")
+            } header: { Text("최근 학습(전체)") } footer: {
+                Text("오늘을 포함한 7일·30일이며 가나와 오답 보강도 포함합니다. 날짜 기준: \(snapshot.settings.timezone). 오늘 미학습이면 어제부터 연속 학습일을 계산합니다.")
             }
             Section("오늘의 평가(전체)") {
                 ForEach(StudyRating.allCases, id: \.self) { rating in LabeledContent(rating.label, value: "\(today.filter { $0.request.rating == rating }.count)개") }
@@ -87,7 +101,7 @@ struct StatisticsView: View {
                 ForEach(Array(snapshot.reviews.suffix(50).reversed().enumerated()), id: \.element.request.key) { _, review in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(snapshot.notes[review.request.noteID]?.title ?? "보존된 카드 기록").font(.headline).lineLimit(1)
-                        Text("\(review.request.rating.label)\(review.receipt.reinforcement ? " · 보강" : "") · \(review.receipt.reviewedAt.formatted(date: .abbreviated, time: .shortened))").font(.caption).foregroundStyle(.secondary)
+                        Text("\(review.request.rating.label)\(review.receipt.reinforcement ? " · 보강" : "") · \(localDate(review.receipt.reviewedAt))").font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }

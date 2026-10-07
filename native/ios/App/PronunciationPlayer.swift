@@ -21,8 +21,8 @@ final class PronunciationPlayer: NSObject, AVAudioPlayerDelegate {
                 } catch { /* Unsupported local formats use the installed device voice below. */ }
             }
         }
-        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              let voice = AVSpeechSynthesisVoice(language: "ja-JP") else { throw CoreError.missingNote }
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw PronunciationError.emptyText }
+        guard let voice = AVSpeechSynthesisVoice(language: "ja-JP") else { throw PronunciationError.japaneseVoiceUnavailable }
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = voice; utterance.rate = rate
         synthesizer.speak(utterance)

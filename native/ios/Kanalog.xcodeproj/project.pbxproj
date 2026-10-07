@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		16F49EA3BBFAC9DFF3A315B6 /* KanalogTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21A1A0B4B398AE8631757A67 /* KanalogTheme.swift */; };
 		1740BC4BDF611CA79E865849 /* PronunciationPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62405937B74B767E8FA058D0 /* PronunciationPlayer.swift */; };
 		1B77E5F50F095CCDECF3A496 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4726E9ED2438BD2ED52065 /* SettingsView.swift */; };
 		2B5775F88DC100197A5B96E4 /* KanalogUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E3E4D5CCAD32AE7D403A7E /* KanalogUITests.swift */; };
@@ -42,6 +43,7 @@
 		0DA220AB0C227758C91CCD0A /* Kanalog.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Kanalog.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F5EBF627C698618D919E2CC /* PersonalAssets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PersonalAssets; path = Resources/PersonalAssets; sourceTree = SOURCE_ROOT; };
 		1F6B72DD4088ADF424721871 /* ios */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ios; path = .; sourceTree = SOURCE_ROOT; };
+		21A1A0B4B398AE8631757A67 /* KanalogTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KanalogTheme.swift; sourceTree = "<group>"; };
 		223568C77E67AE8115DCE32D /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		33DAF7412B2B94B01AFD90BF /* KanalogLayoutTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KanalogLayoutTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4844B6C18E899B84B944907E /* KanalogUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KanalogUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -113,6 +115,7 @@
 			isa = PBXGroup;
 			children = (
 				E068F0E430EC053E3283992E /* KanalogApp.swift */,
+				21A1A0B4B398AE8631757A67 /* KanalogTheme.swift */,
 				223568C77E67AE8115DCE32D /* LibraryView.swift */,
 				62405937B74B767E8FA058D0 /* PronunciationPlayer.swift */,
 				DA2AC2EB9C485D9B4CA1A546 /* RootView.swift */,
@@ -289,6 +292,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7E3B855561AADA3C4580BCEA /* KanalogApp.swift in Sources */,
+				16F49EA3BBFAC9DFF3A315B6 /* KanalogTheme.swift in Sources */,
 				8AA112E5531389C023C0683A /* LibraryView.swift in Sources */,
 				1740BC4BDF611CA79E865849 /* PronunciationPlayer.swift in Sources */,
 				6177F4F2E2FBD3E0E6188D05 /* RootView.swift in Sources */,

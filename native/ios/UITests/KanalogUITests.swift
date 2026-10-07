@@ -43,6 +43,15 @@ final class KanalogUITests: XCTestCase {
         XCTAssertTrue(element.isHittable, "Requested control remained outside the viewport after \(maximumDrags) short scrolls")
     }
 
+    private func tapSwitch(_ element: XCUIElement, expecting value: String) {
+        XCTAssertTrue(element.isHittable)
+        // Form can expose the whole labeled row as a switch; tap its trailing switch track.
+        element.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        let changed = expectation(for: NSPredicate(format: "value == %@", value), evaluatedWith: element)
+        wait(for: [changed], timeout: 5)
+        XCTAssertEqual(element.value as? String, value)
+    }
+
     func testOfflineKanaRevealRateAndPersistedSettings() {
         let app = XCUIApplication()
         app.launchArguments = ["--public-content-only"]
@@ -51,7 +60,7 @@ final class KanalogUITests: XCTestCase {
         let katakana = app.switches["kana.katakana"]
         XCTAssertTrue(katakana.waitForExistence(timeout: 5))
         XCTAssertEqual(katakana.value as? String, "0")
-        katakana.tap()
+        tapSwitch(katakana, expecting: "1")
         XCTAssertEqual(katakana.value as? String, "1", "Katakana must be selected before verifying the combined count")
         let practice = app.buttons["kana.practice.start"]
         scrollUntilHittable(practice, in: app)
@@ -70,8 +79,9 @@ final class KanalogUITests: XCTestCase {
         let hangul = app.switches["settings.hangul"]
         XCTAssertTrue(hangul.waitForExistence(timeout: 5))
         let before = hangul.value as? String
-        hangul.tap()
-        let after = hangul.value as? String
+        XCTAssertTrue(before == "0" || before == "1")
+        let after = before == "1" ? "0" : "1"
+        tapSwitch(hangul, expecting: after)
         XCTAssertNotEqual(before, after)
         let save = app.buttons["settings.save"]
         scrollUntilHittable(save, in: app)

@@ -38,7 +38,7 @@ struct StudyView: View {
                                         }
                                         .buttonStyle(.borderedProminent)
                                         .accessibilityIdentifier("study.rating.\(rating.rawValue)")
-                                        .tint(rating == .again ? .orange : rating == .hard ? .purple : .indigo)
+                                        .tint(rating == .again ? .orange : rating == .hard ? .purple : KanalogTheme.primary)
                                         .disabled(model.working || (selectedRating != nil && selectedRating != rating))
                                         .frame(maxWidth: .infinity)
                                     }
@@ -93,7 +93,7 @@ struct PrimaryGlassStyle: ButtonStyle {
     }
     private func standard(_ configuration: Configuration) -> some View {
         configuration.label.font(.headline).padding(.horizontal, 28).padding(.vertical, 16)
-            .frame(maxWidth: .infinity).background(.indigo, in: Capsule()).foregroundStyle(.white)
+            .frame(maxWidth: .infinity).background(KanalogTheme.primary, in: Capsule()).foregroundStyle(.white)
             .opacity(configuration.isPressed ? 0.65 : 1)
     }
 }
@@ -106,7 +106,7 @@ struct NoteCard: View {
         let display = NotePresentation(note: note, revealed: revealed, settings: model.snapshot.settings)
         VStack(alignment: .leading, spacing: 22) {
             if note.kind == .grammar, display.title != display.prompt {
-                Text(display.title).font(.title2.bold()).foregroundStyle(.indigo)
+                Text(display.title).font(.title2.bold()).foregroundStyle(KanalogTheme.primary)
             }
             JapaneseText(text: display.prompt, guide: display.readingGuide, highlights: display.highlightSegments, large: note.kind.isKana)
             if let reading = display.reading, !reading.isEmpty, reading != display.prompt, display.readingGuide?.segments.contains(where: { $0.reading != nil }) != true {
@@ -142,7 +142,7 @@ struct NoteCard: View {
     }
     private func answerSection(_ title: String, paragraphs: [String]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(title).font(.headline).foregroundStyle(.indigo)
+            Text(title).font(.headline).foregroundStyle(KanalogTheme.primary)
             ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, line in Text(line).font(.body).lineSpacing(6).textSelection(.enabled) }
         }.frame(maxWidth: .infinity, alignment: .leading).padding(16).background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 16))
     }
@@ -175,7 +175,7 @@ struct JapaneseText: View {
                 let begin = part.index(part.startIndex, offsetBy: from - start)
                 let finish = part.index(part.startIndex, offsetBy: to - start)
                 let fragment = Text(String(part[begin..<finish]))
-                result = result + (highlight.highlighted ? fragment.foregroundColor(.indigo).bold() : fragment)
+                result = result + (highlight.highlighted ? fragment.foregroundColor(KanalogTheme.primary).bold() : fragment)
             }
             offset = end
         }

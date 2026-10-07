@@ -17,7 +17,7 @@ struct RootView: View {
                 .sheet(item: $model.currentSession) { _ in NavigationStack { StudyView() }.environmentObject(model) }
             }
         }
-        .tint(.indigo)
+        .tint(KanalogTheme.primary)
         .alert("확인해 주세요", isPresented: Binding(get: { model.error != nil && model.store != nil && model.currentSession == nil }, set: { if !$0 { model.error = nil } })) {
             Button("확인", role: .cancel) { model.error = nil }
         } message: { Text(model.error ?? "") }
