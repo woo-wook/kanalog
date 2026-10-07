@@ -76,6 +76,7 @@ import com.kanalog.core.ReadingSegment
 import com.kanalog.core.Settings
 import com.kanalog.core.StudyScope
 import com.kanalog.core.StudySession
+import com.kanalog.core.learningStats
 import com.kanalog.core.structureGrammarAnswer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -92,7 +93,26 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme(
-                colorScheme = lightColorScheme(primary = Color(0xFF006A63), secondary = Color(0xFF4C635F), tertiary = Color(0xFF48617B)),
+                colorScheme =
+                    lightColorScheme(
+                        primary = Color(0xFF006A63),
+                        primaryContainer = Color(0xFF9EF2E7),
+                        onPrimaryContainer = Color(0xFF00504A),
+                        secondary = Color(0xFF4C635F),
+                        secondaryContainer = Color(0xFFCEE8E2),
+                        onSecondaryContainer = Color(0xFF304B46),
+                        tertiary = Color(0xFF48617B),
+                        background = Color(0xFFF5FAF7),
+                        onBackground = Color(0xFF171D1B),
+                        surface = Color(0xFFF5FAF7),
+                        onSurface = Color(0xFF171D1B),
+                        surfaceContainer = Color(0xFFE9EFEC),
+                        surfaceContainerLow = Color(0xFFEFF5F2),
+                        surfaceContainerHigh = Color(0xFFE3EAE6),
+                        surfaceContainerHighest = Color(0xFFDEE4E1),
+                        outline = Color(0xFF6F7975),
+                        outlineVariant = Color(0xFFBEC9C4),
+                    ),
             ) {
                 var store by remember { mutableStateOf<LocalStore?>(null) }
                 var error by remember { mutableStateOf<String?>(null) }
@@ -682,11 +702,17 @@ fun KanalogApp(
     kana: Boolean = false,
     highlights: List<HighlightSegment>? = null,
 ) {
+    val highlightStyle =
+        SpanStyle(
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            fontWeight = FontWeight.Bold,
+            background = MaterialTheme.colorScheme.primaryContainer,
+        )
     if (guide != null && settings.furigana) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(1.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             var offset = 0
             guide.segments.forEach { segment ->
-                val annotated = highlightText(segment.text, highlights, offset)
+                val annotated = highlightText(segment.text, highlights, offset, highlightStyle)
                 offset += segment.text.length
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(segment.reading ?: " ", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
@@ -696,7 +722,7 @@ fun KanalogApp(
         }
     } else {
         Text(
-            highlightText(text, highlights, 0),
+            highlightText(text, highlights, 0, highlightStyle),
             style = if (kana) MaterialTheme.typography.displayLarge else MaterialTheme.typography.headlineMedium,
         )
     }
@@ -715,6 +741,7 @@ private fun highlightText(
     text: String,
     segments: List<HighlightSegment>?,
     offset: Int,
+    highlightStyle: SpanStyle,
 ) = buildAnnotatedString {
     val positions = mutableSetOf<Int>()
     var start = 0
@@ -728,7 +755,7 @@ private fun highlightText(
             if (index + offset in
                 positions
             ) {
-                SpanStyle(color = Color(0xFF006A63), fontWeight = FontWeight.Bold, background = Color(0xFFE0F3EE))
+                highlightStyle
             } else {
                 SpanStyle()
             },
@@ -891,20 +918,56 @@ private fun highlightText(
 
 @Composable private fun StatsScreen(state: LocalState) {
     val zone = ZoneId.of(state.settings.timeZone)
-    val today = Instant.now().atZone(zone).toLocalDate()
-    val scheduled = state.reviews.filterNot { it.reinforcement }
-    val todayCount = scheduled.count { Instant.parse(it.at).atZone(zone).toLocalDate() == today }
-    val dueCount = state.progress.values.count { p -> !p.excluded && p.due?.let { !Instant.parse(it).isAfter(Instant.now()) } == true }
+    val now = Instant.now()
+    val stats = learningStats(state, now)
+    val reviews = state.reviews.filter { !Instant.parse(it.at).isAfter(now) }
+    val active = state.notes.map { it.id }.toSet()
+    val dueCount =
+        state.progress.entries.count { (id, progress) ->
+            id in active && !progress.excluded &&
+                listOfNotNull(progress.due, progress.nextDayReminder).any { !Instant.parse(it).isAfter(now) }
+        }
+    val learned = state.notes.count { state.progress[it.id]?.fsrsJson != null }
+    val figures =
+        listOf(
+            "오늘 답변" to stats.todayAnswers.toString(),
+            "오늘 고유 카드" to stats.todayUniqueCards.toString(),
+            "최근 7일 답변" to stats.answers7Days.toString(),
+            "최근 7일 고유 카드" to stats.uniqueCards7Days.toString(),
+            "최근 30일 답변" to stats.answers30Days.toString(),
+            "최근 30일 고유 카드" to stats.uniqueCards30Days.toString(),
+            "연속 학습일" to "${stats.streak}일",
+            "최근 학습일" to (
+                stats.lastStudiedAt
+                    ?.atZone(zone)
+                    ?.toLocalDate()
+                    ?.toString() ?: "아직 없음"
+            ),
+        )
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Text("나의 학습 기록", style = MaterialTheme.typography.headlineMedium)
-        Text("오늘 평가 $todayCount · 복습할 카드 $dueCount", style = MaterialTheme.typography.titleLarge)
-        Text("학습한 카드 ${state.progress.values.count { it.fsrsJson != null }} · 전체 ${state.notes.size}")
-        Text("정규 복습 ${scheduled.size} · 오답 재연습 ${state.reviews.count { it.reinforcement }}")
+        Text("가나·단어·문법과 오답 재연습을 모두 포함합니다. 같은 카드는 고유 카드 수에서 한 번만 셉니다.")
+        Text("오늘을 포함한 7일·30일 · ${state.settings.timeZone} 기준", style = MaterialTheme.typography.bodySmall)
+        figures.chunked(2).forEach { pair ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                pair.forEach { (label, value) ->
+                    ElevatedCard(Modifier.weight(1f)) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(label, style = MaterialTheme.typography.labelLarge)
+                            Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+        Text("학습한 카드 $learned · 전체 ${state.notes.size} · 복습할 카드 $dueCount")
+        Text("전체 답변 ${reviews.size} · 오답 재연습 ${reviews.count { it.reinforcement }}")
+        Text("평가별 답변", style = MaterialTheme.typography.titleLarge)
         listOf("AGAIN" to "다시", "HARD" to "어려움", "GOOD" to "보통", "EASY" to "쉬움").forEach { (rating, label) ->
-            Text("$label: ${scheduled.count { it.rating == rating }}회")
+            Text("$label: ${reviews.count { it.rating == rating }}회")
         }
         Text("최근 평가", style = MaterialTheme.typography.titleLarge)
-        state.reviews.takeLast(30).reversed().forEach { review ->
+        reviews.takeLast(30).reversed().forEach { review ->
             val note = state.notes.firstOrNull { it.id == review.noteId }
             Text(
                 "${note?.grammarFocus?.title ?: note?.front?.take(
