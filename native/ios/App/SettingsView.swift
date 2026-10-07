@@ -70,9 +70,11 @@ struct StatisticsView: View {
     }
     var body: some View {
         let snapshot = model.snapshot
+        let now = Date()
+        let validReviews = snapshot.reviews.filter { $0.receipt.reviewedAt <= now }
         let studied = snapshot.notes.values.filter { !$0.kind.isKana && snapshot.progress[$0.id]?.lastRating != nil }.count
         let kanaStudied = snapshot.notes.values.filter { $0.kind.isKana && snapshot.progress[$0.id]?.lastRating != nil }.count
-        let statistics = StudyStatistics(reviews: snapshot.reviews, timezone: TimeZone(identifier: snapshot.settings.timezone) ?? .current)
+        let statistics = StudyStatistics(reviews: validReviews, timezone: TimeZone(identifier: snapshot.settings.timezone) ?? .current, now: now)
         let today = statistics.todayReviews
         List {
             Section("내 학습") {
@@ -80,7 +82,7 @@ struct StatisticsView: View {
                 LabeledContent("연습한 가나", value: "\(kanaStudied)자")
                 LabeledContent("단어·문법 복습", value: "\(model.dueCount)장")
                 LabeledContent("오늘 평가(전체)", value: "\(today.count)개")
-                LabeledContent("전체 평가", value: "\(snapshot.reviews.count)개")
+                LabeledContent("전체 평가", value: "\(validReviews.count)개")
                 LabeledContent("완료한 연습(전체)", value: "\(snapshot.sessions.values.filter { $0.complete && !$0.items.isEmpty }.count)회")
                 LabeledContent("연속 학습", value: "\(statistics.streak)일")
                 LabeledContent("최근 학습", value: statistics.lastStudiedAt.map(localDate) ?? "아직 없음")
@@ -98,7 +100,7 @@ struct StatisticsView: View {
                 LabeledContent("즉시 보강", value: "\(today.filter(\.receipt.reinforcement).count)개")
             }
             Section("최근 기록(전체)") {
-                ForEach(Array(snapshot.reviews.suffix(50).reversed().enumerated()), id: \.element.request.key) { _, review in
+                ForEach(Array(validReviews.suffix(50).reversed().enumerated()), id: \.element.request.key) { _, review in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(snapshot.notes[review.request.noteID]?.title ?? "보존된 카드 기록").font(.headline).lineLimit(1)
                         Text("\(review.request.rating.label)\(review.receipt.reinforcement ? " · 보강" : "") · \(localDate(review.receipt.reviewedAt))").font(.caption).foregroundStyle(.secondary)

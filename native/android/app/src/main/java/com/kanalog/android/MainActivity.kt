@@ -78,6 +78,7 @@ import com.kanalog.core.StudyScope
 import com.kanalog.core.StudySession
 import com.kanalog.core.learningStats
 import com.kanalog.core.structureGrammarAnswer
+import com.kanalog.core.vocabularyGrammarDueCount
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -525,6 +526,12 @@ fun KanalogApp(
             }
         }
         Text("레벨 전체 학습", style = MaterialTheme.typography.titleLarge)
+        val dueCount = vocabularyGrammarDueCount(state, Instant.now())
+        Button(
+            onClick = { begin(StudyScope(kinds = setOf("vocabulary", "grammar"), reviewOnly = true)) },
+            enabled = dueCount > 0,
+            modifier = Modifier.fillMaxWidth(),
+        ) { Text("모든 레벨 단어·문법 복습 $dueCount 장") }
         Row(
             Modifier.fillMaxWidth().toggleable(reviewOnly, role = Role.Checkbox, onValueChange = {
                 reviewOnly = it
@@ -921,12 +928,7 @@ private fun highlightText(
     val now = Instant.now()
     val stats = learningStats(state, now)
     val reviews = state.reviews.filter { !Instant.parse(it.at).isAfter(now) }
-    val active = state.notes.map { it.id }.toSet()
-    val dueCount =
-        state.progress.entries.count { (id, progress) ->
-            id in active && !progress.excluded &&
-                listOfNotNull(progress.due, progress.nextDayReminder).any { !Instant.parse(it).isAfter(now) }
-        }
+    val dueCount = vocabularyGrammarDueCount(state, now)
     val learned = state.notes.count { state.progress[it.id]?.fsrsJson != null }
     val figures =
         listOf(
@@ -960,7 +962,8 @@ private fun highlightText(
                 }
             }
         }
-        Text("학습한 카드 $learned · 전체 ${state.notes.size} · 복습할 카드 $dueCount")
+        Text("학습한 카드 $learned · 전체 ${state.notes.size}")
+        Text("단어·문법 복습 $dueCount 장 · 모든 레벨")
         Text("전체 답변 ${reviews.size} · 오답 재연습 ${reviews.count { it.reinforcement }}")
         Text("평가별 답변", style = MaterialTheme.typography.titleLarge)
         listOf("AGAIN" to "다시", "HARD" to "어려움", "GOOD" to "보통", "EASY" to "쉬움").forEach { (rating, label) ->

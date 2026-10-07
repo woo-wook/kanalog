@@ -3,6 +3,16 @@ package com.kanalog.core
 import java.time.Instant
 import java.time.ZoneId
 
+fun vocabularyGrammarDueCount(
+    state: LocalState,
+    now: Instant,
+): Int =
+    state.notes.count { note ->
+        val progress = state.progress[note.id]
+        note.kind in setOf("vocabulary", "grammar") && progress != null && !progress.excluded &&
+            listOfNotNull(progress.due, progress.nextDayReminder).any { !Instant.parse(it).isAfter(now) }
+    }
+
 data class LearningStats(
     val todayAnswers: Int = 0,
     val todayUniqueCards: Int = 0,

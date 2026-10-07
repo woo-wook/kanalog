@@ -7,6 +7,35 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class LearningStatsTest {
+    @Test fun `global review counts active vocabulary and grammar across levels once when either due arrives`() {
+        val now = Instant.parse("2026-10-07T03:00:00Z")
+        val future = now.plusSeconds(1).toString()
+        val state =
+            LocalState(
+                notes =
+                    listOf(
+                        Note("word", "vocabulary", "合成", level = "N5"),
+                        Note("grammar", "grammar", "合成", level = "N1"),
+                        Note("both", "vocabulary", "合成", level = "N3"),
+                        Note("excluded", "grammar", "合成", level = "N2"),
+                        Note("kana", "hiragana", "あ", group = "basic"),
+                        Note("future", "grammar", "合成", level = "N4"),
+                        Note("new", "vocabulary", "合成", level = "N5"),
+                    ),
+                progress =
+                    mapOf(
+                        "word" to Progress(due = now.toString()),
+                        "grammar" to Progress(due = future, nextDayReminder = now.toString()),
+                        "both" to Progress(due = now.minusSeconds(1).toString(), nextDayReminder = now.toString()),
+                        "excluded" to Progress(due = now.toString(), excluded = true),
+                        "kana" to Progress(due = now.toString()),
+                        "future" to Progress(due = future, nextDayReminder = future),
+                        "inactive" to Progress(due = now.toString()),
+                    ),
+            )
+        assertEquals(3, vocabularyGrammarDueCount(state, now))
+    }
+
     private fun review(
         id: String,
         at: Instant,
