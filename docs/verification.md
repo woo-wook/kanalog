@@ -1,5 +1,46 @@
 # 검증 기록
 
+## 네이티브 오프라인·웹 Material 3 (2026-10-06~07)
+
+### 실제 코드와 데이터
+
+- Android: Kotlin 2.3.21/Compose Material 3 1.4.0, API 26 이상, java-fsrs 1.0.0. Gradle wrapper/checksum·lockfile·ktlint 1.8.0 고정. iOS: SwiftUI/iOS 17 이상, iOS 26 Liquid Glass, 공식 swift-fsrs FSRS 6 revision `4fbaf20184d62f82a9f44f343337c61a2c5483e9` 고정. 두 앱 모두 로그인/서버/DB 컨테이너 없이 로컬 학습·평가·콘텐츠·미디어를 사용한다.
+- 실제 개인 패키지 `2.1.2+kana-audio1`: 어휘 9,159·문법 1,078·가나 208 = 앱 노트 10,445개. 음성 20,259개(원본 MAX 20,155 + Supertonic 빌드 시 생성한 가나 104). 전체 파일 해시·크기·참조 검사 통과. Git/공개 CI/웹 Docker 이미지에는 포함하지 않았다.
+- 가나 전체 혼합, 정답 숨김·원본 문법 강조, 후리가나·선택적 한글, 로컬 음성/기기 일본어 TTS, 개인 단어·검색·메모·북마크·제외, FSRS·즉시 1회 보강·별도 다음날 알림, 7/30일·고유 카드·연속일을 네이티브에 구현했다. 선택적 콘텐츠 installer와 HTTPS 계약은 학습과 분리한다. 웹 진도 동기화 및 공개 catalog는 현재 없다.
+- 웹 Material 3 전환: Android와 같은 청록색 역할 색상, surface/outline/state 토큰, 둥근 버튼·선택 칩, 활성 navigation indicator, 최소 48px 주요 터치 영역, PWA 테마를 적용했다. 웹 백엔드/API/기존 사용자 데이터는 변경하지 않았다.
+
+### 실행한 검증
+
+- BE `check bootJar`: **73개 통과**, ktlint 통과. exporter main 추가로 Spring bootJar가 두 진입점을 추론하지 못하는 실제 빌드 실패를 확인한 뒤 AppKt를 명시해 복구했다. 기존 Kotlin/PostgreSQL HTTP/domain 회귀와 네이티브 export/읽기 golden fixture 포함.
+- FE Vitest **82개 통과**, TypeScript·ESLint·Docker production build 통과. 역할 토큰 부재 테스트 RED→GREEN, PWA 색상/기존 인증·읽기·학습 회귀 포함.
+- Android 코어 **27개 통과**, 실제 10,445노트·20,259미디어 전수 검증 포함. 공식 평가·전체 상태 재로딩, 키 재전송/충돌·version·일일 한도·자정·다시 보강, 업데이트/원본 owner/빠진 ID 진도 보존, path/hash/schema 손상, 읽기 golden 14+9, 7/30 경계·DST·미래 제외·전체 레벨 복습 count 검증. 신규 토글/통계/복습 회귀는 RED→GREEN 확인.
+- Android private APK 및 instrumentation APK 빌드·ktlint 통과. API 36 ARM64 에뮬레이터 UI **4개 통과**: 정답 전 문법 해설 숨김, 힌트 꺼짐, 설정 레이블 토글과 재열기, 복습 checkbox 행 터치. 에뮬레이터 Wi-Fi/data를 끄고 실제 개인 패키지에서 208자 선택→‘다시’ 후 209장으로 한 번 보강→네이티브 음성 이벤트→재시작 시 평가·한글 설정 유지→MAX N5 단어·문법→저장된 전체 FSRS/다음날 알림→실제 기록 화면의 7일 통계 확인. 저장 완료를 기다린 뒤 DB 역할의 로컬 profile을 읽어 평가 4개 증가를 확인했다. 대형 디버그 APK는 약 767MB이며 공개 배포하지 않았다.
+- Swift 코어 **23개 모두 통과**, private 전수 설치·N5 단어/문법 평가·재시작·재가져오기 진도 유지 포함(개인 테스트 약 47초). 일반 공개 suite는 22통과+개인 옵션 1skip이다. 원자적 저장 실패, 여러 파일 저장소 경쟁, 세션·평가·전체 FSRS·오답 due와 알림 분리·읽기·owner·손상 입력, 통계 자정/DST/미래 제외 검증 포함. iOS 프로젝트 생성과 SwiftUI 문법 검사도 별도 실행했다.
+- Python 패키지 도구 **2개 통과**, 최종 private manifest 검사 통과. 다운로드/서버 구동 없이 기존 offline 변환 결과를 사용했고, 가나 음성 생성용 임시 8091 계산 프로세스는 생성 완료 후 종료했다.
+- 공개 주소 `https://kanalog.hanwook.me`에 frontend만 교체했다. backend/voice/공유 PostgreSQL과 볼륨은 유지했고 readiness·HTTPS·Secure cookie 검사 통과.
+- 공개 서버 실제 브라우저 회귀 **12개 종류 통과**: Material 360/390/768/1280px의 홈·코스·단어장·설정·통계와 활성 탐색/가로 넘침/48px, 긴 문법과 원본 강조 2종, 가나 참고표 104쌍, 작은 화면 학습 4종, 원본 음성 200/206·디코딩·재생, 단어장 모바일/PC·북마크·제외·검색, 개인 단어 편집·재접속. QA 계정으로 실행하며 본문·캡처는 private-data에 보관했다. 첫 Material 캡처에 로딩 화면이 포함되어 데이터 로딩 완료 대기를 추가했다. Next route announcer의 빈 alert를 API 오류로 취급한 테스트는 실제 `.surface[role=alert]` 오류만 검사하도록 수정한 뒤 통과했다.
+
+### 플랫폼과 제한
+
+로컬 Mac은 Apple Silicon, JDK 21, Android API 36 ARM 에뮬레이터, Command Line Tools Swift 6.1.2다. 전체 Xcode는 로컬에 없으므로 iOS 앱 빌드는 GitHub macOS Xcode 26.6에서 별도로 수행한다. 개인 자료를 CI에 보내지 않으며 CI 앱에는 자체 가나만 들어간다. iOS 앱 컴파일은 통과했다. 화면 테스트에서는 스위치 레이블 중앙 탭, 스크롤 영역, SwiftUI Form의 같은 식별자를 가진 접근성 요소가 여러 개 발견되는 문제를 실제 실패로 확인하고 보완했다. 저장 버튼/확인 문구는 정확한 label과 식별자로 좁혀 단일 접근성 요소를 조회한다. [최종 Native CI 실행](https://github.com/woo-wook/kanalog/actions/runs/37552932050), 소스 커밋 `2bf03e8`, **Android/iOS 모두 통과**. iOS 26.6 시뮬레이터에서 208자 선택→정답 보기→평가→다음 카드→한글 설정 변경·저장→앱 재실행 후 설정 유지와 320px 읽기 레이아웃 테스트가 통과했고, 공개 가나 simulator 앱 아티팩트를 생성했다. 테스트에서 검증 조건을 제거하거나 실패를 무시하지 않았다.
+
+실제 iPhone/Android 기기 청취 품질, App Store/Play Store 제출·서명 IPA, 설치 PWA 실기기 검증은 수행하지 않았다. 일본어 기기 TTS 음성 미설치 때는 안내를 제공한다. 서버에서 콘텐츠/진도를 자동 동기화하는 기능을 구현했다고 표현하지 않는다.
+
+```sh
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+backend/gradlew -p backend check bootJar
+native/android/gradlew -p native/android -PverifyPrivateContent=true :core:test ktlintCheck
+native/android/gradlew -p native/android -PincludePrivateContent=true :app:assembleDebug :app:assembleDebugAndroidTest
+python3 tools/native-content/android_offline_e2e.py
+NATIVE_PACKAGE_PATH="$PWD/private-data/native/ios" swift test --package-path native/ios
+native/ios/scripts/build-ios.sh --private --project-only
+python3 tools/native-content/verify_pack.py private-data/native/android
+python3 -m unittest discover -s tools/native-content -p 'test_*.py'
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/material-layout.spec.ts e2e/mobile-study.spec.ts e2e/grammar-layout.spec.ts e2e/kana-reference.spec.ts
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/notes-layout.spec.ts e2e/notes-desktop.spec.ts e2e/audio.spec.ts
+```
+
+
 ## ktlint 적용 (2026-10-04)
 
 - ktlint-gradle **14.2.0**/ktlint **1.8.0**을 version catalog에 고정했다. ktlint 구성의 도구 의존성은 `backend/gradle.lockfile`로 잠근다. 공식 tag의 MIT LICENSE와 Gradle 9 지원 이력을 확인했다.

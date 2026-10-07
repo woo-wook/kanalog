@@ -147,3 +147,23 @@ JLPT MAX는 개인 학습용으로만 내려받아 가져온다. 공개 다운�
 코스 화면의 **히라가나·가타카나 참고표** 또는 `/courses/kana`에서 두 문자를 함께 비교한다. 기본·탁음·반탁음·요음 104쌍과 문자/로마자 검색을 제공한다. 한글 표시는 기존 **한글 발음 보조 표시** 설정을 따른다.
 
 문법 연습은 일본어 문형·강조된 예문으로 뜻을 떠올린 뒤 **정답 보기**로 한국어 해설을 확인한다. 한글 발음의 `〔원문〕`은 읽기가 확인되지 않은 부분이며 음성과 가나로 확인한다.
+
+
+## 서버 없이 쓰는 네이티브 앱
+
+- Android: Kotlin/Compose Material 3, [빌드와 설치](native/android/README.md).
+- iPhone/iPad: SwiftUI, iOS 26 Liquid Glass, [Xcode 실행](native/ios/README.md).
+- 가나·단어·문법·평가·진도·검색·설정·로컬 음성은 기기에서 동작한다. 웹 계정과 진도 자동 동기화는 현재 제공하지 않는다.
+- 공개 빌드는 가나 208자만 포함한다. 개인 MAX 2.1.2 패키지(어휘 9,159·문법 1,078·가나 208·음성 20,259)는 `private-data/native`에 분리하며 개인 빌드나 폴더 가져오기로 선택한다.
+
+```sh
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+native/android/gradlew -p native/android -PincludePrivateContent=true :app:assembleDebug
+"$ANDROID_HOME/platform-tools/adb" install -r native/android/app/build/outputs/apk/debug/app-debug.apk
+# 전체 Xcode가 설치된 Mac에서:
+native/ios/scripts/build-ios.sh --private
+open native/ios/Kanalog.xcodeproj
+```
+
+[오프라인 구조·콘텐츠 계약](docs/native-apps.md), [플랫폼 동시 수정 원칙](docs/platform-parity.md), [실제 검증](docs/verification.md). 웹도 Android와 같은 Material 3 역할 색상·카드·버튼·탐색을 사용하며, iOS는 플랫폼의 Liquid Glass를 유지한다.

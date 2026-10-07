@@ -31,3 +31,12 @@ Anki 및 AnkiWeb의 AGPL 엔진 코드는 사용하지 않는다. APKG 변환기
 
 Kuromoji IPADIC **0.9.0**, https://github.com/atilika/kuromoji/tree/0.9.0.
 Copyright 2010–2015 Atilika Inc. and contributors. Kuromoji code is Apache License 2.0; the bundled **mecab-ipadic 2.7.0-20070801** dictionary has separate NAIST/ICOT terms. Full upstream license and dictionary notice are retained in `backend/src/main/resources/META-INF/licenses/kuromoji` and included in the backend JAR. These notices concern the code/dictionary dependency, separately from personal MAX data and audio.
+
+
+## 네이티브 앱
+
+- Android Compose Material 3 **1.4.0**, Kotlin **2.3.21**, kotlinx.serialization **1.9.0**, AndroidX 및 Android Gradle Plugin: 각 공식 배포물의 Apache License 2.0 등 원래 조건을 적용한다. 정확한 버전과 전이 의존성은 `native/android/*/build.gradle.kts`, `gradle.lockfile`에 고정했다.
+- Android FSRS는 서버와 같은 **java-fsrs 1.0.0/MIT**이다. 전문은 `docs/licenses/java-fsrs-MIT.txt`에 보존한다.
+- iOS **swift-fsrs**, revision `4fbaf20184d62f82a9f44f343337c61a2c5483e9`, MIT: 전문을 `native/ios/ThirdParty/swift-fsrs-LICENSE`에 보존한다. Apple SwiftUI/AVFoundation 시스템 API로 UI·재생을 구현한다.
+- 공개 내장 가나 JSON은 자체 코드의 기존 KanaInventory로 생성했다. 개인 패키지의 MAX 본문/음성은 위 NOTICE 적용 대상이며 공개 CI/APK/저장소에는 포함하지 않는다.
+- 개인 가나 음성 104개는 고정된 Supertonic 3/F1으로 빌드 시 생성하고 두 문자 208자에서 재사용한다. 원어민 녹음이 아닌 합성 음성이며 private-data에만 둔다. 네이티브 앱에 모델 엔진을 탑재하거나 학습 중 서버를 호출하지 않는다.
