@@ -12,7 +12,7 @@ swiftc -parse native/ios/App/*.swift native/ios/UITests/*.swift
 xcodegen generate --spec native/ios/project.yml --project native/ios
 ```
 
-Swift 코어 테스트 실행, SwiftUI 소스의 문법 검사, Xcode 프로젝트 생성은 별개입니다. 현재 환경은 Command Line Tools Swift 6.1.2이며 전체 Xcode/iOS SDK가 없어 iOS 앱 빌드, 시뮬레이터 UI 테스트 및 실제 재생은 실행하지 못했습니다.
+Swift 코어 테스트 실행, SwiftUI 소스의 문법 검사, Xcode 프로젝트 생성과 앱 빌드는 별개입니다. 로컬 Mac은 Command Line Tools Swift 6.1.2로 실제 개인 패키지를 포함한 코어 테스트 23개를 통과했습니다. iOS 앱은 GitHub macOS Xcode 26.6에서 빌드하며, 시뮬레이터 UI 검증의 최종 결과는 [검증 기록](../../docs/verification.md)을 따릅니다. 로컬 시뮬레이터 실행에는 전체 Xcode가 필요하고, 실제 iPhone 청취 품질과 서명 IPA는 검증하지 않았습니다.
 
 ## 전체 Xcode가 있는 Mac
 

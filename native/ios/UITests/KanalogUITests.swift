@@ -131,12 +131,17 @@ final class KanalogUITests: XCTestCase {
         tapSwitch(hangul, expecting: after)
         XCTAssertNotEqual(before, after)
         stage("settings.save.scroll")
-        let save = app.buttons["settings.save"]
+        // SwiftUI Form can expose both a row and its button with the inherited identifier.
+        // Resolve one button by its identifier and action label before reading its frame.
+        let save = app.buttons.matching(identifier: "settings.save")
+            .matching(NSPredicate(format: "label == %@", "설정 저장")).firstMatch
         scroll(save, identifier: "settings.save", in: app, interactive: true)
         XCTAssertTrue(save.isEnabled)
         stage("settings.save")
         save.tap()
-        let saved = app.descendants(matching: .any)["settings.saved"]
+        // Label can propagate the identifier to its accessibility children as well.
+        let saved = app.descendants(matching: .any).matching(identifier: "settings.saved")
+            .matching(NSPredicate(format: "label == %@", "기기에 저장했습니다")).firstMatch
         stage("settings.saved.feedback")
         // Give the save time to finish; Form may create its footer only once it is scrolled into view.
         _ = saved.waitForExistence(timeout: 5)
