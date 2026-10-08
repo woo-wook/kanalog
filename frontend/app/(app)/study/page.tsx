@@ -20,6 +20,7 @@ import { JapaneseText, PronunciationHint } from "@/japanese-text";
 import { GrammarPrompt } from "@/grammar-prompt";
 import { GrammarAnswer } from "@/grammar-answer";
 import { StudyNextStep } from "@/study-next-step";
+import { VerbConjugationPanel } from "@/verb-conjugation";
 const ratings: { value: Rating; label: string }[] = [
   { value: "AGAIN", label: "다시" },
   { value: "HARD", label: "어려움" },
@@ -966,6 +967,17 @@ function StudyContent() {
                   </p>
                 )}
               </details>
+            )}
+            {card.kind === "vocabulary" && card.verbConjugation && (
+              <VerbConjugationPanel
+                conjugation={card.verbConjugation}
+                settings={settings.data}
+                onPlay={
+                  settings.data?.audioEngine !== "ORIGINAL"
+                    ? (reading) => void play(card, { japanese: reading })
+                    : undefined
+                }
+              />
             )}
           </div>
         )}

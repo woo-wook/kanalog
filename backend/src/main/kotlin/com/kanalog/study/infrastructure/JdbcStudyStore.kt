@@ -102,6 +102,13 @@ class JdbcStudyStore(
                                     sentence = true,
                                 ),
                             lastRating = rs.getString("last_rating"),
+                            verbConjugation =
+                                guides.verb(
+                                    rs.getString("front"),
+                                    rs.getString("reading"),
+                                    rs.getString("part_of_speech"),
+                                    rs.getString("kind"),
+                                ),
                             grammarFocus =
                                 if (rs.getString("kind") ==
                                     "grammar"

@@ -29,12 +29,12 @@ struct LibraryView: View {
                         }
                         if model.snapshot.progress[note.id]?.excluded == true { Label("학습 제외", systemImage: "minus.circle").font(.caption).foregroundStyle(.secondary) }
                     }.padding(.vertical, 4)
-                }
+                }.accessibilityIdentifier("library.note.\(note.id)")
             }
         }
         .navigationTitle("단어장")
         .searchable(text: $query, prompt: "일본어, 읽기, 한국어 뜻")
-        .toolbar { Button { adding = true } label: { Image(systemName: "plus") }.accessibilityLabel("개인 단어 추가") }
+        .toolbar { Button { adding = true } label: { Image(systemName: "plus") }.accessibilityLabel("개인 단어 추가").accessibilityIdentifier("library.personal.add") }
         .sheet(isPresented: $adding) { NavigationStack { PersonalNoteEditor() }.environmentObject(model) }
         .task(id: "\(query)|\(kind?.rawValue ?? "")|\(bookmarked)|\(model.snapshot.reviews.count)|\(model.snapshot.progress.values.filter(\.bookmarked).count)|\(model.snapshot.notes.count)") {
             let search = query, selectedKind = kind, onlySaved = bookmarked
@@ -87,9 +87,9 @@ struct PersonalNoteEditor: View {
     @State private var saving = false
     var body: some View {
         Form {
-            TextField("일본어 단어", text: $front).textInputAutocapitalization(.never)
-            TextField("읽기", text: $reading).textInputAutocapitalization(.never)
-            TextField("한국어 뜻", text: $meaning, axis: .vertical)
+            TextField("일본어 단어", text: $front).textInputAutocapitalization(.never).accessibilityIdentifier("personal.front")
+            TextField("읽기", text: $reading).textInputAutocapitalization(.never).accessibilityIdentifier("personal.reading")
+            TextField("한국어 뜻", text: $meaning, axis: .vertical).accessibilityIdentifier("personal.meaning")
             Picker("급수", selection: $level) { ForEach(["N5", "N4", "N3", "N2", "N1"], id: \.self) { Text($0).tag($0) } }
         }
         .navigationTitle(existing == nil ? "개인 단어 추가" : "개인 단어 수정")
@@ -98,9 +98,16 @@ struct PersonalNoteEditor: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button("저장") {
                     saving = true
-                    let note = Note(id: existing?.id ?? "personal:\(UUID().uuidString):front", kind: .vocabulary, level: level, front: front.trimmingCharacters(in: .whitespacesAndNewlines), reading: reading.isEmpty ? nil : reading, meaning: meaning.isEmpty ? nil : meaning)
-                    Task { if await model.savePersonal(note) { dismiss() }; saving = false }
-                }.disabled(front.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || saving)
+                    var note = existing ?? Note(id: "personal:\(UUID().uuidString):front", kind: .vocabulary, front: front)
+                    note.front = front.trimmingCharacters(in: .whitespacesAndNewlines)
+                    note.reading = reading.isEmpty ? nil : reading
+                    note.meaning = meaning.isEmpty ? nil : meaning
+                    note.level = level
+                    // Keep the supplied classification and other original metadata when editing.
+                    if note.front != existing?.front || note.reading != existing?.reading { note.readingGuide = nil }
+                    let updated = note
+                    Task { if await model.savePersonal(updated) { dismiss() }; saving = false }
+                }.disabled(front.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || saving).accessibilityIdentifier("personal.save")
             }
         }
         .onAppear { if let existing { front = existing.front; reading = existing.reading ?? ""; meaning = existing.meaning ?? ""; level = existing.level ?? "N5" } }

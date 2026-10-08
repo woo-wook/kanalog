@@ -54,7 +54,7 @@ struct HomeView: View {
                 Picker("유형", selection: $kind) { Text("단어").tag(ContentKind.vocabulary); Text("문법").tag(ContentKind.grammar) }.pickerStyle(.segmented)
                 let count = model.snapshot.notes.values.filter { $0.level == level && $0.kind == kind }.count
                 Text("전체 \(count)장 · 복습 우선 · 새 카드 \(model.snapshot.settings.newCardsPerDay)장/일").font(.subheadline).foregroundStyle(.secondary)
-                Button("\(level) \(kind.label) 학습") { Task { await model.start(StudyScope(kinds: [kind], levels: [level])) } }.disabled(count == 0 || model.working)
+                Button("\(level) \(kind.label) 학습") { Task { await model.start(StudyScope(kinds: [kind], levels: [level])) } }.disabled(count == 0 || model.working).accessibilityIdentifier("level.study.start")
                 if count == 0 { Text("설정에서 개인 콘텐츠 폴더를 가져오면 학습할 수 있습니다.").font(.footnote).foregroundStyle(.secondary) }
             }
         }

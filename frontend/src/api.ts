@@ -107,6 +107,25 @@ export interface ReadingGuide {
   hangulSource?: "MANUAL" | "APPROXIMATE" | null;
   hangulStatus?: "COMPLETE" | "PARTIAL" | "UNAVAILABLE";
 }
+export interface VerbConjugationForm {
+  key: string;
+  label: string;
+  group: "BASIC" | "CONNECT" | "ADVANCED";
+  description: string;
+  japanese: string;
+  reading: string;
+  stem: string;
+  suffix: string;
+  readingGuide?: ReadingGuide | null;
+}
+export interface VerbConjugation {
+  verbClass: "GODAN" | "ICHIDAN" | "SURU" | "KURU";
+  classLabel: string;
+  dictionaryForm: string;
+  dictionaryReading: string;
+  rule: string;
+  forms: VerbConjugationForm[];
+}
 export interface StudyCard {
   readingGuide?: ReadingGuide | null;
   exampleReadingGuide?: ReadingGuide | null;
@@ -127,6 +146,7 @@ export interface StudyCard {
   audioId?: string | null;
   exampleAudioId?: string | null;
   hangulHint?: string | null;
+  verbConjugation?: VerbConjugation | null;
   examples?: {
     japanese: string;
     readingGuide?: ReadingGuide | null;
@@ -198,6 +218,7 @@ export interface Note {
   bookmarked?: boolean;
   excluded?: boolean;
   audioId?: string | null;
+  verbConjugation?: VerbConjugation | null;
 }
 export interface Page<T> {
   content: T[];

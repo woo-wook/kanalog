@@ -10,6 +10,7 @@ import { structureGrammarAnswer } from "./grammar-content";
 import { HighlightedExample } from "./grammar-prompt";
 import { NoteAudio } from "./note-audio";
 import type { NoteAudioPlayer } from "./use-note-audio";
+import { VerbConjugationPanel } from "./verb-conjugation";
 
 export function NoteEntry({
   note,
@@ -211,6 +212,23 @@ export function NoteEntry({
                 </p>
               )}
             </>
+          )}
+          {!grammar && note.verbConjugation && (
+            <VerbConjugationPanel
+              conjugation={note.verbConjugation}
+              settings={settings}
+              onPlay={
+                audio?.enabled && audio.engine !== "ORIGINAL"
+                  ? (reading, key) => {
+                      void audio.play({
+                        noteId: note.id,
+                        key: `${note.id}:verb:${key}`,
+                        text: reading,
+                      });
+                    }
+                  : undefined
+              }
+            />
           )}
           {note.memo && (
             <section

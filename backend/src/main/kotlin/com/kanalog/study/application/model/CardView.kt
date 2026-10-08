@@ -2,6 +2,7 @@ package com.kanalog.study.application.model
 
 import com.kanalog.content.domain.GrammarFocus
 import com.kanalog.content.domain.ReadingGuide
+import com.kanalog.content.domain.VerbConjugation
 import java.time.Instant
 import java.util.UUID
 
@@ -27,4 +28,5 @@ data class CardView(
     val retryVersion: Long = 0,
     val readingGuide: ReadingGuide? = null,
     val exampleReadingGuide: ReadingGuide? = null,
+    val verbConjugation: VerbConjugation? = null,
 )

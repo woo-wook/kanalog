@@ -9,6 +9,17 @@ class ReadingGuideFactoryTest {
     private val factory = ReadingGuideFactory()
     private val mapper = JsonMapper.builder().build()
 
+    @Test fun `verb inference requires exact dictionary base and source class overrides ending guesses`() {
+        assertEquals("GODAN", factory.verb("帰る", "かえる", "5단동사", "vocabulary")!!.verbClass)
+        assertEquals("ICHIDAN", factory.verb("食べる", "たべる", null, "vocabulary")!!.verbClass)
+        assertEquals("SURU", factory.verb("勉強", "べんきょう", null, "vocabulary")!!.verbClass)
+        assertNull(factory.verb("食べます", "たべます", null, "vocabulary"))
+        assertNull(factory.verb("椅子", "いす", null, "vocabulary"))
+        assertNull(factory.verb("食べる", "たべます", null, "vocabulary"))
+        assertNull(factory.verb("書く", "かく", "명사", "vocabulary"))
+        assertNull(factory.verb("来る", "くる", "カ변동사", "grammar"))
+    }
+
     @Test fun `source ruby wins over dictionary with strict base match and manual hint priority`() {
         val raw = mapper.readTree("""[{"text":"日本","reading":"にっぽん"}]""")
         val guide = factory.create("日本", "にほん", "직접 입력", raw)!!

@@ -2,6 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { NoteEntry } from "./note-entry";
+import type { VerbConjugation } from "./api";
 afterEach(cleanup);
 
 it("문법 목록은 문형과 뜻만 요약하고 상세에서 원본 강조 예문과 구분된 설명을 읽는다", async () => {
@@ -50,4 +51,41 @@ it("문법 목록은 문형과 뜻만 요약하고 상세에서 원본 강조 �
     screen.queryByRole("button", { name: "수정" }),
   ).not.toBeInTheDocument();
   expect(screen.queryByText(/JLPT MAX|출처/)).not.toBeInTheDocument();
+});
+
+it("동사 활용은 단어장 상세를 펼친 뒤 보이고 모든 활용형을 유지한다", async () => {
+  const conjugation: VerbConjugation = {
+    verbClass: "ICHIDAN",
+    classLabel: "1단 동사",
+    dictionaryForm: "食べる",
+    dictionaryReading: "たべる",
+    rule: "る를 빼고 어미를 붙입니다.",
+    forms: Array.from({ length: 21 }, (_, i) => ({
+      key: `form-${i}`,
+      label: `활용 ${i + 1}`,
+      group: i < 7 ? "BASIC" : i < 14 ? "CONNECT" : "ADVANCED",
+      description: "활용 설명",
+      japanese: "食べます",
+      reading: "たべます",
+      stem: "食べ",
+      suffix: "ます",
+    })),
+  };
+  const { container } = render(
+    <NoteEntry
+      note={{
+        id: "verb",
+        kind: "vocabulary",
+        japanese: "食べる",
+        verbConjugation: conjugation,
+      }}
+      onPatch={vi.fn()}
+      onEdit={vi.fn()}
+      pending={false}
+    />,
+  );
+  expect(screen.getByRole("region", { name: "동사 활용" })).not.toBeVisible();
+  await userEvent.click(screen.getByText("뜻·예문 보기"));
+  expect(screen.getByRole("region", { name: "동사 활용" })).toBeVisible();
+  expect(container.querySelectorAll(".verb-form-row")).toHaveLength(21);
 });

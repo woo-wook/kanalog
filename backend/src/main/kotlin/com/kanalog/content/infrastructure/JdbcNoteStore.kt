@@ -18,7 +18,7 @@ class JdbcNoteStore(
 ) : NoteStore {
     private val columns = """n.id,n.front,n.reading,n.meaning,n.example,n.example_meaning,n.explanation,
         n.personal_memo,n.hangul_hint,n.source_id,(b.note_id is not null) bookmarked,
-        coalesce(s.suspended,false) excluded,c.word_audio_id,n.kind,n.raw_fields,d.level"""
+        coalesce(s.suspended,false) excluded,c.word_audio_id,n.kind,n.raw_fields,d.level,n.part_of_speech"""
     private val joins = """from study_note n left join bookmark b on b.note_id=n.id and b.user_id=?
         left join card c on c.id=(select c2.id from card c2 where c2.note_id=n.id and c2.owner_id=? order by c2.id limit 1)
         left join user_card_state s on s.card_id=c.id and s.user_id=?
@@ -211,6 +211,7 @@ class JdbcNoteStore(
                     raw?.path("furigana"),
                     rs.getString("kind") == "grammar",
                 ),
+            verbConjugation = guides.verb(front, rs.getString("reading"), rs.getString("part_of_speech"), rs.getString("kind")),
             exampleReadingGuide =
                 guides.create(
                     rs.getString("example"),

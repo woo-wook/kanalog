@@ -76,6 +76,7 @@ import com.kanalog.core.ReadingSegment
 import com.kanalog.core.Settings
 import com.kanalog.core.StudyScope
 import com.kanalog.core.StudySession
+import com.kanalog.core.conjugationFor
 import com.kanalog.core.learningStats
 import com.kanalog.core.structureGrammarAnswer
 import com.kanalog.core.vocabularyGrammarDueCount
@@ -685,6 +686,8 @@ fun KanalogApp(
             note.meaning?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.titleMedium, lineHeight = 29.sp) }
         }
         note.partOfSpeech?.let { Text(it, style = MaterialTheme.typography.labelLarge) }
+        val conjugation = remember(note) { conjugationFor(note) }
+        conjugation?.let { VerbConjugationContent(it, settings, playText) }
         note.examples.forEach { example ->
             Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = MaterialTheme.shapes.medium) {
                 Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -701,7 +704,7 @@ fun KanalogApp(
     }
 }
 
-@Composable private fun JapaneseText(
+@Composable internal fun JapaneseText(
     text: String,
     guide: ReadingGuide?,
     reading: String?,

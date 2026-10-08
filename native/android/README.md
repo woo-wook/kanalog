@@ -28,4 +28,6 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
 
 FSRS는 `java-fsrs/1.0.0`을 사용하고 fuzz를 끈다. 전체 FSRS JSON과 공식 due를 보존하며 다음 날 오답 알림은 별도 `nextDayReminder`에 저장한다. 다음 카드 평가 전에는 고정 요청 key와 카드 version을 확인한다. 코어 테스트와 Android instrumentation 테스트는 서로 다른 검증이다. 기기 없는 환경의 APK 컴파일 성공을 UI 테스트 실행 성공으로 표현하지 않는다.
 
-개인 단어의 읽기는 서버의 순수 Kotlin `ReadingGuide.kt`와 `HangulPronunciation.kt` 두 원본을 빌드 시 선택하여 재사용한다. 서버 실행·데이터베이스·네트워크 의존성은 포함하지 않는다. 입력한 가나와 본문을 정렬할 수 있을 때만 후리가나와 한글 보조를 생성하며 알 수 없는 읽기를 추정하지 않는다. 공유 `reading-fixtures.json`의 한글 14개와 정렬 9개를 코어 테스트에서 확인한다. Gradle wrapper SHA256과 해결된 코어·앱의 전이 의존성 lockfile도 고정한다.
+개인 단어의 읽기는 서버의 순수 Kotlin `ReadingGuide.kt`와 `HangulPronunciation.kt`를 빌드 시 선택하여 재사용한다. 동사 활용도 순수 `VerbConjugation.kt` 원본을 재사용하며 품사와 가나 읽기가 확인되는 단어에서만 생성한다. 상세 화면은 활용표를 펼쳐 보여 주고 학습 화면은 정답 공개 후에만 표시한다. 기본·연결·확장 그룹으로 표준 21개 활용형과 규칙을 표시하며 ある처럼 일부 형태가 쓰이지 않는 동사는 해당 행을 생략한다. 후리가나와 한글 보조는 설정에 따르고 가나 읽기는 각 행에 명시한다. 활용형 듣기는 원본 단어 음성을 재사용하지 않고 확인된 가나 읽기를 기기의 일본어 TTS에 전달한다.
+
+서버 실행·데이터베이스·네트워크 의존성은 포함하지 않는다. 입력한 가나와 본문을 정렬할 수 있을 때만 후리가나와 한글 보조를 생성하며 알 수 없는 읽기를 추정하지 않는다. 공유 `reading-fixtures.json`의 한글 14개와 정렬 9개, `verb-fixtures.json`의 동사 28개 벡터를 코어 테스트에서 확인한다. Gradle wrapper SHA256과 해결된 코어·앱의 전이 의존성 lockfile도 고정한다.

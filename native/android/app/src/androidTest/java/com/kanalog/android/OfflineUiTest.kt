@@ -1,6 +1,8 @@
 package com.kanalog.android
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -12,9 +14,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -31,6 +35,7 @@ import com.kanalog.core.ReadingSegment
 import com.kanalog.core.Settings
 import com.kanalog.core.StudyScope
 import com.kanalog.core.StudySession
+import com.kanalog.core.conjugationFor
 import com.kanalog.core.structureGrammarAnswer
 import org.junit.Rule
 import org.junit.Test
@@ -38,6 +43,55 @@ import java.io.File
 
 class OfflineUiTest {
     @get:Rule val compose = createComposeRule()
+
+    @Test fun verbConjugationIsHiddenUntilAnswerEvenWhenReadingHintsAreEnabled() {
+        val note = Note("synthetic:verb", "vocabulary", "書く", reading = "かく", meaning = "쓰다", partOfSpeech = "五段動詞")
+        compose.setContent {
+            var answer by remember { mutableStateOf(false) }
+            MaterialTheme {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    Button(onClick = { answer = true }) { Text("정답 보기") }
+                    NoteBody(note, answer, Settings(hintBeforeAnswer = true, hangul = true))
+                }
+            }
+        }
+        compose.onNodeWithTag("verb-conjugation").assertDoesNotExist()
+        compose.onNodeWithText("정답 보기").performClick()
+        compose.onNodeWithText("동사 활용").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test fun verbPanelKeepsExplicitKanaAndHonorsRubyHangulWithSyntheticAudio() {
+        val note = Note("synthetic:verb", "vocabulary", "書く", reading = "かく", partOfSpeech = "五段動詞")
+        val fullPanel = checkNotNull(conjugationFor(note))
+        val panel = fullPanel.copy(forms = fullPanel.forms.filter { it.key == "masu" })
+        var played: String? = null
+        var audio: String? = "original-must-not-be-used"
+        compose.setContent {
+            var settings by remember { mutableStateOf(Settings(furigana = false, hangul = false)) }
+            MaterialTheme {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    Button(onClick = { settings = settings.copy(furigana = true) }) { Text("후리가나 켜기") }
+                    Button(onClick = { settings = settings.copy(hangul = true) }) { Text("한글 켜기") }
+                    VerbConjugationContent(panel, settings) { text, path ->
+                        played = text
+                        audio = path
+                    }
+                }
+            }
+        }
+        compose.onNodeWithText("읽기 · かきます").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("か").assertDoesNotExist()
+        compose.onNodeWithText("한글 보조 · 카키마스").assertDoesNotExist()
+        compose.onNodeWithText("후리가나 켜기").performScrollTo().performClick()
+        compose.onNodeWithText("か").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("한글 켜기").performScrollTo().performClick()
+        compose.onNodeWithText("한글 보조 · 카키마스").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("verb-listen-masu").performScrollTo().performClick()
+        compose.runOnIdle {
+            org.junit.Assert.assertEquals("かきます", played)
+            org.junit.Assert.assertNull(audio)
+        }
+    }
 
     @Test fun settingsLabelPersistsHangulAndRestoresAfterReopening() {
         val directory = File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir, "ui-settings-${System.nanoTime()}")

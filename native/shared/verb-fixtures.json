@@ -1,0 +1,681 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "front": "書く",
+      "reading": "かく",
+      "partOfSpeech": "5단동사 · 타동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "masu": {
+          "japanese": "書きます",
+          "reading": "かきます"
+        },
+        "nai": {
+          "japanese": "書かない",
+          "reading": "かかない"
+        },
+        "te": {
+          "japanese": "書いて",
+          "reading": "かいて"
+        },
+        "ta": {
+          "japanese": "書いた",
+          "reading": "かいた"
+        },
+        "potential": {
+          "japanese": "書ける",
+          "reading": "かける"
+        },
+        "causativePassive": {
+          "japanese": "書かせられる",
+          "reading": "かかせられる"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "泳ぐ",
+      "reading": "およぐ",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "te": {
+          "japanese": "泳いで",
+          "reading": "およいで"
+        },
+        "ta": {
+          "japanese": "泳いだ",
+          "reading": "およいだ"
+        },
+        "ba": {
+          "japanese": "泳げば",
+          "reading": "およげば"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "話す",
+      "reading": "はなす",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "te": {
+          "japanese": "話して",
+          "reading": "はなして"
+        },
+        "ta": {
+          "japanese": "話した",
+          "reading": "はなした"
+        },
+        "volitional": {
+          "japanese": "話そう",
+          "reading": "はなそう"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "待つ",
+      "reading": "まつ",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "te": {
+          "japanese": "待って",
+          "reading": "まって"
+        },
+        "nai": {
+          "japanese": "待たない",
+          "reading": "またない"
+        },
+        "imperative": {
+          "japanese": "待て",
+          "reading": "まて"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "死ぬ",
+      "reading": "しぬ",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "te": {
+          "japanese": "死んで",
+          "reading": "しんで"
+        },
+        "ta": {
+          "japanese": "死んだ",
+          "reading": "しんだ"
+        },
+        "masu": {
+          "japanese": "死にます",
+          "reading": "しにます"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "遊ぶ",
+      "reading": "あそぶ",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "te": {
+          "japanese": "遊んで",
+          "reading": "あそんで"
+        },
+        "ta": {
+          "japanese": "遊んだ",
+          "reading": "あそんだ"
+        },
+        "passive": {
+          "japanese": "遊ばれる",
+          "reading": "あそばれる"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "飲む",
+      "reading": "のむ",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "te": {
+          "japanese": "飲んで",
+          "reading": "のんで"
+        },
+        "ta": {
+          "japanese": "飲んだ",
+          "reading": "のんだ"
+        },
+        "request": {
+          "japanese": "飲んでください",
+          "reading": "のんでください"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "帰る",
+      "reading": "かえる",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "te": {
+          "japanese": "帰って",
+          "reading": "かえって"
+        },
+        "nai": {
+          "japanese": "帰らない",
+          "reading": "かえらない"
+        },
+        "potential": {
+          "japanese": "帰れる",
+          "reading": "かえれる"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "買う",
+      "reading": "かう",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "te": {
+          "japanese": "買って",
+          "reading": "かって"
+        },
+        "nai": {
+          "japanese": "買わない",
+          "reading": "かわない"
+        },
+        "prohibition": {
+          "japanese": "買わないでください",
+          "reading": "かわないでください"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "行く",
+      "reading": "いく",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "te": {
+          "japanese": "行って",
+          "reading": "いって"
+        },
+        "ta": {
+          "japanese": "行った",
+          "reading": "いった"
+        },
+        "tara": {
+          "japanese": "行ったら",
+          "reading": "いったら"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "持って行く",
+      "reading": "もっていく",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "te": {
+          "japanese": "持って行って",
+          "reading": "もっていって"
+        },
+        "ta": {
+          "japanese": "持って行った",
+          "reading": "もっていった"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "ある",
+      "reading": "ある",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 14,
+      "expected": {
+        "nai": {
+          "japanese": "ない",
+          "reading": "ない"
+        },
+        "nakatta": {
+          "japanese": "なかった",
+          "reading": "なかった"
+        },
+        "masu": {
+          "japanese": "あります",
+          "reading": "あります"
+        },
+        "te": {
+          "japanese": "あって",
+          "reading": "あって"
+        },
+        "ta": {
+          "japanese": "あった",
+          "reading": "あった"
+        }
+      },
+      "absent": [
+        "potential",
+        "passive",
+        "causative",
+        "causativePassive",
+        "imperative",
+        "request",
+        "prohibition"
+      ]
+    },
+    {
+      "front": "問う",
+      "reading": "とう",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "te": {
+          "japanese": "問うて",
+          "reading": "とうて"
+        },
+        "ta": {
+          "japanese": "問うた",
+          "reading": "とうた"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "食べる",
+      "reading": "たべる",
+      "partOfSpeech": "1단동사",
+      "verbClass": "ICHIDAN",
+      "formCount": 21,
+      "expected": {
+        "te": {
+          "japanese": "食べて",
+          "reading": "たべて"
+        },
+        "nai": {
+          "japanese": "食べない",
+          "reading": "たべない"
+        },
+        "potential": {
+          "japanese": "食べられる",
+          "reading": "たべられる"
+        },
+        "causativePassive": {
+          "japanese": "食べさせられる",
+          "reading": "たべさせられる"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "見る",
+      "reading": "みる",
+      "partOfSpeech": "一段動詞",
+      "verbClass": "ICHIDAN",
+      "formCount": 21,
+      "expected": {
+        "masu": {
+          "japanese": "見ます",
+          "reading": "みます"
+        },
+        "nai": {
+          "japanese": "見ない",
+          "reading": "みない"
+        },
+        "ba": {
+          "japanese": "見れば",
+          "reading": "みれば"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "する",
+      "reading": "する",
+      "partOfSpeech": "サ변동사",
+      "verbClass": "SURU",
+      "formCount": 21,
+      "expected": {
+        "masu": {
+          "japanese": "します",
+          "reading": "します"
+        },
+        "nai": {
+          "japanese": "しない",
+          "reading": "しない"
+        },
+        "te": {
+          "japanese": "して",
+          "reading": "して"
+        },
+        "ta": {
+          "japanese": "した",
+          "reading": "した"
+        },
+        "potential": {
+          "japanese": "できる",
+          "reading": "できる"
+        },
+        "passive": {
+          "japanese": "される",
+          "reading": "される"
+        },
+        "causative": {
+          "japanese": "させる",
+          "reading": "させる"
+        },
+        "causativePassive": {
+          "japanese": "させられる",
+          "reading": "させられる"
+        },
+        "volitional": {
+          "japanese": "しよう",
+          "reading": "しよう"
+        },
+        "imperative": {
+          "japanese": "しろ",
+          "reading": "しろ"
+        },
+        "ba": {
+          "japanese": "すれば",
+          "reading": "すれば"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "勉強",
+      "reading": "べんきょう",
+      "partOfSpeech": "명사 · サ변동사",
+      "verbClass": "SURU",
+      "formCount": 21,
+      "expected": {
+        "dictionary": {
+          "japanese": "勉強する",
+          "reading": "べんきょうする"
+        },
+        "masu": {
+          "japanese": "勉強します",
+          "reading": "べんきょうします"
+        },
+        "nai": {
+          "japanese": "勉強しない",
+          "reading": "べんきょうしない"
+        },
+        "potential": {
+          "japanese": "勉強できる",
+          "reading": "べんきょうできる"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "来る",
+      "reading": "くる",
+      "partOfSpeech": "カ변동사",
+      "verbClass": "KURU",
+      "formCount": 21,
+      "expected": {
+        "dictionary": {
+          "japanese": "来る",
+          "reading": "くる"
+        },
+        "masu": {
+          "japanese": "来ます",
+          "reading": "きます"
+        },
+        "masen": {
+          "japanese": "来ません",
+          "reading": "きません"
+        },
+        "mashita": {
+          "japanese": "来ました",
+          "reading": "きました"
+        },
+        "masendeshita": {
+          "japanese": "来ませんでした",
+          "reading": "きませんでした"
+        },
+        "nai": {
+          "japanese": "来ない",
+          "reading": "こない"
+        },
+        "nakatta": {
+          "japanese": "来なかった",
+          "reading": "こなかった"
+        },
+        "te": {
+          "japanese": "来て",
+          "reading": "きて"
+        },
+        "ta": {
+          "japanese": "来た",
+          "reading": "きた"
+        },
+        "teiru": {
+          "japanese": "来ている",
+          "reading": "きている"
+        },
+        "tai": {
+          "japanese": "来たい",
+          "reading": "きたい"
+        },
+        "potential": {
+          "japanese": "来られる",
+          "reading": "こられる"
+        },
+        "passive": {
+          "japanese": "来られる",
+          "reading": "こられる"
+        },
+        "causative": {
+          "japanese": "来させる",
+          "reading": "こさせる"
+        },
+        "causativePassive": {
+          "japanese": "来させられる",
+          "reading": "こさせられる"
+        },
+        "volitional": {
+          "japanese": "来よう",
+          "reading": "こよう"
+        },
+        "imperative": {
+          "japanese": "来い",
+          "reading": "こい"
+        },
+        "ba": {
+          "japanese": "来れば",
+          "reading": "くれば"
+        },
+        "tara": {
+          "japanese": "来たら",
+          "reading": "きたら"
+        },
+        "request": {
+          "japanese": "来てください",
+          "reading": "きてください"
+        },
+        "prohibition": {
+          "japanese": "来ないでください",
+          "reading": "こないでください"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "くる",
+      "reading": "くる",
+      "partOfSpeech": null,
+      "verbClass": "KURU",
+      "formCount": 21,
+      "expected": {
+        "masu": {
+          "japanese": "きます",
+          "reading": "きます"
+        },
+        "nai": {
+          "japanese": "こない",
+          "reading": "こない"
+        },
+        "te": {
+          "japanese": "きて",
+          "reading": "きて"
+        },
+        "volitional": {
+          "japanese": "こよう",
+          "reading": "こよう"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "いらっしゃる",
+      "reading": "いらっしゃる",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "masu": {
+          "japanese": "いらっしゃいます",
+          "reading": "いらっしゃいます"
+        },
+        "masen": {
+          "japanese": "いらっしゃいません",
+          "reading": "いらっしゃいません"
+        },
+        "imperative": {
+          "japanese": "いらっしゃい",
+          "reading": "いらっしゃい"
+        },
+        "tai": {
+          "japanese": "いらっしゃりたい",
+          "reading": "いらっしゃりたい"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "下さる",
+      "reading": "くださる",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "masu": {
+          "japanese": "下さいます",
+          "reading": "くださいます"
+        },
+        "imperative": {
+          "japanese": "下さい",
+          "reading": "ください"
+        },
+        "te": {
+          "japanese": "下さって",
+          "reading": "くださって"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "愛する",
+      "reading": "あいする",
+      "partOfSpeech": "サ변동사",
+      "verbClass": "SURU",
+      "formCount": 20,
+      "expected": {
+        "te": {
+          "japanese": "愛して",
+          "reading": "あいして"
+        },
+        "masu": {
+          "japanese": "愛します",
+          "reading": "あいします"
+        }
+      },
+      "absent": [
+        "potential"
+      ]
+    },
+    {
+      "front": "椅子",
+      "reading": "いす",
+      "partOfSpeech": "명사",
+      "verbClass": null,
+      "formCount": 0,
+      "expected": {},
+      "absent": []
+    },
+    {
+      "front": "走る",
+      "reading": "はしる",
+      "partOfSpeech": null,
+      "verbClass": null,
+      "formCount": 0,
+      "expected": {},
+      "absent": []
+    },
+    {
+      "front": "食べる",
+      "reading": "たべます",
+      "partOfSpeech": "1단동사",
+      "verbClass": null,
+      "formCount": 0,
+      "expected": {},
+      "absent": []
+    },
+    {
+      "front": "する",
+      "reading": "unknown",
+      "partOfSpeech": null,
+      "verbClass": null,
+      "formCount": 0,
+      "expected": {},
+      "absent": []
+    },
+    {
+      "front": "食べる。",
+      "reading": "たべる",
+      "partOfSpeech": "1단동사",
+      "verbClass": null,
+      "formCount": 0,
+      "expected": {},
+      "absent": []
+    },
+    {
+      "front": "日本",
+      "reading": "にほん",
+      "partOfSpeech": "1단동사",
+      "verbClass": null,
+      "formCount": 0,
+      "expected": {},
+      "absent": []
+    }
+  ]
+}

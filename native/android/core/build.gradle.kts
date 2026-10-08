@@ -7,7 +7,11 @@ ktlint { version.set("1.8.0") }
 dependencyLocking { lockAllConfigurations() }
 val syncReadingDomain by tasks.registering(Sync::class) {
     from(rootProject.file("../../backend/src/main/kotlin")) {
-        include("com/kanalog/content/domain/ReadingGuide.kt", "com/kanalog/content/domain/HangulPronunciation.kt")
+        include(
+            "com/kanalog/content/domain/ReadingGuide.kt",
+            "com/kanalog/content/domain/HangulPronunciation.kt",
+            "com/kanalog/content/domain/VerbConjugation.kt",
+        )
     }
     into(layout.buildDirectory.dir("generated/reading-domain"))
 }
@@ -25,6 +29,7 @@ dependencies {
 tasks.test {
     systemProperty("builtinFile", rootProject.file("../shared/builtin-content.json").absolutePath)
     systemProperty("readingFixtureFile", rootProject.file("../shared/reading-fixtures.json").absolutePath)
+    systemProperty("verbFixtureFile", rootProject.file("../shared/verb-fixtures.json").absolutePath)
     systemProperty("privateContentDirectory", rootProject.file("../../private-data/native/android").absolutePath)
     systemProperty("verifyPrivateContent", providers.gradleProperty("verifyPrivateContent").orNull ?: "false")
 }

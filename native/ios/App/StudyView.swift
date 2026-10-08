@@ -128,6 +128,9 @@ struct NoteCard: View {
                 } else if let answer = display.answer, !answer.isEmpty {
                     answerSection(note.kind == .grammar ? "해설" : "뜻", paragraphs: answer.components(separatedBy: .newlines).filter { !$0.isEmpty })
                 }
+                if note.kind == .vocabulary, let conjugation = VerbConjugator.generate(front: note.front, reading: note.reading, partOfSpeech: note.partOfSpeech) {
+                    VerbConjugationView(conjugation: conjugation)
+                }
                 if let explanation = note.explanation, !explanation.isEmpty { answerSection("설명", paragraphs: explanation.components(separatedBy: .newlines)) }
                 ForEach(Array((note.examples ?? []).enumerated()), id: \.offset) { _, example in
                     VStack(alignment: .leading, spacing: 12) {

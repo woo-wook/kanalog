@@ -2,6 +2,7 @@ package com.kanalog.content.application.model
 
 import com.kanalog.content.domain.GrammarFocus
 import com.kanalog.content.domain.ReadingGuide
+import com.kanalog.content.domain.VerbConjugation
 import java.util.UUID
 
 data class NoteView(
@@ -24,4 +25,5 @@ data class NoteView(
     val grammarFocus: GrammarFocus?,
     val readingGuide: ReadingGuide? = null,
     val exampleReadingGuide: ReadingGuide? = null,
+    val verbConjugation: VerbConjugation? = null,
 )

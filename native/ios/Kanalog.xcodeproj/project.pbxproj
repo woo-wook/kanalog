@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		114CD3C780CE01ECFE58E433 /* VerbConjugationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5544CCCA3EA168D02263C4C8 /* VerbConjugationView.swift */; };
 		16F49EA3BBFAC9DFF3A315B6 /* KanalogTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21A1A0B4B398AE8631757A67 /* KanalogTheme.swift */; };
 		1740BC4BDF611CA79E865849 /* PronunciationPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62405937B74B767E8FA058D0 /* PronunciationPlayer.swift */; };
 		1B77E5F50F095CCDECF3A496 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4726E9ED2438BD2ED52065 /* SettingsView.swift */; };
@@ -47,6 +48,7 @@
 		223568C77E67AE8115DCE32D /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		33DAF7412B2B94B01AFD90BF /* KanalogLayoutTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KanalogLayoutTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4844B6C18E899B84B944907E /* KanalogUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KanalogUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5544CCCA3EA168D02263C4C8 /* VerbConjugationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerbConjugationView.swift; sourceTree = "<group>"; };
 		56F260C66E668E3F2221DC67 /* StudyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyView.swift; sourceTree = "<group>"; };
 		62405937B74B767E8FA058D0 /* PronunciationPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PronunciationPlayer.swift; sourceTree = "<group>"; };
 		7C4726E9ED2438BD2ED52065 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -121,6 +123,7 @@
 				DA2AC2EB9C485D9B4CA1A546 /* RootView.swift */,
 				7C4726E9ED2438BD2ED52065 /* SettingsView.swift */,
 				56F260C66E668E3F2221DC67 /* StudyView.swift */,
+				5544CCCA3EA168D02263C4C8 /* VerbConjugationView.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -298,6 +301,7 @@
 				6177F4F2E2FBD3E0E6188D05 /* RootView.swift in Sources */,
 				1B77E5F50F095CCDECF3A496 /* SettingsView.swift in Sources */,
 				D48B460759AC54B4DC2DC822 /* StudyView.swift in Sources */,
+				114CD3C780CE01ECFE58E433 /* VerbConjugationView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

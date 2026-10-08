@@ -5,6 +5,8 @@ import com.kanalog.content.domain.HangulPronunciation
 import com.kanalog.content.domain.KanaAlignment
 import com.kanalog.content.domain.ReadingGuide
 import com.kanalog.content.domain.ReadingSegment
+import com.kanalog.content.domain.VerbConjugation
+import com.kanalog.content.domain.VerbConjugator
 import org.springframework.stereotype.Component
 import tools.jackson.databind.JsonNode
 
@@ -12,6 +14,34 @@ import tools.jackson.databind.JsonNode
 @Component
 class ReadingGuideFactory {
     private val tokenizer by lazy { Tokenizer() }
+
+    fun verb(
+        front: String,
+        reading: String?,
+        partOfSpeech: String?,
+        kind: String,
+    ): VerbConjugation? {
+        if (kind != "vocabulary") return null
+        if (!partOfSpeech.isNullOrBlank()) return VerbConjugator.generate(front, reading, partOfSpeech)
+        VerbConjugator.generate(front, reading, null)?.let { return it }
+        if (front.isBlank() || front.length > 128) return null
+        val token = tokenizer.tokenize(front).singleOrNull() ?: return null
+        if (token.surface != front || !token.isKnown) return null
+        val dictionaryReading = KanaAlignment.hiragana(token.reading)
+        if (!KanaAlignment.isKana(dictionaryReading)) return null
+        if (!reading.isNullOrBlank() && KanaAlignment.hiragana(reading) != dictionaryReading) return null
+        val pos =
+            when {
+                token.partOfSpeechLevel1 == "名詞" && token.partOfSpeechLevel2 == "サ変接続" -> "명사 · サ변동사"
+                token.partOfSpeechLevel1 != "動詞" || token.baseForm != front -> return null
+                token.conjugationType.startsWith("五段") -> "5단동사"
+                token.conjugationType.startsWith("一段") -> "1단동사"
+                token.conjugationType.startsWith("サ変") -> "サ변동사"
+                token.conjugationType.startsWith("カ変") -> "カ변동사"
+                else -> return null
+            }
+        return VerbConjugator.generate(front, dictionaryReading, pos)
+    }
 
     fun sourceSegments(
         node: JsonNode?,

@@ -154,4 +154,48 @@ final class KanalogUITests: XCTestCase {
         XCTAssertEqual(app.switches["settings.hangul"].value as? String, after)
         stage("completed")
     }
+
+    func testPersonalSuruConjugationDetailAndAnswerVisibility() {
+        let app = XCUIApplication()
+        let fixtureID = UUID().uuidString
+        app.launchArguments = ["--public-content-only", "--conjugation-ui-fixture"]
+        app.launchEnvironment["KANALOG_UI_FIXTURE_ID"] = fixtureID
+        stage("verb.launch.synthetic-personal")
+        app.launch()
+        XCTAssertTrue(app.navigationBars["Kanalog"].waitForExistence(timeout: 30))
+        app.tabBars.buttons["단어장"].tap()
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap(); search.typeText("\(fixtureID)\n")
+        let entry = app.buttons.matching(identifier: "library.note.personal:conjugation-ui:\(fixtureID):front").firstMatch
+        XCTAssertTrue(entry.waitForExistence(timeout: 10))
+        stage("verb.detail.open")
+        entry.tap()
+        let heading = app.staticTexts.matching(identifier: "verb.conjugation.title").firstMatch
+        XCTAssertTrue(heading.waitForExistence(timeout: 10))
+        scroll(heading, identifier: "verb.conjugation.title", in: app, interactive: false)
+        XCTAssertTrue(app.staticTexts.matching(identifier: "verb.conjugation.class").firstMatch.label.contains("する"))
+        let politeReading = app.staticTexts.matching(identifier: "verb.reading.masu").firstMatch
+        scroll(politeReading, identifier: "verb.reading.masu", in: app, interactive: false)
+        XCTAssertEqual(politeReading.label, "します")
+        XCTAssertTrue(app.buttons.matching(identifier: "verb.audio.masu").firstMatch.exists)
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.tabBars.buttons["학습"].tap()
+        stage("verb.study.start")
+        let start = app.buttons.matching(identifier: "level.study.start").firstMatch
+        scroll(start, identifier: "level.study.start", in: app, interactive: true, maximumDrags: 20)
+        XCTAssertTrue(start.isEnabled)
+        start.tap()
+        let reveal = app.buttons.matching(identifier: "study.reveal").firstMatch
+        XCTAssertTrue(reveal.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.staticTexts.matching(identifier: "verb.conjugation.title").firstMatch.exists, "Conjugations must stay hidden until the answer is revealed")
+        stage("verb.study.reveal")
+        reveal.tap()
+        XCTAssertTrue(heading.waitForExistence(timeout: 10))
+        scroll(politeReading, identifier: "verb.reading.masu", in: app, interactive: false)
+        XCTAssertEqual(politeReading.label, "します")
+        app.buttons.matching(identifier: "study.close").firstMatch.tap()
+        stage("verb.completed")
+    }
+
 }

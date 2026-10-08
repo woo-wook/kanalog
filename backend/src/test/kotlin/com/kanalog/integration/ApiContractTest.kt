@@ -141,6 +141,31 @@ class ApiContractTest
             )
         }
 
+        @Test fun `personal verb exposes the same automatic conjugation in notes and study without changing state`() {
+            val owner = login()
+            val created = request("POST", "/api/notes", """{"japanese":"食べる","reading":"たべる","meaning":"먹다"}""", owner)
+            assertEquals(200, created.statusCode())
+            val note = json(created)
+            assertEquals("ICHIDAN", note.path("verbConjugation").path("verbClass").asString())
+            val session = scheduled(owner, UUID.fromString(note.path("id").asString()))
+            val table = session.path("cards").get(0).path("verbConjugation")
+            assertEquals(note.path("verbConjugation"), table)
+            assertEquals(21, table.path("forms").size())
+            val te = table.path("forms").first { it.path("key").asString() == "te" }
+            assertEquals("食べて", te.path("japanese").asString())
+            assertEquals("たべて", te.path("reading").asString())
+            assertEquals(0, jdbc.queryForObject("select count(*) from review_log where user_id=?", Int::class.java, owner.id))
+            val nonVerb = newNote(owner)
+            val cat =
+                json(request("GET", "/api/notes?query=猫", login = owner)).path("content").first {
+                    it.path("id").asString() ==
+                        nonVerb.toString()
+                }
+            assertTrue(cat.path("verbConjugation").isNull || cat.path("verbConjugation").isMissingNode)
+            val other = login()
+            assertEquals(0, json(request("GET", "/api/notes?query=食べる", login = other)).path("totalElements").asInt())
+        }
+
         @Test fun `kana reference is authenticated and uses the same 104 pairs without creating study state`() {
             code(request("GET", "/api/kana/reference"), 401, "UNAUTHORIZED")
             val owner = login()

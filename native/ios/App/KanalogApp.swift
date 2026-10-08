@@ -38,6 +38,15 @@ final class AppModel: ObservableObject {
                     let manifest = try JSONDecoder().decode(PackageManifest.self, from: data)
                     if saved.packages[manifest.packageId] != manifest.version { try ContentPackageInstaller(store: store).install(directory: personal) }
                 }
+                #if DEBUG
+                // Opt-in synthetic personal data for simulator UI tests; never bundled MAX content.
+                if ProcessInfo.processInfo.arguments.contains("--public-content-only"),
+                   ProcessInfo.processInfo.arguments.contains("--conjugation-ui-fixture"),
+                   let fixtureID = ProcessInfo.processInfo.environment["KANALOG_UI_FIXTURE_ID"], UUID(uuidString: fixtureID) != nil {
+                    let fixture = Note(id: "personal:conjugation-ui:\(fixtureID):front", kind: .vocabulary, level: "N5", front: "する", reading: "する", meaning: "하다 · 합성 UI 검증 단어 \(fixtureID)")
+                    try store.savePersonalNote(fixture)
+                }
+                #endif
                 return (store, try store.snapshot())
             }.value
             store = result.0; snapshot = result.1
@@ -92,6 +101,12 @@ final class AppModel: ObservableObject {
         let path = example?.audio ?? note.audio
         let text = example.map { $0.reading ?? $0.japanese } ?? note.spokenText
         do { try audio.play(path: path, text: text, directory: store.directory, rate: Float(snapshot.settings.speechRate)) }
+        catch { self.error = error.localizedDescription }
+    }
+    func pronounceConjugation(_ form: VerbConjugationForm) {
+        guard let store else { return }
+        // Conjugated forms use their own kana reading, never the dictionary word's recording.
+        do { try audio.play(path: nil, text: form.reading, directory: store.directory, rate: Float(snapshot.settings.speechRate)) }
         catch { self.error = error.localizedDescription }
     }
     var dueCount: Int {
