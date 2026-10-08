@@ -35,7 +35,10 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 kotlin { compilerOptions { freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property") } }
-tasks.withType<Test> { useJUnitPlatform() }
+tasks.withType<Test> {
+    useJUnitPlatform()
+    inputs.file("../native/shared/verb-fixtures.json")
+}
 
 ktlint {
     version.set(libs.versions.ktlint.get())
@@ -56,5 +59,15 @@ tasks.register<JavaExec>("nativeExport") {
     args(providers.gradleProperty("nativeOutput").getOrElse("../native/shared/builtin-content.json"))
     providers.gradleProperty("nativeInput").orNull?.let { input ->
         args(input, providers.gradleProperty("nativeMediaMap").get())
+    }
+}
+
+tasks.register<JavaExec>("verbAuditExport") {
+    group = "verification"
+    description = "Export all source-tagged verb forms to private JSONL without a database"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("com.kanalog.tools.VerbAuditExporter")
+    doFirst {
+        args(providers.gradleProperty("verbInput").get(), providers.gradleProperty("verbOutput").get())
     }
 }

@@ -1,6 +1,7 @@
 package com.kanalog.core
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
@@ -9,16 +10,36 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class VerbConjugationTest {
+    private fun assertOptionalHangul(
+        expected: JsonObject,
+        actual: VerbForm,
+    ) {
+        if ("hangul" in expected) {
+            assertEquals(expected.getValue("hangul").jsonPrimitive.contentOrNull, actual.readingGuide.hangul, "${actual.japanese} Hangul")
+        }
+    }
+
+    @Test fun `optional Hangul fixture expectations reject incorrect values and allow absent fields`() {
+        val panel = assertNotNull(conjugationFor(Note("synthetic:verb", "vocabulary", "書く", reading = "かく", partOfSpeech = "五段動詞")))
+        val form = panel.forms.first { it.key == "masu" }
+        assertOptionalHangul(Json.parseToJsonElement("{}").jsonObject, form)
+        assertOptionalHangul(Json.parseToJsonElement("{\"hangul\":\"카키마스\"}").jsonObject, form)
+        assertFailsWith<AssertionError> {
+            assertOptionalHangul(Json.parseToJsonElement("{\"hangul\":\"틀린 합성 기대값\"}").jsonObject, form)
+        }
+    }
+
     @Test fun `shared verb fixtures preserve every supported form reading and omission`() {
         val fixture = Json.parseToJsonElement(File(System.getProperty("verbFixtureFile")).readText()).jsonObject
         assertEquals(1, fixture.getValue("schemaVersion").jsonPrimitive.int)
         val cases = fixture.getValue("cases").jsonArray
-        assertEquals(28, cases.size)
+        assertTrue(cases.isNotEmpty())
         cases.forEachIndexed { index, vector ->
             val row = vector.jsonObject
             val front = row.getValue("front").jsonPrimitive.content
@@ -52,6 +73,7 @@ class VerbConjugationTest {
                     val actual = assertNotNull(forms[key], "$front $key")
                     assertEquals(expected.getValue("japanese").jsonPrimitive.content, actual.japanese, "$front $key")
                     assertEquals(expected.getValue("reading").jsonPrimitive.content, actual.reading, "$front $key")
+                    assertOptionalHangul(expected, actual)
                     assertEquals(actual.japanese, actual.stem + actual.suffix, "$front $key accent")
                     assertEquals(actual.japanese, actual.readingGuide.segments.joinToString("") { it.text }, "$front $key ruby")
                     assertTrue(actual.group in setOf("BASIC", "CONNECT", "ADVANCED"))

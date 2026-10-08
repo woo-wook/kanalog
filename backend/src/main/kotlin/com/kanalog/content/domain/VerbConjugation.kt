@@ -30,6 +30,54 @@ object VerbConjugator {
         fun append(suffix: String) = PairForm(text + suffix, reading + suffix)
     }
 
+    // Basic non-volitional senses confirmed by JPF BTS00003; spelling AND reading avoid homophones.
+    private val nonVolitional =
+        mapOf(
+            "合う" to "あう",
+            "開く" to "あく",
+            "空く" to "あく",
+            "要る" to "いる",
+            "折れる" to "おれる",
+            "掛かる" to "かかる",
+            "かかる" to "かかる",
+            "乾く" to "かわく",
+            "決まる" to "きまる",
+            "暮れる" to "くれる",
+            "故障する" to "こしょうする",
+            "混む" to "こむ",
+            "壊れる" to "こわれる",
+            "咲く" to "さく",
+            "閉まる" to "しまる",
+            "すく" to "すく",
+            "済む" to "すむ",
+            "足りる" to "たりる",
+            "違う" to "ちがう",
+            "点く" to "つく",
+            "続く" to "つづく",
+            "止まる" to "とまる",
+            "治る" to "なおる",
+            "直る" to "なおる",
+            "無くなる" to "なくなる",
+            "なくなる" to "なくなる",
+            "鳴る" to "なる",
+            "似る" to "にる",
+            "始まる" to "はじまる",
+            "晴れる" to "はれる",
+            "冷える" to "ひえる",
+            "増える" to "ふえる",
+            "焼ける" to "やける",
+            "揺れる" to "ゆれる",
+            "汚れる" to "よごれる",
+            "沸く" to "わく",
+            "割れる" to "われる",
+            "気がする" to "きがする",
+            "見える" to "みえる",
+            "聞こえる" to "きこえる",
+            "見つかる" to "みつかる",
+            "できる" to "できる",
+            "出来る" to "できる",
+        )
+
     fun generate(
         front: String,
         reading: String?,
@@ -39,16 +87,27 @@ object VerbConjugator {
         val kana = KanaAlignment.hiragana(reading)
         if (KanaAlignment.align(front, kana) == null) return null
         val pos = partOfSpeech.orEmpty().replace(" ", "")
+        val godanPos = pos.contains("5단동사") || pos.contains("五段")
+        val ichidanPos = pos.contains("1단동사") || pos.contains("一段")
+        val modernJun = front in setOf("準ずる", "准ずる") && kana == "じゅんずる"
+        val modernKakeru = front == "駆ける" && kana == "かける"
+        if (godanPos && ichidanPos && !modernKakeru && !modernJun) return null
         val type =
             when {
-                pos.contains("5단동사") || pos.contains("五段") -> "GODAN"
-                pos.contains("1단동사") || pos.contains("一段") -> "ICHIDAN"
+                modernJun || modernKakeru -> "ICHIDAN"
+                godanPos -> "GODAN"
+                ichidanPos -> "ICHIDAN"
                 pos.contains("サ변") || pos.contains("サ変") || front == "する" -> "SURU"
                 pos.contains("カ변") || pos.contains("カ変") || front in setOf("来る", "くる") -> "KURU"
                 else -> return null
             }
         val nominalSuru = type == "SURU" && (pos.contains("명사") || pos.contains("名詞")) && !front.endsWith("する")
-        val dictionary = PairForm(front + if (nominalSuru) "する" else "", kana + if (nominalSuru) "する" else "")
+        val dictionary =
+            when {
+                modernJun -> PairForm(front.dropLast(2) + "じる", "じゅんじる")
+                nominalSuru -> PairForm(front + "する", kana + "する")
+                else -> PairForm(front, kana)
+            }
         val ending = dictionary.text.last()
         if (type == "GODAN" && (ending !in "うくぐすつぬぶむる" || dictionary.reading.last() != ending)) return null
         if (type == "ICHIDAN" && (!dictionary.text.endsWith("る") || !dictionary.reading.endsWith("る"))) return null
@@ -75,7 +134,8 @@ object VerbConjugator {
                 else -> stem
             }
         val aStem = if (type == "GODAN") godan("わかがさたなばまら") else stem
-        val aru = type == "GODAN" && dictionary.text in setOf("ある", "有る", "在る") && dictionary.reading == "ある"
+        val aru = type == "GODAN" && setOf("ある", "有る", "在る").any(dictionary.text::endsWith) && dictionary.reading.endsWith("ある")
+        val iru = type == "ICHIDAN" && dictionary.text in setOf("いる", "居る") && dictionary.reading == "いる"
         val iku =
             type == "GODAN" && dictionary.text.endsWith("く") &&
                 (
@@ -86,7 +146,7 @@ object VerbConjugator {
         val uOnbin = type == "GODAN" && dictionary.text in setOf("問う", "請う", "乞う")
         val negative =
             when {
-                aru -> PairForm("ない", "ない")
+                aru -> PairForm(dictionary.text.dropLast(2) + "ない", dictionary.reading.dropLast(2) + "ない")
 
                 type == "GODAN" -> aStem.append("ない")
 
@@ -99,16 +159,48 @@ object VerbConjugator {
             }
         val te =
             when {
-                type == "SURU" -> stem.append("して")
-                type == "KURU" -> kuru("きて")
-                type == "ICHIDAN" -> stem.append("て")
-                iku -> stem.append("って")
-                uOnbin -> stem.append("うて")
-                ending in "うつる" -> stem.append("って")
-                ending in "ぬぶむ" -> stem.append("んで")
-                ending == 'く' -> stem.append("いて")
-                ending == 'ぐ' -> stem.append("いで")
-                else -> stem.append("して")
+                type == "SURU" -> {
+                    stem.append("して")
+                }
+
+                type == "KURU" -> {
+                    kuru("きて")
+                }
+
+                type == "ICHIDAN" -> {
+                    stem.append("て")
+                }
+
+                iku -> {
+                    PairForm(
+                        if (dictionary.text.endsWith("ゆく")) dictionary.text.dropLast(2) + "いって" else stem.text + "って",
+                        if (dictionary.reading.endsWith("ゆく")) dictionary.reading.dropLast(2) + "いって" else stem.reading + "って",
+                    )
+                }
+
+                uOnbin -> {
+                    stem.append("うて")
+                }
+
+                ending in "うつる" -> {
+                    stem.append("って")
+                }
+
+                ending in "ぬぶむ" -> {
+                    stem.append("んで")
+                }
+
+                ending == 'く' -> {
+                    stem.append("いて")
+                }
+
+                ending == 'ぐ' -> {
+                    stem.append("いで")
+                }
+
+                else -> {
+                    stem.append("して")
+                }
             }
         val past =
             PairForm(
@@ -116,6 +208,50 @@ object VerbConjugator {
                 te.reading.dropLast(1) + if (te.reading.endsWith("で")) "だ" else "た",
             )
         val politeStem = if (honorific) stem.append("い") else iStem
+        val kureru = type == "ICHIDAN" && dictionary.text in setOf("くれる", "呉れる") && dictionary.reading == "くれる"
+        val dekiru = type == "ICHIDAN" && dictionary.text in setOf("できる", "出来る") && dictionary.reading == "できる"
+        val noIntent = nonVolitional[dictionary.text] == dictionary.reading || (dictionary.text == "空く" && dictionary.reading == "すく")
+        val noPotential =
+            noIntent ||
+                mapOf("分かる" to "わかる", "わかる" to "わかる", "知る" to "しる")[dictionary.text] == dictionary.reading
+        val noPassive =
+            mapOf("分かる" to "わかる", "わかる" to "わかる", "できる" to "できる", "出来る" to "できる")[dictionary.text] == dictionary.reading
+        val excluded =
+            (
+                when {
+                    kureru -> {
+                        setOf("potential", "passive", "tai", "volitional", "request")
+                    }
+
+                    dekiru -> {
+                        setOf(
+                            "potential",
+                            "passive",
+                            "tai",
+                            "volitional",
+                            "imperative",
+                            "causative",
+                            "causativePassive",
+                            "request",
+                            "prohibition",
+                        )
+                    }
+
+                    aru -> {
+                        setOf("teiru", "tai", "volitional")
+                    }
+
+                    iru -> {
+                        setOf("teiru")
+                    }
+
+                    else -> {
+                        emptySet()
+                    }
+                }
+            ) + (if (noIntent) setOf("volitional", "imperative") else emptySet()) +
+                (if (noPotential) setOf("potential") else emptySet()) +
+                (if (noPassive) setOf("passive") else emptySet())
         val forms = mutableListOf<VerbForm>()
 
         fun add(
@@ -125,11 +261,21 @@ object VerbConjugator {
             description: String,
             value: PairForm,
         ) {
+            if (key in excluded) return
             val base = if (key == "dictionary") value.text else stem.text.takeIf { value.text.startsWith(it) }.orEmpty()
-            val pronunciation = HangulPronunciation.guide(value.reading)
+            val segments = KanaAlignment.align(value.text, value.reading) ?: listOf(ReadingSegment(value.text, value.reading))
+            var readingOffset = 0
+            val vowelBreaks =
+                segments
+                    .map { segment ->
+                        val start = readingOffset
+                        readingOffset += (segment.reading ?: segment.text).length
+                        start
+                    }.toSet()
+            val pronunciation = HangulPronunciation.guide(value.reading, vowelBreaks)
             val guide =
                 ReadingGuide(
-                    KanaAlignment.align(value.text, value.reading) ?: listOf(ReadingSegment(value.text, value.reading)),
+                    segments,
                     "READING",
                     pronunciation.text,
                     "APPROXIMATE",
@@ -194,6 +340,8 @@ object VerbConjugator {
             }
         val imperative =
             when {
+                kureru -> stem
+
                 honorific -> stem.append("い")
 
                 type == "GODAN" -> godan("えけげせてねべめれ")
@@ -213,7 +361,15 @@ object VerbConjugator {
                 else -> stem.append("れば")
             }
         add("volitional", "의지·권유", "ADVANCED", "～하자 · ～하려고 한다", volitional)
-        if (!aru) add("imperative", "명령형", "ADVANCED", "강한 명령 · 일상 요청에는 てください 사용", imperative)
+        if (!aru) {
+            add(
+                "imperative",
+                "명령형",
+                "ADVANCED",
+                if (kureru) "강한 요청 · 정중하게는 くれますか 등으로 부탁합니다" else "강한 명령 · 일상 요청에는 てください 사용",
+                imperative,
+            )
+        }
         add("ba", "ば 조건형", "ADVANCED", "～하면 · 조건 표현", conditional)
         add("tara", "たら 조건형", "ADVANCED", "～하면 · ～한 뒤에", past.append("ら"))
         if (!aru) {
@@ -229,7 +385,12 @@ object VerbConjugator {
             }
         val rule =
             when {
-                aru -> "ある의 부정은 ない입니다. 일반 예제로 쓰지 않는 가능·수동·사역·요청은 제외합니다."
+                dekiru -> "できる는 가능·완성을 나타냅니다. 희망은 ～できるようになりたい 등으로 표현하며, 사역·요청 등을 그대로 만들지 않습니다. ～ている는 완성된 상태의 뜻에서 사용합니다."
+                modernJun -> "원본 準ずる·准ずる는 サ변입니다. 여기서는 같은 뜻의 현대형 準じる·准じる 활용을 보여줍니다."
+                modernKakeru -> "駆ける는 현대 일본어의 1단 동사입니다. 원본의 혼합 분류 대신 る를 빼고 활용합니다."
+                kureru -> "くれる의 표준 명령형은 くれ입니다. 주는 사람의 관점 때문에 일반적으로 쓰지 않는 가능·수동·희망·의지·てください는 제외합니다."
+                aru -> "ある의 부정은 ない입니다. 이미 상태를 나타내므로 ～ている를 붙이지 않습니다. 기본 용법에 맞지 않는 형태는 제외합니다."
+                iru -> "존재를 나타내는 いる는 그 자체로 상태를 나타냅니다. ～ている를 덧붙이지 않습니다."
                 iku -> "行く의 て형·과거형은 行って·行った입니다. 나머지는 5단 규칙을 따릅니다."
                 honorific -> "정중형은 り 대신 い가 됩니다. 존경 표현의 쓰임은 문맥에 따라 확인하세요."
                 type == "GODAN" -> "어미가 あ·い·う·え·お단으로 바뀝니다. う의 부정은 わない, て형은 어미별 음편을 따릅니다."
@@ -239,6 +400,12 @@ object VerbConjugator {
                 !productivePotential -> "する 활용을 따릅니다. 이 어휘의 가능 표현은 의미·용법 확인이 필요해 자동 생성하지 않습니다."
                 else -> "する는 します·しない·して, 가능형은 できる로 바뀝니다."
             }
-        return VerbConjugation(type, label, dictionary.text, dictionary.reading, rule, forms)
+        val usageRule =
+            rule +
+                (if (noIntent) " 기본 뜻에서는 의지·명령을 쓰지 않으므로 두 형태를 표시하지 않습니다." else "") +
+                (if (noPotential) " 기본 뜻에 맞지 않는 가능형은 생성하지 않습니다." else "") +
+                (if (noPassive) " 일반적인 수동형도 표시하지 않습니다." else "") +
+                " 활용의 모양을 비교하는 표입니다. 뜻·주어·상황에 따라 사용할 수 있는 형태는 다릅니다."
+        return VerbConjugation(type, label, dictionary.text, dictionary.reading, usageRule, forms)
     }
 }

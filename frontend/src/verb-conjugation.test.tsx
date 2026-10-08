@@ -92,3 +92,51 @@ it("한글 보조와 후리가나는 설정을 따르고 활용형 읽기는 원
   );
   expect(onPlay).toHaveBeenCalledWith("かきます", "masu");
 });
+
+it("서버가 제한한 활용은 추가하지 않고 대체형 안내와 읽기를 그대로 보여준다", async () => {
+  const onPlay = vi.fn();
+  const reviewed: VerbConjugation = {
+    ...conjugation,
+    verbClass: "ICHIDAN",
+    classLabel: "1단 동사",
+    dictionaryForm: "準じる",
+    dictionaryReading: "じゅんじる",
+    rule: "원본 準ずる 대신 같은 뜻의 현대형 準じる 활용을 보여줍니다.",
+    forms: [
+      {
+        key: "masu",
+        label: "정중형",
+        group: "BASIC",
+        description: "정중하게 말할 때",
+        japanese: "準じます",
+        reading: "じゅんじます",
+        stem: "準じ",
+        suffix: "ます",
+        readingGuide: {
+          source: "READING",
+          segments: [{ text: "準", reading: "じゅん" }, { text: "じます" }],
+          hangul: "준지마스",
+          hangulSource: "APPROXIMATE",
+          hangulStatus: "COMPLETE",
+        },
+      },
+    ],
+  };
+  const { container } = render(
+    <VerbConjugationPanel
+      conjugation={reviewed}
+      settings={{ showFurigana: true, showHangulHint: true }}
+      onPlay={onPlay}
+    />,
+  );
+  expect(screen.getByText(reviewed.rule)).toBeVisible();
+  expect(container.querySelectorAll(".verb-form-row")).toHaveLength(1);
+  expect(
+    screen.queryByRole("heading", { name: "표현 넓히기" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByText(/준지마스/)).toBeVisible();
+  await userEvent.click(
+    screen.getByRole("button", { name: "準じます 활용형 듣기" }),
+  );
+  expect(onPlay).toHaveBeenCalledWith("じゅんじます", "masu");
+});

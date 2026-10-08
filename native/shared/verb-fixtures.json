@@ -256,7 +256,7 @@
       "reading": "ある",
       "partOfSpeech": "5단동사",
       "verbClass": "GODAN",
-      "formCount": 14,
+      "formCount": 11,
       "expected": {
         "nai": {
           "japanese": "ない",
@@ -286,7 +286,10 @@
         "causativePassive",
         "imperative",
         "request",
-        "prohibition"
+        "prohibition",
+        "teiru",
+        "tai",
+        "volitional"
       ]
     },
     {
@@ -676,6 +679,331 @@
       "formCount": 0,
       "expected": {},
       "absent": []
+    },
+    {
+      "front": "くれる",
+      "reading": "くれる",
+      "partOfSpeech": "1단동사",
+      "verbClass": "ICHIDAN",
+      "formCount": 16,
+      "expected": {
+        "imperative": {
+          "japanese": "くれ",
+          "reading": "くれ"
+        }
+      },
+      "absent": [
+        "potential",
+        "passive",
+        "tai",
+        "volitional",
+        "request"
+      ]
+    },
+    {
+      "front": "準ずる",
+      "reading": "じゅんずる",
+      "partOfSpeech": "1단동사",
+      "verbClass": "ICHIDAN",
+      "formCount": 21,
+      "expected": {
+        "dictionary": {
+          "japanese": "準じる",
+          "reading": "じゅんじる"
+        },
+        "masu": {
+          "japanese": "準じます",
+          "reading": "じゅんじます"
+        },
+        "te": {
+          "japanese": "準じて",
+          "reading": "じゅんじて"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "駆ける",
+      "reading": "かける",
+      "partOfSpeech": "1단동사 · 5단동사",
+      "verbClass": "ICHIDAN",
+      "formCount": 21,
+      "expected": {
+        "dictionary": {
+          "japanese": "駆ける",
+          "reading": "かける"
+        },
+        "masu": {
+          "japanese": "駆けます",
+          "reading": "かけます"
+        },
+        "te": {
+          "japanese": "駆けて",
+          "reading": "かけて"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "食べる",
+      "reading": "たべる",
+      "partOfSpeech": "5단동사 · 1단동사",
+      "verbClass": null,
+      "formCount": 0,
+      "expected": {},
+      "absent": []
+    },
+    {
+      "front": "気がある",
+      "reading": "きがある",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 11,
+      "expected": {
+        "nai": {
+          "japanese": "気がない",
+          "reading": "きがない"
+        },
+        "nakatta": {
+          "japanese": "気がなかった",
+          "reading": "きがなかった"
+        }
+      },
+      "absent": [
+        "potential",
+        "passive",
+        "causative",
+        "causativePassive",
+        "imperative",
+        "request",
+        "prohibition",
+        "teiru",
+        "tai",
+        "volitional"
+      ]
+    },
+    {
+      "front": "居る",
+      "reading": "いる",
+      "partOfSpeech": "1단동사",
+      "verbClass": "ICHIDAN",
+      "formCount": 20,
+      "expected": {
+        "volitional": {
+          "japanese": "居よう",
+          "reading": "いよう"
+        }
+      },
+      "absent": [
+        "teiru"
+      ]
+    },
+    {
+      "front": "行く",
+      "reading": "ゆく",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "te": {
+          "japanese": "行って",
+          "reading": "いって"
+        },
+        "ta": {
+          "japanese": "行った",
+          "reading": "いった"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "ゆく",
+      "reading": "ゆく",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "te": {
+          "japanese": "いって",
+          "reading": "いって"
+        },
+        "ta": {
+          "japanese": "いった",
+          "reading": "いった"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "思う",
+      "reading": "おもう",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "dictionary": {
+          "japanese": "思う",
+          "reading": "おもう",
+          "hangul": "오모우"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "拾う",
+      "reading": "ひろう",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {
+        "dictionary": {
+          "japanese": "拾う",
+          "reading": "ひろう",
+          "hangul": "히로우"
+        }
+      },
+      "absent": []
+    },
+    {
+      "front": "暮れる",
+      "reading": "くれる",
+      "partOfSpeech": "1단동사",
+      "verbClass": "ICHIDAN",
+      "formCount": 18,
+      "expected": {},
+      "absent": [
+        "volitional",
+        "imperative",
+        "potential"
+      ]
+    },
+    {
+      "front": "故障",
+      "reading": "こしょう",
+      "partOfSpeech": "명사 · サ변동사",
+      "verbClass": "SURU",
+      "formCount": 18,
+      "expected": {},
+      "absent": [
+        "volitional",
+        "imperative",
+        "potential"
+      ]
+    },
+    {
+      "front": "開く",
+      "reading": "あく",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 18,
+      "expected": {},
+      "absent": [
+        "volitional",
+        "imperative",
+        "potential"
+      ]
+    },
+    {
+      "front": "開く",
+      "reading": "ひらく",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 21,
+      "expected": {},
+      "absent": []
+    },
+    {
+      "front": "気がする",
+      "reading": "きがする",
+      "partOfSpeech": "サ변동사",
+      "verbClass": "SURU",
+      "formCount": 18,
+      "expected": {},
+      "absent": [
+        "volitional",
+        "imperative"
+      ]
+    },
+    {
+      "front": "見える",
+      "reading": "みえる",
+      "partOfSpeech": "1단동사",
+      "verbClass": "ICHIDAN",
+      "formCount": 18,
+      "expected": {},
+      "absent": [
+        "potential",
+        "volitional",
+        "imperative"
+      ]
+    },
+    {
+      "front": "聞こえる",
+      "reading": "きこえる",
+      "partOfSpeech": "1단동사",
+      "verbClass": "ICHIDAN",
+      "formCount": 18,
+      "expected": {},
+      "absent": [
+        "potential",
+        "volitional",
+        "imperative"
+      ]
+    },
+    {
+      "front": "見つかる",
+      "reading": "みつかる",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 18,
+      "expected": {},
+      "absent": [
+        "potential",
+        "volitional",
+        "imperative"
+      ]
+    },
+    {
+      "front": "分かる",
+      "reading": "わかる",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 19,
+      "expected": {},
+      "absent": [
+        "potential",
+        "passive"
+      ]
+    },
+    {
+      "front": "知る",
+      "reading": "しる",
+      "partOfSpeech": "5단동사",
+      "verbClass": "GODAN",
+      "formCount": 20,
+      "expected": {},
+      "absent": [
+        "potential"
+      ]
+    },
+    {
+      "front": "できる",
+      "reading": "できる",
+      "partOfSpeech": "1단동사",
+      "verbClass": "ICHIDAN",
+      "formCount": 12,
+      "expected": {},
+      "absent": [
+        "potential",
+        "passive",
+        "volitional",
+        "imperative",
+        "tai",
+        "causative",
+        "causativePassive",
+        "request",
+        "prohibition"
+      ]
     }
   ]
 }

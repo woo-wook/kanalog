@@ -27,6 +27,7 @@ dependencies {
     testImplementation(kotlin("test-junit"))
 }
 tasks.test {
+    inputs.file(rootProject.file("../shared/verb-fixtures.json")).withPropertyName("verbFixtures")
     systemProperty("builtinFile", rootProject.file("../shared/builtin-content.json").absolutePath)
     systemProperty("readingFixtureFile", rootProject.file("../shared/reading-fixtures.json").absolutePath)
     systemProperty("verbFixtureFile", rootProject.file("../shared/verb-fixtures.json").absolutePath)

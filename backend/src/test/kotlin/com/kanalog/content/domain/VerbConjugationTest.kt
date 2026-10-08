@@ -35,6 +35,9 @@ class VerbConjugationTest {
                 val form = actual.forms.single { it.key == key }
                 assertEquals(expected.path("japanese").asString(), form.japanese, "$front/$key")
                 assertEquals(expected.path("reading").asString(), form.reading, "$front/$key")
+                if (expected.path("hangul").isString) {
+                    assertEquals(expected.path("hangul").asString(), form.readingGuide.hangul, "$front/$key/hangul")
+                }
             }
             for (key in row.path("absent")) assertNull(actual.forms.firstOrNull { it.key == key.asString() }, front)
         }
