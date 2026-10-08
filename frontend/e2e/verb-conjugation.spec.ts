@@ -343,3 +343,126 @@ test("MAX 5단·する·来る 전체 활용과 가나 합성 음성을 실제 �
     }
   }
 });
+
+test("실제 MAX N5 예외 동사에서 제한한 형태와 수정한 한글 읽기를 확인한다", async ({
+  page,
+}) => {
+  test.setTimeout(240_000);
+  await login(page);
+  const original = await (await page.request.get("/api/settings")).json();
+  const headers = await csrfHeaders(page);
+  try {
+    const changed = await page.request.patch("/api/settings", {
+      headers,
+      data: { showHangulHint: true, showFurigana: true, autoPlayAudio: false },
+    });
+    expect(changed.ok()).toBe(true);
+    const cases = [
+      {
+        variants: ["くれる", "呉れる"],
+        reading: "くれる",
+        count: 16,
+        absent: ["potential", "passive", "tai", "volitional", "request"],
+        expected: { imperative: "くれ" },
+      },
+      {
+        variants: ["ある", "有る", "在る"],
+        reading: "ある",
+        count: 11,
+        absent: ["potential", "passive", "teiru", "tai", "volitional"],
+        expected: { nai: "ない", nakatta: "なかった" },
+      },
+      {
+        variants: ["いる", "居る"],
+        reading: "いる",
+        count: 20,
+        absent: ["teiru"],
+        expected: { nai: "いない" },
+      },
+      {
+        variants: ["できる", "出来る"],
+        reading: "できる",
+        count: 12,
+        absent: [
+          "potential",
+          "passive",
+          "tai",
+          "volitional",
+          "imperative",
+          "causative",
+          "causativePassive",
+          "request",
+          "prohibition",
+        ],
+        expected: { te: "できて" },
+      },
+      {
+        variants: ["分かる", "わかる"],
+        reading: "わかる",
+        count: 19,
+        absent: ["potential", "passive"],
+        expected: { nai: "わからない" },
+      },
+      {
+        variants: ["思う"],
+        reading: "おもう",
+        count: 21,
+        absent: [],
+        expected: { dictionary: "おもう" },
+        hangul: "오모우",
+      },
+    ];
+    for (const item of cases) {
+      let selected: { note: VerbNote; query: string } | undefined;
+      for (const query of item.variants) {
+        const result = await page.request.get(
+          `/api/notes?query=${encodeURIComponent(query)}&page=0&size=100&kind=vocabulary`,
+        );
+        expect(result.ok()).toBe(true);
+        const note = ((await result.json()) as NotePage<Note>).content.find(
+          (entry) =>
+            entry.source !== "PERSONAL" &&
+            entry.verbConjugation?.dictionaryReading === item.reading &&
+            item.variants.includes(entry.verbConjugation.dictionaryForm),
+        );
+        if (note) {
+          selected = { note: note as VerbNote, query };
+          break;
+        }
+      }
+      expect(selected, `QA 원본 ${item.variants[0]}가 필요합니다`).toBeTruthy();
+      const { note, query } = selected!;
+      const forms = note.verbConjugation.forms;
+      expect(forms.length).toBe(item.count);
+      for (const key of item.absent)
+        expect(forms.some((form) => form.key === key)).toBe(false);
+      for (const [key, reading] of Object.entries(item.expected))
+        expect(forms.find((form) => form.key === key)?.reading).toBe(reading);
+      await page.goto("/notes");
+      await page.getByRole("button", { name: "단어", exact: true }).click();
+      await page.getByLabel("단어 검색").fill(query);
+      await page.getByRole("button", { name: "검색", exact: true }).click();
+      const entry = page.locator(`[data-note-id="${note.id}"]`);
+      await expect(entry).toBeVisible();
+      await entry.locator("summary").click();
+      const panel = entry.getByRole("region", { name: "동사 활용" });
+      await assertCompletePanel(panel, note.verbConjugation);
+      await expect(panel).toContainText("뜻·주어·상황");
+      if (item.hangul) {
+        const dictionary = panel.locator(".verb-form-row").first();
+        await expect(dictionary).toContainText(`근사 발음 · ${item.hangul}`);
+      }
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth - innerWidth,
+        ),
+      ).toBeLessThanOrEqual(1);
+    }
+  } finally {
+    const restored = await page.request.patch("/api/settings", {
+      headers: await csrfHeaders(page),
+      data: original,
+    });
+    expect(restored.ok()).toBe(true);
+  }
+});
