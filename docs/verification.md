@@ -1,5 +1,47 @@
 # 검증 기록
 
+## 동사 활용 전수 검수 (2026-10-08 후속)
+
+### 전수 검사와 수정
+
+- 실제 MAX 2.1.2 동사 **3,361개**의 Kotlin 생성 결과를 독립 Python 규칙표/원본 GUID manifest와 대조했다. 수정 전 **70,546형태·53오류/48노트**에서 수정 후 **70,399형태·0오류**, 누락/미생성 0으로 바뀌었다. 원본 분류 충돌·예외·비의지 기본 뜻·잘못된 가능형·한글 모라 경계를 수정했다. 상세 기준과 교차 사전의 표기 차이/문맥 검수 한계는 [전수 검수 결과](verb-conjugation-review.md)에 기록했다.
+- 공통 golden **49개**, 모든 플랫폼에서 같은 정책을 사용한다. Gradle 테스트의 입력에 fixture를 명시해 변경된 예제를 이전 결과로 잘못 처리하지 않도록 했다. Kotlin 실제 결과를 내보내는 DB 없는 CLI와 별도 Python 검수 도구를 추가했다. 원문·개별 보고서·비교 사전 캐시는 개인 디렉터리에만 저장한다.
+
+### 로컬 검증
+
+- BE `ktlintFormat` 다음 별도 `check bootJar`: **77개 통과**, 실패/오류/skip 0; ktlint 통과. 처음 두 태스크를 한 번에 실행할 때 check가 포맷 전 파일을 읽는 실패가 있었고 순서대로 재실행해 통과했다.
+- FE TypeScript·ESLint·변경 파일 Prettier·production Docker 빌드 통과, Vitest **88개 통과**. 서버가 제한한 형태/현대형 안내·후리가나·한글·가나 TTS callback을 추가 확인했다.
+- Python 독립 규칙/manifest 검수 **5개 통과**. 실제 전체 결과도 0오류로 재실행했다.
+- Android 코어 **30개 통과**, 개인 콘텐츠 전수 검사·ktlint·개인 APK 및 테스트 APK 빌드 통과. API 36 ARM64 실제 에뮬레이터 UI **6개 통과**. 개인 APK 재설치 전/UI 후/최종 재설치 후 profile 파일 해시가 동일하다. 공통 Kotlin 원본과 Android 재사용 파일이 일치한다.
+- Swift **37개 통과**(실제 개인 패키지 검사 포함). 별도 공개 fixture 실행은 36개 통과/개인 패키지 1개 skip이다. SwiftUI/UI 테스트 소스 parse 통과. iOS의 실제 앱 빌드/화면 결과는 아래 CI와 구분한다.
+
+### 웹 배포와 데이터 보존
+
+서명 커밋 `164d2fd`를 main과 작업 브랜치에 푸시했다. 기존 `infra-postgres`를 재시작하지 않고 backend/frontend만 production 빌드·재배포했다. 개인 DB dump를 백업하고 archive 목차를 읽어 유효성을 확인했다. QA 쓰기 전에 DB **24개 테이블의 행 수와 전체 행 해시가 배포 전후 동일**했다. 공개 HTTPS·Secure 쿠키·backend readiness도 통과했다. 원본 콘텐츠·미디어·FSRS·ReviewLog와 네이티브 개인 패키지는 유지한다.
+
+공개 HTTPS 실제 브라우저 첫 회귀는 11개 중 9개 통과/2개 실패였다. 390px 가나 검사에서 로그인 HTTP 200 후 홈 화면 대기 시간 초과가 발생했고, 새 예외 검사에서는 QA 계정에 가져오지 않은 N4 단어를 찾던 입력 오류가 있었다. API mock이나 성공 처리 없이 로그인은 동일 검사로 재실행하고, 실제 설치된 N5 여섯 예외/발음 항목으로 화면 검사를 한정했다. N4~N1 전체는 별도 3,361개 오프라인 전수 검사와 49개 공통 fixture로 검증했다.
+
+재실행 **2개 모두 통과**: 동일 390px 로그인/가나 검사, 실제 MAX N5 여섯 항목(`くれる・ある・いる・できる・分かる・思う`)의 고정 기대 형태 수/제외 키/가나·한글 보조/반응형 패널. 첫 9개와 합쳐 **11개 항목이 최종 통과**했다. 개인 단어 생성·재접속·학습 정답 전/후, 360/390px 가나·긴 예문·평가 버튼, 긴 문법/あの 강조, 단어장 북마크·제외·검색, 실제 원본 음성 200/206·디코딩·재생, MAX 5단/する/来る의 전체 형태/어미 강조, Supertonic 가나 요청·WAV·비무음·재생을 포함한다. QA 설정은 finally로 복원했다. 최신 390px 활용 패널 캡처도 직접 확인했다. 실제 iPhone Safari/PWA 실기기 청취 품질은 검증하지 않았다.
+
+서명 기능 커밋 `164d2fd`의 [Native CI](https://github.com/woo-wook/kanalog/actions/runs/37789128832)에서 **Android·iOS 둘 다 통과**했다. Android 공개 코어/ktlint/APK/instrumentation 소스 빌드와 Xcode 26.6 Swift 코어/앱 빌드/iOS 시뮬레이터 UI·진도 저장·레이아웃 suite를 포함한다. 공개 CI는 가나와 합성 fixture만 사용한다. 로컬 실제 MAX 패키지 검사는 별도로 수행했다. 실제 iPhone/Android 기기의 청취 품질, 배포 서명 IPA·스토어 제출은 미실행이다. 같은 기능 코드 위에 N5 브라우저 회귀/검수 기록만 추가한 서명 커밋 `22b0135`도 두 브랜치에 푸시했다.
+
+```sh
+JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home backend/gradlew -p backend ktlintFormat
+JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home backend/gradlew -p backend check bootJar
+(cd frontend && pnpm exec tsc --noEmit && pnpm lint && pnpm test)
+python3 -m unittest discover -s tools/verb-audit -p 'test_*.py'
+native/android/gradlew -p native/android -PverifyPrivateContent=true :core:test ktlintCheck
+native/android/gradlew -p native/android -PincludePrivateContent=true :app:assembleDebug :app:assembleDebugAndroidTest
+native/android/gradlew -p native/android :app:connectedDebugAndroidTest
+NATIVE_PACKAGE_PATH="$PWD/private-data/native/ios" swift test --package-path native/ios
+# 전수 export/검수: tools/verb-audit/README.md
+# 배포: DB/voice를 재생성하지 않는다.
+docker compose build backend frontend
+docker compose up -d --no-deps --wait --wait-timeout 90 backend frontend
+python3 tools/e2e/check_deployment.py
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/verb-conjugation.spec.ts e2e/mobile-study.spec.ts e2e/grammar-layout.spec.ts e2e/notes-layout.spec.ts e2e/audio.spec.ts
+```
+
 ## 동사 활용·형태별 읽기 (2026-10-08)
 
 ### 구현과 데이터 보존
