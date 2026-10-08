@@ -151,6 +151,8 @@ V10부터 queueInfo는 생성 당시 서버의 빈 큐 이유·다음 시각을 
 
 ### 읽기 보조
 
+`NoteView/CardView`의 선택적 `verbConjugation`에는 확인된 동사 분류·활용 예제·형태별 읽기를 제공한다. 없으면 필드가 생략될 수 있다. `{verbClass,classLabel,dictionaryForm,dictionaryReading,rule,forms}`이며 form은 `{key,label,group,description,japanese,reading,stem,suffix,readingGuide}`다. 그룹은 `BASIC/CONNECT/ADVANCED`, `stem+suffix=japanese`다. 별도 상태 변경이나 카드 생성은 하지 않는다. 학습 클라이언트는 정답 공개 뒤에만 렌더링하고 TTS에는 `reading`을 사용한다. [세부 생성 정책](verb-conjugation.md).
+
 `Settings` GET/PATCH는 `showFurigana`(기본 true)를 지원한다. 기존 `showReadingHint`는 정답 전 읽기 노출, `showHangulHint`는 한글 보조 표시를 각각 제어한다.
 
 `CardView`, `NoteView`, `ExampleView`에 nullable `readingGuide`가 추가된다. Card/Note의 첫 예문은 `exampleReadingGuide`에도 제공된다. 예시(직접 작성한 문장):

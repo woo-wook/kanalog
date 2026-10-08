@@ -1,5 +1,43 @@
 # 검증 기록
 
+## 동사 활용·형태별 읽기 (2026-10-08)
+
+### 구현과 데이터 보존
+
+- 웹 단어 상세·정답 확인 후 카드, Android Compose, iOS SwiftUI에 5단·1단·する·くる 활용표를 연결했다. 기본/연결/확장 그룹과 변경 어미 강조, 명시적인 가나, 기존 후리가나·한글 설정을 제공한다. 활용형 TTS는 원형 음성 대신 해당 형태의 확인된 가나를 사용한다.
+- 자체 작성한 공통 golden 28개로 5단 9개 어미·음편·行く·ある·問う·명사+する·来る의 모든 읽기·존경 동사·어휘적 サ변과 비동사/읽기 불일치를 비교했다. 사전형에는 변경 어미 강조를 넣지 않는다. 대표 21종의 생성 규칙과 예외는 [동사 활용](verb-conjugation.md)에 있다.
+- 개인 MAX 2.1.2 변환본 어휘 9,159개 중 동사 품사 3,361개 모두 생성 확인: 5단 966·1단 490·する 1,902·くる 3. 표의 생성 범위 집계이며 모든 용법의 전문가 검수나 전수 청취 결과는 아니다. 원문/음성/집계 입력은 private-data에만 있다.
+- 운영 DB를 개인 dump로 백업했다. backend/frontend만 교체한 후 QA 쓰기 전에 기존 DB public 24개 테이블의 행 수와 전체 행 해시가 모두 동일했다. DB 마이그레이션·재import 없이 기존 콘텐츠·미디어·FSRS·ReviewLog를 유지했다. Android 최신 개인 APK 재설치 전후 기존 profile 파일 해시도 동일했다.
+
+### 로컬 검증
+
+- BE `ktlintFormat check bootJar`: **77개 통과**, 실패/오류 0. 실제 PostgreSQL HTTP에서 개인 단어의 노트/학습 API 활용 계약과 다른 사용자 접근 제한을 포함한다.
+- FE TypeScript·ESLint·변경 파일 Prettier·production Docker 빌드 통과. Vitest **87개 통과**. 정답 전 비노출, 전체 그룹/형태, 표시 설정, 실제 읽기를 전달하는 듣기 callback을 RED→GREEN으로 확인했다.
+- Android `:core:test` **29개 통과**, 개인 패키지 전수 검사 포함. 전체 ktlint·개인 APK/화면 테스트 APK 빌드 통과. API 36 ARM64 에뮬레이터 UI **6개 통과**: 기존 오프라인 학습/설정과 새 활용 정답 전 숨김, 읽기·한글·후리가나 설정, 가나 TTS callback 및 원형 audioId 미사용을 포함한다.
+- Swift 개인 코어 **26개 통과**(공통 golden과 기존 개인 콘텐츠 설치·진도 보존, 일반 import로 강조 데이터 공개 생성자 검사 포함). SwiftUI/테스트 문법 검사·Xcode 프로젝트 생성 통과. 로컬은 Command Line Tools만 있으므로 iOS 앱 빌드/시뮬레이터 UI는 아래 CI 결과와 구분한다.
+- Docker backend/frontend 빌드·재배포와 공개 HTTPS/readiness/Secure cookie 검사 통과. 기능 서명 커밋 `4e2ecbb`을 main 및 작업 브랜치에 푸시했다.
+
+### 공개 웹과 iOS 시뮬레이터
+
+공개 HTTPS 서버 기존 회귀 **9개 통과**: 개인 활용표 표시·재접속, 360/390px 가나·긴 예문·평가 버튼, 문법 해설/강조, 단어장 검색/북마크/제외, 실제 원본 음성 디코딩·재생·Range를 포함한다. 확장 WebKit/iPhone 390px 회귀 **2개 통과**: 개인 食べる의 단어장 재접속·실제 학습 정답 전/후·카드 내부 스크롤과 평가 버튼, 실제 MAX 5단/する/来る의 전체 활용·읽기·어미 강조, 선택한 Supertonic 활용형 음성의 가나 요청/200 WAV/디코딩/비무음 RMS/실제 재생 확인. QA 설정은 finally로 복원했다. 캡처는 개인 디렉터리에만 저장하고 모바일·활용 패널을 직접 확인했다.
+
+확장 음성 테스트 첫 실행은 로컬 HTTP 대상의 Secure cookie로 로그인 대기에 실패했고 공개 HTTPS로 바로잡았다. 이후 Chromium의 로컬 Supertonic 실행 경로에서 서버 응답을 기다리던 테스트가 시간 초과했다. API mock 대신 서버 음성 경로를 사용하는 WebKit/iPhone 모드에서 재검증했다. 이 두 실패를 기능 통과로 집계하지 않는다. 실제 Safari/iPhone 기기 청취를 수행한 것으로 표현하지 않는다.
+
+[첫 Native CI](https://github.com/woo-wook/kanalog/actions/runs/37731460156)는 Android가 통과했으나 iOS 새 활용표의 SwiftUI type-check에서 실패했다. 앱이 강조 데이터의 internal 생성자에 접근하는 문제를 일반 import 테스트로 재현한 뒤 public 생성자를 추가하고 typed helper view로 나눴다. 서명 수정 커밋 `6405cc4`의 [재검증 CI](https://github.com/woo-wook/kanalog/actions/runs/37731850736)에서 Xcode 26.6 앱 빌드와 iOS 시뮬레이터 UI·레이아웃 suite 모두 **통과**했다. 새 합성 개인 する 단어의 UUID 검색→상세 활용/します 읽기→N5 학습→정답 전 표 없음→정답 후 표/읽기와 기존 208자 연습·평가·설정 재실행/320px 읽기 레이아웃을 포함한다. UI 단계는 11분 36초 걸렸으며 제한/검증 조건을 제거하거나 실패를 무시하지 않았다. 공개 CI에는 자체 가나와 합성 fixture만 사용했다. 실제 iPhone/Android 기기 청취 품질·스토어 서명/제출은 이번 작업에서 검증하지 않았다.
+
+```sh
+JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home backend/gradlew -p backend ktlintFormat check bootJar
+(cd frontend && pnpm exec tsc --noEmit && pnpm lint && pnpm test)
+# 저장소 루트에서
+native/android/gradlew -p native/android -PverifyPrivateContent=true :core:test ktlintCheck
+native/android/gradlew -p native/android -PincludePrivateContent=true :app:assembleDebug :app:assembleDebugAndroidTest
+NATIVE_PACKAGE_PATH="$PWD/private-data/native/ios" swift test --package-path native/ios
+docker compose build backend frontend
+docker compose up -d --no-deps --wait --wait-timeout 90 backend frontend
+python3 tools/e2e/check_deployment.py
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/verb-conjugation.spec.ts e2e/mobile-study.spec.ts e2e/grammar-layout.spec.ts e2e/notes-layout.spec.ts e2e/audio.spec.ts
+```
+
 ## 네이티브 오프라인·웹 Material 3 (2026-10-06~07)
 
 ### 실제 코드와 데이터
