@@ -21,6 +21,9 @@ public struct ReadingGuide: Codable, Equatable, Sendable {
 public struct HighlightSegment: Codable, Equatable, Sendable {
     public var text: String
     public var highlighted: Bool
+    public init(text: String, highlighted: Bool) {
+        self.text = text; self.highlighted = highlighted
+    }
 }
 public struct GrammarFocus: Codable, Equatable, Sendable {
     public var title: String
