@@ -169,3 +169,7 @@ open native/ios/Kanalog.xcodeproj
 ```
 
 [오프라인 구조·콘텐츠 계약](docs/native-apps.md), [플랫폼 동시 수정 원칙](docs/platform-parity.md), [실제 검증](docs/verification.md). 웹도 Android와 같은 Material 3 역할 색상·카드·버튼·탐색을 사용하며, iOS는 플랫폼의 Liquid Glass를 유지한다.
+
+## 앱 다운로드 페이지
+
+로그인 없이 [앱 다운로드](https://kanalog.hanwook.me/download)를 열 수 있다. 공개 Android 개발 APK는 기본 가나 208자를 포함한다. 개인 MAX가 포함된 APK는 공개하지 않는다. iOS 설치 배포는 준비 상태이며 웹 사용 경로를 안내한다. 재빌드/게시/volume 설정은 [다운로드 운영](tools/app-downloads/README.md)을 따른다.

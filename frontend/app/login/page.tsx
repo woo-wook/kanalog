@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useState, useSyncExternalStore } from "react";
 import { BookOpen } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { api, json, me } from "@/api";
@@ -89,6 +90,9 @@ export default function LoginPage() {
           {pending ? "로그인 중…" : "로그인"}
         </button>
       </form>
+      <Link href="/download" className="btn mt-5 text-sm">
+        앱 다운로드 · 로그인 없이 시작하기
+      </Link>
     </main>
   );
 }

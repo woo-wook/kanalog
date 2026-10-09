@@ -15,3 +15,6 @@ private-data/
 **/.next/
 **/build/
 **/.gradle/
+
+# Inspected public app distribution artifacts
+public-downloads/

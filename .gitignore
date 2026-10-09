@@ -85,3 +85,6 @@ local.properties
 *.keystore
 *.p12
 *.mobileprovision
+
+# Inspected public app distribution artifacts
+public-downloads/

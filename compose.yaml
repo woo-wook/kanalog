@@ -49,11 +49,13 @@ services:
       context: ./frontend
     environment:
       BACKEND_API_URL: http://backend:8080
+      APP_DOWNLOAD_ROOT: /app/downloads
       HOSTNAME: 0.0.0.0
       PORT: 3000
     ports:
       - "${APP_BIND_IP:-127.0.0.1}:${APP_PORT:-3200}:3000"
     volumes:
+      - ./public-downloads:/app/downloads:ro
       - ./private-data/supertonic/models:/app/public/tts/supertonic:ro
     depends_on:
       backend:
