@@ -1,5 +1,25 @@
 # 검증 기록
 
+## 로그인 없는 앱 다운로드 (2026-10-09)
+
+- `/download`를 보호 앱 Shell 밖에 추가하고 `/login`에 진입 링크를 연결했다. Material 디자인의 Android/iOS/웹 카드로 설치/준비 상태를 표시한다. 공개 페이지가 `/api/me`를 호출하거나 로그인으로 이동하지 않음을 확인했다.
+- 공개 Android `1.0.0`, API26 이상, 개발 debug APK를 clean 빌드했다. 가나 208자와 직접 작성한 reading/verb fixture **3개 asset만** 포함한다. 파일 **12,395,111 bytes**, SHA-256 `d952b07336e1578b394255df95ddd505faa887fb616a48636ce3fb87de097611`. apksigner·aapt의 서명/package/minSDK/version/debuggable, ZIP/공개 fixture 바이트 일치 검사 통과. MAX·개인 음성·진도는 포함하지 않는다.
+- 처음 incremental public 빌드는 asset 목록에서 개인 파일이 사라져도 이전 ZIP 바이트가 남아 765MB였으므로 게시하지 않았다. 개인 APK를 private-data에 보존한 후 `:app:clean :app:assembleDebug`로 새 12MB 파일을 만들었다. 게시 폴더는 Git/이미지에서 제외하고 frontend read-only volume에만 연결한다. 네이티브 앱 코드·기기 진도를 수정하거나 앱을 재설치하지 않았다.
+- 현재 manifest의 실제 파일 크기와 허용 파일명·SHA를 검사한다. 파일/manifest가 없거나 잘못되면 준비 상태를 표시한다. 다운로드는 인증 없이 HEAD/스트리밍/단일 Range(206/416)/파일 해시 ETag를 제공하며 다른 파일·symlink를 거부한다. 비밀번호·사용자 DB·개인 미디어는 이 경로에서 접근하지 못한다.
+- FE 타입·ESLint·Prettier·Docker production 빌드 통과. Vitest **93개/36파일 통과**(새 UI/파일 검사 5개). Python 게시 도구 **4개 통과**. Python 3.9의 `hashlib.file_digest` 미지원은 스트리밍 SHA256으로 수정해 재실행했다.
+- 공개 HTTPS Playwright **5개 통과**: 비로그인 360/390/1280px의 200/로그인 링크/가로 넘침 없음/로그인 API 호출 없음, iPhone 모드 WebKit의 iOS 준비 상태/웹 사용 경로, 실제 APK 다운로드→크기와 SHA 일치→ZIP 헤더 Range→비정상 Range416→미등록/개인 파일404→보호 API401. 처음 WebKit을 describe 그룹에 배치한 실행 설정 오류는 파일을 분리한 뒤 통과했다. 최신 390px 전체 캡처도 직접 확인했다. 실제 Android 기기 설치·청취 품질이나 iOS 설치 배포는 이번 작업에서 수행하지 않았다.
+- frontend만 교체했고 backend/DB/voice는 재생성하지 않았다. 배포 전후 기존 PostgreSQL **24개 테이블의 행 수/내용 해시 동일**, 공개 URL/readiness/Secure cookie 검사 통과. 서명 기능 커밋 `95477e2`를 main과 작업 브랜치에 푸시했다.
+- iOS 앱 빌드 성공과 설치 배포는 구분한다. 실제 서명 IPA/TestFlight/App Store 링크가 없으므로 준비 상태와 Safari 웹 사용 안내를 제공한다. 웹 계정 기록과 앱 기기 기록은 별도이며 학습/콘텐츠 계약은 바꾸지 않았다.
+
+```sh
+# 공개 clean APK/서명 검사/게시: tools/app-downloads/README.md
+(cd frontend && pnpm exec tsc --noEmit && pnpm lint && pnpm test)
+python3 -m unittest discover -s tools/app-downloads -p 'test_*.py'
+docker compose build frontend
+docker compose up -d --no-deps --wait --wait-timeout 90 frontend
+E2E_BASE_URL=https://kanalog.hanwook.me python3 tools/e2e/run_live.py e2e/app-downloads.spec.ts e2e/app-downloads-webkit.spec.ts
+```
+
 ## 동사 활용 전수 검수 (2026-10-08 후속)
 
 ### 전수 검사와 수정
